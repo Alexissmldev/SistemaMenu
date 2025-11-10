@@ -63,6 +63,6 @@ if (isset($_GET['vista']) && $_GET['vista'] === 'reportes' && isset($_GET['desca
     ?>
 
 </body>
-
+<h1> j</h1>
 </html>
 <?php ob_end_flush(); ?>
