@@ -45,3 +45,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+
+   // Función para abrir el modal y poblarlo con datos
+    function openModal(productData) {
+      const modal = document.getElementById('product-modal');
+
+      // Llenar el contenido del modal
+      document.getElementById('modal-image').src = productData.foto;
+      document.getElementById('modal-name').textContent = productData.nombre;
+      document.getElementById('modal-price').innerHTML = productData.precio;
+      document.getElementById('modal-description').textContent = productData.descripcion;
+
+      // Mostrar el modal
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Función para cerrar el modal
+    function closeModal() {
+      const modal = document.getElementById('product-modal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Cierra el modal si se pulsa fuera de él
+    document.getElementById('product-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'product-modal') {
+        closeModal();
+      }
+    });
+
+    // Cierra el modal si se pulsa ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !document.getElementById('product-modal').classList.contains('hidden')) {
+        closeModal();
+      }
+    });
