@@ -40,28 +40,8 @@ include "./php/categorias_ordenadas.php";
       include "./php/productos_cliente.php";
       ?>
     </main>
-
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex justify-around lg:hidden shadow-xl z-20">
-      <button class="text-red-600 flex flex-col items-center">
-        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-        </svg>
-        <span class="text-xs">Inicio</span>
-      </button>
-
-
-      <button class="text-gray-400 hover:text-red-600 flex flex-col items-center">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-        </svg>
-        <span class="text-xs">Carrito</span>
-      </button>
-
-    </div>
-
   </div>
-
-  <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50 hidden p-4">
+  <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden p-4">
 
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
 
@@ -85,13 +65,14 @@ include "./php/categorias_ordenadas.php";
 
       <div class="flex-shrink-0 border-t border-gray-200 p-4 sm:p-6 bg-gray-50">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
           <div class="flex items-center justify-center space-x-3">
-            <button class="w-10 h-10 flex items-center justify-center border border-red-500 text-red-600 rounded-full hover:bg-red-50 transition text-2xl">-</button>
-            <span class="text-2xl font-bold px-2">1</span>
-            <button class="w-10 h-10 flex items-center justify-center bg-red-600 text-white rounded-full hover:bg-red-700 transition text-2xl">+</button>
+            <button id="btn-minus" class="w-10 h-10 flex items-center justify-center border border-red-500 text-red-600 rounded-full hover:bg-red-50 transition text-2xl">-</button>
+            <span id="quantity-display" class="text-2xl font-bold px-2">1</span>
+            <button id="btn-plus" class="w-10 h-10 flex items-center justify-center bg-red-600 text-white rounded-full hover:bg-red-700 transition text-2xl">+</button>
           </div>
 
-          <button class="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-semibold rounded-full shadow-md hover:bg-red-700 transition">
+          <button id="btn-add-to-cart" class="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-semibold rounded-full shadow-md hover:bg-red-700 transition">
             Añadir al Carrito
           </button>
         </div>
