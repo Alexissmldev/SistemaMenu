@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 07-11-2025 a las 18:34:23
+-- Tiempo de generación: 11-11-2025 a las 16:08:46
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `inventario`
+-- Base de datos: `sistemamenu`
 --
 
 -- --------------------------------------------------------
@@ -84,15 +84,16 @@ CREATE TABLE `usuario` (
   `usuario_apellido` varchar(50) DEFAULT NULL,
   `usuario_usuario` varchar(20) DEFAULT NULL,
   `usuario_clave` varchar(200) DEFAULT NULL,
-  `usuario_email` varchar(70) DEFAULT NULL
+  `usuario_email` varchar(70) DEFAULT NULL,
+  `usuario_telefono` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `usuario`
 --
 
-INSERT INTO `usuario` (`usuario_id`, `usuario_nombre`, `usuario_apellido`, `usuario_usuario`, `usuario_clave`, `usuario_email`) VALUES
-(30, 'Administrador', 'Administrador', 'admin', '$2y$10$D1C4yHkVhYuXuAxpK0o.b.XROlJ9nq0zCBwDidiUZEXnCww0T3qhm', '');
+INSERT INTO `usuario` (`usuario_id`, `usuario_nombre`, `usuario_apellido`, `usuario_usuario`, `usuario_clave`, `usuario_email`, `usuario_telefono`) VALUES
+(30, 'Administrador', 'Administrador', 'wilson', '$2y$10$y1d8fSb/P8uWpZ84Xm5eAebd.XEsr/w03Gl85mRY/aFU60CdIey8O', '', '+584243741949');
 
 --
 -- Índices para tablas volcadas
