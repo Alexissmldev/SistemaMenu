@@ -33,13 +33,15 @@ foreach ($categorias_ordenadas as $categoria) {
 
                     // Preparamos los datos para el JS 
                     $producto_json = htmlspecialchars(json_encode([
+                        'id' => $producto['producto_id'],
                         'nombre' => $producto['producto_nombre'],
                         'descripcion' => $producto['descripcion_producto'],
 
-                        // --- CAMBIO 3: Renombramos y añadimos las claves para el JS ---
-                        'precio_display' => $precio_display, // El texto HTML para mostrar al inicio
-                        'precio_raw' => $precio_raw_bs,      // El número (en Bs) para calcular
-                        // --- Fin del Cambio ---
+                        // Renombramos y añadimos las claves para el JS 
+                        'precio_display' => $precio_display,
+                        'precio_raw' => $precio_raw_bs,
+                        'precio_usd' => (float)$producto['producto_precio'],
+
 
                         'foto' => '../img/producto/large/' . $producto['producto_foto']
                     ]), ENT_QUOTES, 'UTF-8');

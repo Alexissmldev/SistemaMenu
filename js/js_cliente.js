@@ -1,19 +1,15 @@
 /* ======================================================================
-  Variables Globales y Helpers
+  ESTADO GLOBAL Y HELPERS
 ====================================================================== */
-
-/** * Guardará el precio base (ej: 150.50) del producto que está en el modal.
- */
 let modalBasePrice = 0;
+let currentModalProduct = {};
+let cart = [];
 
 /**
- * Formatea un número como moneda local (Bolívares).
- * Ej: 1500.5 -> "Bs. 1.500,50"
- * @param {number} number - El número a formatear
+ * Formatea un número como Bolívares (Bs.)
  */
 function formatCurrency(number) {
-  // 'es-VE' usa '.' para miles y ',' para decimales.
-  const formatted = number.toLocaleString("es-VE", {
+  const formatted = (number || 0).toLocaleString("es-VE", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -21,78 +17,285 @@ function formatCurrency(number) {
 }
 
 /**
- * Actualiza el texto del precio en el modal basado en la cantidad actual.
+ * (NUEVO) Formatea un número como Dólares (USD)
  */
-function updateModalPrice() {
-  const quantityDisplay = document.getElementById("quantity-display");
-  const priceDisplay = document.getElementById("modal-price");
-
-  if (!quantityDisplay || !priceDisplay) return;
-
-  const quantity = parseInt(quantityDisplay.textContent);
-  const totalPrice = modalBasePrice * quantity;
-
-  priceDisplay.innerHTML = formatCurrency(totalPrice);
+function formatUSD(number) {
+  const formatted = (number || 0).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return formatted; // Retorna "$1,234.56"
 }
 
 /* ======================================================================
-  Funciones Globales para el Modal (Llamadas desde HTML)
+  FUNCIONES DEL CARRITO (Modelo)
 ====================================================================== */
 
+function loadCart() {
+  const cartData = localStorage.getItem("miMenuGobernacionCart");
+  cart = cartData ? JSON.parse(cartData) : [];
+}
+
+function saveCart() {
+  localStorage.setItem("miMenuGobernacionCart", JSON.stringify(cart));
+}
+
 /**
- * Función para cerrar el modal
+ * (MODIFICADO) Añade el precio USD al carrito
  */
+function addToCart(product) {
+  const quantity = parseInt(product.cantidad);
+  const existingProductIndex = cart.findIndex((item) => item.id === product.id);
+
+  if (existingProductIndex > -1) {
+    cart[existingProductIndex].cantidad += quantity;
+  } else {
+    cart.push({
+      id: product.id,
+      nombre: product.nombre,
+      foto: product.foto,
+      precio: product.precio_raw, // Precio en Bs.
+      precio_usd: product.precio_usd, // ¡NUEVO! Precio en USD
+      cantidad: quantity,
+    });
+  }
+  saveCart();
+  updateCartBadge();
+  renderCartItems();
+}
+
+function updateCartBadge() {
+  const desktopBadge = document.getElementById("cart-count-badge-desktop");
+  const mobileBadge = document.getElementById("cart-count-badge-mobile");
+  const totalItems = cart.reduce((total, item) => total + item.cantidad, 0);
+  const badges = [desktopBadge, mobileBadge];
+
+  badges.forEach((badge) => {
+    if (badge) {
+      if (totalItems > 0) {
+        badge.textContent = totalItems;
+        badge.classList.remove("hidden");
+      } else {
+        badge.classList.add("hidden");
+      }
+    }
+  });
+}
+
+/* ======================================================================
+  CONTROLADORES DE VISTAS (Modal y Sidebar)
+====================================================================== */
+
+function openCart() {
+  renderCartItems();
+  document.getElementById("cart-backdrop").classList.remove("hidden");
+  document.getElementById("cart-sidebar").classList.remove("translate-x-full");
+  document.body.style.overflow = "hidden";
+}
+
+function closeCart() {
+  document.getElementById("cart-backdrop").classList.add("hidden");
+  document.getElementById("cart-sidebar").classList.add("translate-x-full");
+  if (document.getElementById("product-modal").classList.contains("hidden")) {
+    document.body.style.overflow = "";
+  }
+}
+
+function openModal(productData) {
+  const modal = document.getElementById("product-modal");
+  if (!modal) return;
+  modalBasePrice = productData.precio_raw;
+  currentModalProduct = productData;
+  document.getElementById("modal-image").src = productData.foto;
+  document.getElementById("modal-name").textContent = productData.nombre;
+  document.getElementById("modal-description").textContent = productData.descripcion;
+  document.getElementById("modal-price").innerHTML = productData.precio_display;
+  document.getElementById("quantity-display").textContent = "1";
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
 function closeModal() {
   const modal = document.getElementById("product-modal");
   if (modal) {
     modal.classList.add("hidden");
-    document.body.style.overflow = ""; // Devuelve el scroll al body
-    modalBasePrice = 0; // Resetea el precio base
+    if (document.getElementById("cart-sidebar").classList.contains("translate-x-full")) {
+      document.body.style.overflow = "";
+    }
+    modalBasePrice = 0;
+    currentModalProduct = {};
+  }
+}
+
+function updateModalPrice() {
+  const quantityDisplay = document.getElementById("quantity-display");
+  const priceDisplay = document.getElementById("modal-price");
+  if (!quantityDisplay || !priceDisplay) return;
+  const quantity = parseInt(quantityDisplay.textContent);
+  const totalPrice = modalBasePrice * quantity;
+  priceDisplay.innerHTML = formatCurrency(totalPrice);
+}
+
+/* ======================================================================
+  LÓGICA DE RENDERIZADO Y ACCIONES
+====================================================================== */
+
+/**
+ * (MODIFICADO) Dibuja los productos con contadores y calcula ambos totales.
+ */
+function renderCartItems() {
+  const container = document.getElementById("cart-items-container");
+  const totalDisplayBS = document.getElementById("cart-total-display");
+  const totalDisplayUSD = document.getElementById("cart-total-display-usd"); // ¡NUEVO!
+  const checkoutForm = document.getElementById("btn-send-order").parentElement;
+
+  container.innerHTML = ""; // Limpia
+
+  if (cart.length === 0) {
+    container.innerHTML = `
+      <div id="cart-empty-msg" class="text-center text-gray-500 pt-10">
+        <svg class="w-16 h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+        <p class="mt-2">Tu carrito está vacío.</p>
+      </div>
+    `;
+    totalDisplayBS.innerHTML = formatCurrency(0);
+    totalDisplayUSD.innerHTML = formatUSD(0); // ¡NUEVO!
+    if (checkoutForm) checkoutForm.classList.add("hidden");
+    return;
+  }
+
+  if (checkoutForm) checkoutForm.classList.remove("hidden");
+
+  let subtotal_bs = 0;
+  let subtotal_usd = 0;
+
+  cart.forEach((item) => {
+    const itemTotal_bs = item.precio * item.cantidad;
+    subtotal_bs += itemTotal_bs;
+
+    const itemTotal_usd = item.precio_usd * item.cantidad; // ¡NUEVO!
+    subtotal_usd += itemTotal_usd;
+
+    // --- ¡HTML del Item MODIFICADO con contadores! ---
+    const itemHTML = `
+      <div class="flex space-x-3 p-2 bg-white rounded-lg border">
+        <img src="${item.foto}" alt="${item.nombre}" class="w-16 h-16 object-cover rounded-md flex-shrink-0">
+        
+        <div class="flex-grow min-w-0">
+          <p class="font-semibold text-sm text-gray-800 truncate">${item.nombre}</p>
+          <p class="text-sm font-bold text-red-600 mt-1">${formatCurrency(itemTotal_bs)}</p>
+        </div>
+
+        <div class="flex-shrink-0 flex flex-col items-end justify-between">
+            <button class="text-gray-400 hover:text-red-500" onclick="removeItemFromCart(${item.id})">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            
+            <div class="flex items-center space-x-2 mt-2">
+                <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" onclick="decrementCartItem(${item.id})">-</button>
+                <span class="font-bold text-sm px-1">${item.cantidad}</span>
+                <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" onclick="incrementCartItem(${item.id})">+</button>
+            </div>
+        </div>
+      </div>
+    `;
+    container.innerHTML += itemHTML;
+  });
+
+  totalDisplayBS.innerHTML = formatCurrency(subtotal_bs);
+  totalDisplayUSD.innerHTML = formatUSD(subtotal_usd); // ¡NUEVO!
+}
+
+/**
+ * (Global) Elimina un item del carrito
+ */
+function removeItemFromCart(productId) {
+  cart = cart.filter((item) => item.id !== productId);
+  saveCart();
+  renderCartItems();
+  updateCartBadge();
+  if (cart.length === 0) {
+    closeCart();
   }
 }
 
 /**
- * Función para abrir el modal y poblarlo con datos
- * @param {object} productData - Datos del producto
+ * (¡NUEVO!) Incrementa la cantidad de un item en el carrito
  */
-function openModal(productData) {
-  const modal = document.getElementById("product-modal");
-  if (!modal) return;
+function incrementCartItem(productId) {
+  const itemIndex = cart.findIndex((item) => item.id === productId);
+  if (itemIndex > -1) {
+    cart[itemIndex].cantidad++;
+    saveCart();
+    renderCartItems();
+    updateCartBadge();
+  }
+}
 
-  // --- ¡CAMBIO IMPORTANTE! ---
-  // Guardamos el precio base (número) en nuestra variable global
-  modalBasePrice = productData.precio_raw;
+/**
+ * (¡NUEVO!) Decrementa la cantidad de un item en el carrito
+ */
+function decrementCartItem(productId) {
+  const itemIndex = cart.findIndex((item) => item.id === productId);
+  if (itemIndex > -1) {
+    if (cart[itemIndex].cantidad > 1) {
+      cart[itemIndex].cantidad--;
+      saveCart();
+      renderCartItems();
+      updateCartBadge();
+    } else {
+      // Si la cantidad es 1, decrementar es lo mismo que eliminar
+      removeItemFromCart(productId);
+    }
+  }
+}
 
-  // Llenar el contenido del modal
-  document.getElementById("modal-image").src = productData.foto;
-  document.getElementById("modal-name").textContent = productData.nombre;
-  document.getElementById("modal-description").textContent = productData.descripcion;
+/**
+ * Finaliza el pedido
+ */
+function sendOrder() {
+  const clientName = document.getElementById("client-name").value;
+  const clientComments = document.getElementById("client-comments").value;
 
-  // Usamos el precio pre-formateado que viene del PHP
-  document.getElementById("modal-price").innerHTML = productData.precio_display;
+  if (clientName.trim() === "") {
+    alert("Por favor, ingresa tu nombre.");
+    return;
+  }
 
-  // Resetear la cantidad a 1
-  document.getElementById("quantity-display").textContent = "1";
+  console.log("=== PEDIDO ENVIADO ===");
+  console.log("Cliente:", clientName);
+  console.log("Comentarios:", clientComments);
+  console.log("Carrito:", cart);
 
-  // Mostrar el modal
-  modal.classList.remove("hidden");
-  document.body.style.overflow = "hidden"; // Quita el scroll del body
+  alert(`¡Gracias ${clientName}! Tu pedido ha sido enviado.`);
+
+  closeCart();
+  cart = [];
+  saveCart();
+  renderCartItems();
+  updateCartBadge();
 }
 
 /* ======================================================================
-  Listeners de Eventos Principales (DOMContentLoaded)
+  LISTENERS (DOMContentLoaded)
 ====================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
+  // --- INICIALIZACIÓN ---
+  loadCart();
+  updateCartBadge();
+
   // --- Lógica de Menú Hamburguesa ---
   const hamburgerMenu = document.querySelector(".hamburger-menu");
   const navLinks = document.querySelector(".nav-links");
-
   if (hamburgerMenu && navLinks) {
     hamburgerMenu.addEventListener("click", () => {
       hamburgerMenu.classList.toggle("active");
       navLinks.classList.toggle("active");
     });
-
     navLinks.querySelectorAll("a").forEach((link) => {
       link.addEventListener("click", () => {
         if (navLinks.classList.contains("active")) {
@@ -109,9 +312,11 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const targetId = this.getAttribute("href");
       try {
-        const targetElement = targetId === "#" ? document.body : document.querySelector(targetId);
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: "smooth" });
+        if (targetId && targetId.startsWith("#") && targetId.length > 1) {
+          const targetElement = document.querySelector(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: "smooth" });
+          }
         }
       } catch (error) {
         console.error("Error en smooth scroll:", error);
@@ -119,20 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // --- Lógica de ejemplo (botones .add-to-cart fuera del modal) ---
-  const addButtons = document.querySelectorAll(".add-to-cart");
-  addButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const item = button.closest(".menu-item");
-      if (item) {
-        const itemName = item.querySelector("h3").textContent;
-        alert(`"${itemName}" ha sido añadido (funcionalidad de carrito a implementar).`);
-      }
-    });
-  });
-
-  // --- ¡NUEVO! Lógica del Carrito en el Modal ---
-
+  // --- Lógica del MODAL de Producto ---
   const modal = document.getElementById("product-modal");
   const btnMinus = document.getElementById("btn-minus");
   const btnPlus = document.getElementById("btn-plus");
@@ -140,59 +332,56 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnAddToCart = document.getElementById("btn-add-to-cart");
 
   if (modal && btnMinus && btnPlus && quantityDisplay && btnAddToCart) {
-    // --- Lógica de Cantidad (+) ---
     btnPlus.addEventListener("click", () => {
-      let currentQuantity = parseInt(quantityDisplay.textContent);
-      currentQuantity++;
-      quantityDisplay.textContent = currentQuantity;
-
-      // ¡Actualiza el precio!
+      let qty = parseInt(quantityDisplay.textContent);
+      qty++;
+      quantityDisplay.textContent = qty;
       updateModalPrice();
     });
-
-    // --- Lógica de Cantidad (-) ---
     btnMinus.addEventListener("click", () => {
-      let currentQuantity = parseInt(quantityDisplay.textContent);
-      if (currentQuantity > 1) {
-        // No permitir bajar de 1
-        currentQuantity--;
-        quantityDisplay.textContent = currentQuantity;
-
-        // ¡Actualiza el precio!
+      let qty = parseInt(quantityDisplay.textContent);
+      if (qty > 1) {
+        qty--;
+        quantityDisplay.textContent = qty;
         updateModalPrice();
       }
     });
-
-    // --- Lógica de "Añadir al Carrito" ---
     btnAddToCart.addEventListener("click", () => {
-      const quantity = quantityDisplay.textContent;
-      const productName = document.getElementById("modal-name").textContent;
-      const finalPrice = document.getElementById("modal-price").innerHTML;
-
-      alert(`¡Añadido!\n${quantity} x ${productName}\nTotal: ${finalPrice}`);
-
+      const productToAdd = {
+        ...currentModalProduct,
+        cantidad: parseInt(quantityDisplay.textContent),
+      };
+      addToCart(productToAdd);
       closeModal();
+      openCart();
     });
-  } else {
-    console.warn("Advertencia: No se encontraron todos los elementos del modal (btn-minus, btn-plus, etc).");
   }
 
-  // --- Listeners para cerrar el modal ---
+  // --- Lógica del SIDEBAR del Carrito ---
+  const openCartDesktop = document.getElementById("open-cart-btn-desktop");
+  const openCartMobile = document.getElementById("open-cart-btn-mobile");
+  const closeCartBtn = document.getElementById("close-cart-btn");
+  const cartBackdrop = document.getElementById("cart-backdrop");
 
-  if (modal) {
-    // Cierra si se pulsa fuera (fondo oscuro)
-    modal.addEventListener("click", (e) => {
-      if (e.target.id === "product-modal") {
+  if (openCartDesktop) openCartDesktop.addEventListener("click", openCart);
+  if (openCartMobile) openCartMobile.addEventListener("click", openCart);
+  if (closeCartBtn) closeCartBtn.addEventListener("click", closeCart);
+  if (cartBackdrop) cartBackdrop.addEventListener("click", closeCart);
+
+  // --- Listener para el botón de ENVIAR PEDIDO ---
+  const btnSendOrder = document.getElementById("btn-send-order");
+  if (btnSendOrder) {
+    btnSendOrder.addEventListener("click", sendOrder);
+  }
+
+  // --- Listeners Globales de Cierre (ESC) ---
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (!document.getElementById("cart-sidebar").classList.contains("translate-x-full")) {
+        closeCart();
+      } else if (!document.getElementById("product-modal").classList.contains("hidden")) {
         closeModal();
       }
-    });
-  }
-
-  // Cierra si se pulsa la tecla ESC
-  document.addEventListener("keydown", (e) => {
-    const modal = document.getElementById("product-modal");
-    if (modal && e.key === "Escape" && !modal.classList.contains("hidden")) {
-      closeModal();
     }
   });
 });
