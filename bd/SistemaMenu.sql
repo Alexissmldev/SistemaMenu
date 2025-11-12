@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 11-11-2025 a las 16:08:46
+-- Tiempo de generación: 12-11-2025 a las 16:27:08
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -69,8 +69,14 @@ CREATE TABLE `producto` (
 --
 
 INSERT INTO `producto` (`producto_id`, `producto_codigo`, `producto_nombre`, `producto_precio`, `producto_stock`, `producto_estado`, `producto_foto`, `categoria_id`, `usuario_id`, `descripcion_producto`) VALUES
-(98, NULL, 'Empanada', 1.30, NULL, 1, 'Empanada_75.webp', 44, 30, 'pollo, carne, jamon y queso'),
-(99, NULL, 'botella agua', 0.50, NULL, 1, 'botella_agua_72.webp', 45, 30, 'botella de 440ml');
+(98, NULL, 'Empanada', 1.70, NULL, 1, 'Empanada_75.webp', 44, 30, 'pollo, carne, jamon y queso'),
+(99, NULL, 'botella agua', 0.50, NULL, 1, 'botella_agua_72.webp', 45, 30, 'botella de 440ml'),
+(100, NULL, 'Pabellon criollo', 3.00, NULL, 1, 'Pabellon_criollo_53.webp', 43, 30, 'pabellon criollo clasico'),
+(101, NULL, 'pasticho', 2.90, NULL, 1, 'pasticho_45.webp', 43, 30, 'pasticho venezolano'),
+(102, NULL, 'arroz chino', 2.00, NULL, 1, 'arroz_chino_87.webp', 43, 30, 'arroz chinos especial'),
+(103, NULL, 'jugo de melon pequeño', 0.50, NULL, 1, 'jugo_de_melon_pequeño_45.webp', 45, 30, 'pequeño'),
+(104, NULL, 'jugo de guayaba pequeño', 0.50, NULL, 1, 'jugo_de_guayaba_pequeño_9.webp', 45, 30, 'pequeño'),
+(105, NULL, 'Arepas', 1.70, NULL, 1, 'Arepas_61.webp', 44, 30, 'pelua, domino, reina pepiada, catira');
 
 -- --------------------------------------------------------
 
@@ -93,7 +99,7 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`usuario_id`, `usuario_nombre`, `usuario_apellido`, `usuario_usuario`, `usuario_clave`, `usuario_email`, `usuario_telefono`) VALUES
-(30, 'Administrador', 'Administrador', 'wilson', '$2y$10$y1d8fSb/P8uWpZ84Xm5eAebd.XEsr/w03Gl85mRY/aFU60CdIey8O', '', '+584243741949');
+(30, 'Administrador', 'Administrador', 'admin', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', '', '5804243487774');
 
 --
 -- Índices para tablas volcadas
@@ -133,7 +139,7 @@ ALTER TABLE `categoria`
 -- AUTO_INCREMENT de la tabla `producto`
 --
 ALTER TABLE `producto`
-  MODIFY `producto_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
+  MODIFY `producto_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
