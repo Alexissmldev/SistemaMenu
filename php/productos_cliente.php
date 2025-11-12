@@ -1,10 +1,4 @@
 <?php
-/*
-* SCRIPT DE PRODUCTOS (VERSIÓN SIMPLE)
-* Solo imprime todas las categorías.
-* El JS se encarga de filtrar.
-*/
-
 foreach ($categorias_ordenadas as $categoria) {
     $categoria_id = strtolower(str_replace(' ', '', $categoria['categoria_nombre']));
     $categoria_nombre = $categoria['categoria_nombre'];
@@ -63,5 +57,5 @@ foreach ($categorias_ordenadas as $categoria) {
         </div>
     </section>
 <?php
-} // Fin del foreach
+} 
 ?>

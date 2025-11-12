@@ -138,6 +138,5 @@ include "./php/categorias_ordenadas.php";
     <span id="toast-message" class="ml-2">Producto añadido</span>
   </div>
   <script src="js/js_cliente.js"></script>
-
 </body>
 <?php include "./inc/footer_cliente.php"; ?>
