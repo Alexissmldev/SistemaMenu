@@ -90,11 +90,51 @@ include "./php/categorias_ordenadas.php";
 
     </div>
   </div>
+
   <div id="cart-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden"></div>
 
   <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
-  </div>
 
+    <div class="flex-shrink-0 flex items-center justify-between p-4 border-b">
+      <h2 class="text-xl font-bold text-gray-800">Tu Carrito</h2>
+      <button id="close-cart-btn" class="text-gray-500 hover:text-red-600">
+        <i class="fa fa-times text-2xl"></i>
+      </button>
+    </div>
+
+    <div id="cart-items-container" class="flex-grow p-4 overflow-y-auto space-y-4">
+      <div id="cart-empty-msg" class="text-center text-gray-500 pt-10">
+        <i class="fa fa-shopping-cart text-6xl mx-auto text-gray-300"></i>
+        <p class="mt-2">Tu carrito está vacío.</p>
+      </div>
+    </div>
+
+    <div class="flex-shrink-0 p-4 border-t bg-gray-50">
+      <div class="flex justify-between font-bold text-lg text-gray-800">
+        <span>Subtotal (Bs.):</span>
+        <span id="cart-total-display">Bs. 0,00</span>
+      </div>
+      <div class="flex justify-between text-sm text-gray-600 mt-1">
+        <span>Subtotal (USD):</span>
+        <span id="cart-total-display-usd">$0.00</span>
+      </div>
+      <hr class="my-4">
+      <div class="space-y-4">
+        <div>
+          <label for="client-name" class="block text-sm font-medium text-gray-700">Tu Nombre</label>
+          <input type="text" id="client-name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-red-500 focus:border-red-500" placeholder="Escribe tu nombre">
+        </div>
+        <div>
+          <label for="client-comments" class="block text-sm font-medium text-gray-700">Especificaciones (Opcional)</label>
+          <textarea id="client-comments" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-red-500 focus:border-red-500" placeholder="Ej: La empanada de carne. La malta sin pitillo..."></textarea>
+        </div>
+        <button id="btn-send-order" class="w-full bg-red-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-red-700 transition">
+          Confirmar y Enviar Pedido
+        </button>
+      </div>
+    </div>
+
+  </div>
   <script src="js/js_cliente.js"></script>
 
 </body>

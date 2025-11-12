@@ -296,180 +296,86 @@ function sendOrder() {
   updateCartBadge();
 }
 
-/* ======================================================================
-  LISTENERS (DOMContentLoaded)
-====================================================================== */
-document.addEventListener("DOMContentLoaded", () => {
-  // --- INICIALIZACIÓN ---
-  loadCart();
-  updateCartBadge();
-
-  // --- ¡CAMBIO! Apuntamos al nuevo wrapper ---
-  const productContentWrapper = document.getElementById("product-content-wrapper");
-  if (productContentWrapper) {
-    originalMainContent = productContentWrapper.innerHTML;
-  }
-  // --- FIN CAMBIO ---
-
-  // --- Lógica de Menú Hamburguesa ---
-  const hamburgerMenu = document.querySelector(".hamburger-menu");
-  const navLinks = document.querySelector(".nav-links");
-  if (hamburgerMenu && navLinks) {
-    // ... (Tu código de hamburguesa)
-  }
-
-  // --- Lógica de Filtro de Categorías y Búsqueda en Tiempo Real ---
-
-  const desktopInput = document.getElementById("desktop-search-input");
-  const mobileInput = document.getElementById("mobile-search-input");
-  const categoryNav = document.getElementById("category-nav-section");
+// --- (¡NUEVO!) FUNCIÓN PARA REGISTRAR LISTENERS ---
+// Esta función registra todos los listeners que se pierden
+// cuando se reemplaza el HTML.
+function registerAppListeners() {
+  // --- Lógica de Filtro de Categorías ---
+  const categoryLinks = document.querySelectorAll("nav a.category-link");
+  const productSections = document.querySelectorAll("#product-content-wrapper section.product-section");
   const header = document.querySelector("header");
   const activeClasses = ["text-red-600", "border-red-600"];
   const inactiveClasses = ["text-gray-500", "border-transparent"];
+  const isSearchPage = new URLSearchParams(window.location.search).has("busqueda");
 
-  function registerCategoryListeners() {
-    // --- ¡CAMBIO! Busca las secciones dentro del wrapper ---
-    const categoryLinks = document.querySelectorAll("nav a.category-link");
-    const productSections = document.querySelectorAll("#product-content-wrapper section.product-section");
-    // --- FIN CAMBIO ---
-
-    const isSearchPage = new URLSearchParams(window.location.search).has("busqueda");
-
-    if (isSearchPage) {
-      categoryLinks.forEach((link) => {
-        link.classList.remove(...activeClasses);
-        link.classList.add(...inactiveClasses);
-        if (link.getAttribute("href") === "#todos") {
-          link.classList.add(...activeClasses);
-          link.classList.remove(...inactiveClasses);
-        }
-      });
-    }
-
-    const currentHash = window.location.hash;
-    if (!isSearchPage && currentHash && currentHash.length > 1) {
-      const activeLink = document.querySelector(`nav a.category-link[href="${currentHash}"]`);
-      if (activeLink) {
-        activeLink.click();
+  if (isSearchPage) {
+    categoryLinks.forEach((link) => {
+      link.classList.remove(...activeClasses);
+      link.classList.add(...inactiveClasses);
+      if (link.getAttribute("href") === "#todos") {
+        link.classList.add(...activeClasses);
+        link.classList.remove(...inactiveClasses);
       }
-    }
-
-    categoryLinks.forEach((anchor) => {
-      anchor.addEventListener("click", function (e) {
-        e.preventDefault();
-        const targetId = this.getAttribute("href");
-
-        if (isSearchPage) {
-          window.location.href = "menu.php" + (targetId === "#todos" ? "" : targetId);
-          return;
-        }
-
-        categoryLinks.forEach((link) => {
-          link.classList.remove(...activeClasses);
-          link.classList.add(...inactiveClasses);
-        });
-        this.classList.add(...activeClasses);
-        this.classList.remove(...inactiveClasses);
-
-        let sectionToScrollTo = null;
-        if (targetId === "#todos") {
-          productSections.forEach((section) => {
-            if (section.id !== "search-results") {
-              section.style.display = "block";
-            }
-          });
-          sectionToScrollTo =
-            document.getElementById("desayunos") || (productSections.length > 0 ? productSections[0] : null);
-        } else {
-          productSections.forEach((section) => {
-            section.style.display = "none";
-          });
-          try {
-            const targetElement = document.getElementById(targetId.substring(1));
-            if (targetElement) {
-              targetElement.style.display = "block";
-              sectionToScrollTo = targetElement;
-            }
-          } catch (error) {}
-        }
-
-        if (sectionToScrollTo) {
-          const headerHeight = header ? header.offsetHeight : 0;
-          const elementPosition = sectionToScrollTo.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.scrollY - headerHeight - 16;
-          window.scrollTo({ top: offsetPosition, behavior: "smooth" });
-        } else {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-      });
     });
   }
 
-  // Función que maneja la búsqueda AJAX
-  const handleSearch = (query) => {
-    // 1. Si la búsqueda está vacía, restaura todo
-    if (query.trim() === "") {
-      // --- ¡CAMBIO! Apunta al wrapper ---
-      if (productContentWrapper) productContentWrapper.innerHTML = originalMainContent;
-      if (categoryNav) categoryNav.style.display = "block";
-      registerCategoryListeners();
-      return;
+  const currentHash = window.location.hash;
+  if (!isSearchPage && currentHash && currentHash.length > 1) {
+    const activeLink = document.querySelector(`nav a.category-link[href="${currentHash}"]`);
+    if (activeLink) {
+      activeLink.click();
     }
+  }
 
-    // 2. Ocultar categorías
-    if (categoryNav) categoryNav.style.display = "none";
+  categoryLinks.forEach((anchor) => {
+    anchor.addEventListener("click", function (e) {
+      e.preventDefault();
+      const targetId = this.getAttribute("href");
 
-    // 3. Mostrar un 'cargando'
-    // --- ¡CAMBIO! Apunta al wrapper ---
-    if (productContentWrapper)
-      productContentWrapper.innerHTML = '<p class="text-center text-gray-500">Buscando...</p>';
+      if (isSearchPage) {
+        window.location.href = "menu.php" + (targetId === "#todos" ? "" : targetId);
+        return;
+      }
 
-    // 4. Preparar y enviar la petición
-    const formData = new FormData();
-    formData.append("query", query);
-
-    fetch("./php/buscador_cliente.php", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Error en la respuesta del servidor");
-        }
-        return response.text();
-      })
-      .then((html) => {
-        // 5. Inyectar el HTML de los resultados
-        // --- ¡CAMBIO! Apunta al wrapper ---
-        if (productContentWrapper) productContentWrapper.innerHTML = html;
-      })
-      .catch((error) => {
-        console.error("Error en fetch:", error);
-        // --- ¡CAMBIO! Apunta al wrapper ---
-        if (productContentWrapper)
-          productContentWrapper.innerHTML =
-            '<p class="text-center text-red-500">Error al cargar resultados.</p>';
+      categoryLinks.forEach((link) => {
+        link.classList.remove(...activeClasses);
+        link.classList.add(...inactiveClasses);
       });
-  };
+      this.classList.add(...activeClasses);
+      this.classList.remove(...inactiveClasses);
 
-  // Función que se dispara al escribir
-  const onInput = (event) => {
-    clearTimeout(debounceTimeout);
-    const query = event.target.value;
+      let sectionToScrollTo = null;
+      if (targetId === "#todos") {
+        productSections.forEach((section) => {
+          if (section.id !== "search-results") {
+            section.style.display = "block";
+          }
+        });
+        sectionToScrollTo =
+          document.getElementById("desayunos") || (productSections.length > 0 ? productSections[0] : null);
+      } else {
+        productSections.forEach((section) => {
+          section.style.display = "none";
+        });
+        try {
+          const targetElement = document.getElementById(targetId.substring(1));
+          if (targetElement) {
+            targetElement.style.display = "block";
+            sectionToScrollTo = targetElement;
+          }
+        } catch (error) {}
+      }
 
-    debounceTimeout = setTimeout(() => {
-      handleSearch(query);
-    }, 300); // Espera 300ms después de dejar de escribir
-  };
-
-  // Asignar los listeners a AMBAS barras de búsqueda
-  if (desktopInput) desktopInput.addEventListener("input", onInput);
-  if (mobileInput) mobileInput.addEventListener("input", onInput);
-
-  // Registramos los listeners de categorías la primera vez que carga la página
-  registerCategoryListeners();
-
-  // --- FIN BLOQUE BÚSQUEDA ---
+      if (sectionToScrollTo) {
+        const headerHeight = header ? header.offsetHeight : 0;
+        const elementPosition = sectionToScrollTo.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - headerHeight - 16;
+        window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  });
 
   // --- Lógica de Botones de Navegación Móvil ---
   const homeTrigger = document.getElementById("mobile-home-trigger");
@@ -487,22 +393,21 @@ document.addEventListener("DOMContentLoaded", () => {
   if (searchTrigger && searchInput && searchContainer) {
     searchTrigger.addEventListener("click", (e) => {
       e.preventDefault();
-
       const header = document.querySelector("header");
       const headerHeight = header ? header.offsetHeight : 0;
       const elementPosition = searchContainer.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.scrollY - headerHeight - 16;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
-
+      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
       searchInput.focus();
     });
   }
 
   // --- Lógica del MODAL de Producto ---
+  // (¡IMPORTANTE!) Debemos re-asignar los listeners a los botones
+  // de productos que están en el HTML restaurado.
+  // En lugar de usar 'onclick' en el HTML, lo haremos aquí.
+  // PERO, ya que 'openModal' es global y está en el HTML,
+  // solo necesitamos registrar los botones DENTRO del modal.
   const modal = document.getElementById("product-modal");
   const btnMinus = document.getElementById("btn-minus");
   const btnPlus = document.getElementById("btn-plus");
@@ -556,8 +461,85 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnSendOrder) {
     btnSendOrder.addEventListener("click", sendOrder);
   }
+}
+// --- FIN DE LA FUNCIÓN registerAppListeners ---
+
+/* ======================================================================
+  LISTENERS (DOMContentLoaded)
+====================================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  // --- INICIALIZACIÓN ---
+  loadCart();
+  updateCartBadge();
+
+  const productContentWrapper = document.getElementById("product-content-wrapper");
+  if (productContentWrapper) {
+    originalMainContent = productContentWrapper.innerHTML;
+  }
+
+  // --- Lógica de Menú Hamburguesa ---
+  const hamburgerMenu = document.querySelector(".hamburger-menu");
+  const navLinks = document.querySelector(".nav-links");
+  if (hamburgerMenu && navLinks) {
+    // ... (Tu código de hamburguesa)
+  }
+
+  // --- Lógica de Búsqueda en Tiempo Real ---
+  const desktopInput = document.getElementById("desktop-search-input");
+  const mobileInput = document.getElementById("mobile-search-input");
+  const categoryNav = document.getElementById("category-nav-section");
+
+  const handleSearch = (query) => {
+    if (query.trim() === "") {
+      if (productContentWrapper) productContentWrapper.innerHTML = originalMainContent;
+      if (categoryNav) categoryNav.style.display = "block";
+      // --- ¡CORRECCIÓN! ---
+      // Llamamos a la función que re-activa todos los botones
+      registerAppListeners();
+      return;
+    }
+
+    if (categoryNav) categoryNav.style.display = "none";
+    if (productContentWrapper)
+      productContentWrapper.innerHTML = '<p class="text-center text-gray-500">Buscando...</p>';
+
+    const formData = new FormData();
+    formData.append("query", query);
+
+    fetch("./php/buscador_cliente.php", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.text())
+      .then((html) => {
+        if (productContentWrapper) productContentWrapper.innerHTML = html;
+      })
+      .catch((error) => {
+        console.error("Error en fetch:", error);
+        if (productContentWrapper)
+          productContentWrapper.innerHTML =
+            '<p class="text-center text-red-500">Error al cargar resultados.</p>';
+      });
+  };
+
+  const onInput = (event) => {
+    clearTimeout(debounceTimeout);
+    const query = event.target.value;
+    debounceTimeout = setTimeout(() => {
+      handleSearch(query);
+    }, 300);
+  };
+
+  if (desktopInput) desktopInput.addEventListener("input", onInput);
+  if (mobileInput) mobileInput.addEventListener("input", onInput);
+
+  // Registramos los listeners la primera vez que carga la página
+  registerAppListeners();
+
+  // --- FIN BLOQUE BÚSQUEDA ---
 
   // --- Listeners Globales de Cierre (ESC) ---
+  // (Lo dejamos aquí para que solo se registre UNA VEZ)
   document.addEventListener("keydown", (e) => {
     const modal = document.getElementById("product-modal");
     const cartSidebar = document.getElementById("cart-sidebar");
