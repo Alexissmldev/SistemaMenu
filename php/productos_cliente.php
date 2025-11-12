@@ -1,4 +1,6 @@
 <?php
+
+
 // Genera las secciones y productos dinámicamente
 foreach ($categorias_ordenadas as $categoria) {
     $categoria_id = strtolower(str_replace(' ', '', $categoria['categoria_nombre']));
