@@ -14,8 +14,10 @@ foreach ($categorias_ordenadas as $categoria) {
     $productos = $query->fetchAll();
 ?>
     <section id="<?php echo htmlspecialchars($categoria_id); ?>" class="mb-8 product-section">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6"><?php echo htmlspecialchars($categoria_nombre); ?></h2>
 
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 border-l-4 border-red-500 pl-4">
+            <?php echo htmlspecialchars($categoria_nombre); ?>
+        </h2>
         <div class="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 xl:grid-cols-3">
             <?php if (count($productos) > 0): ?>
                 <?php foreach ($productos as $producto):

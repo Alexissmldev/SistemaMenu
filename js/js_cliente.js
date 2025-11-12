@@ -1,13 +1,10 @@
-/* ======================================================================
-  ESTADO GLOBAL Y HELPERS
-====================================================================== */
 let modalBasePrice = 0;
 let currentModalProduct = {};
 let cart = [];
 
 let originalMainContent = "";
 let debounceTimeout;
-let toastTimeout; // <-- ¡NUEVO! Timer para el Toast
+let toastTimeout;
 
 function formatCurrency(number) {
   const formatted = (number || 0).toLocaleString("es-VE", {
@@ -27,37 +24,42 @@ function formatUSD(number) {
   return formatted;
 }
 
-/* ======================================================================
-  (¡NUEVA!) FUNCIÓN PARA MOSTRAR ALERTA (TOAST)
-====================================================================== */
-function showToast(message) {
+/**
+ * Muestra una alerta toast en la esquina.
+ * @param {string} message - El mensaje a mostrar.
+ * @param {string} type - 'success' (verde) o 'error' (rojo).
+ */
+function showToast(message, type = "success") {
   const toast = document.getElementById("toast-notification");
   const toastMessage = document.getElementById("toast-message");
-  if (!toast || !toastMessage) return;
+  const toastIcon = toast.querySelector("i");
 
-  // 1. Limpiar timer anterior
+  if (!toast || !toastMessage || !toastIcon) return;
+
   clearTimeout(toastTimeout);
-
-  // 2. Poner el mensaje
   toastMessage.textContent = message;
 
-  // 3. Mostrar (Animar entrada)
+  toast.classList.remove("bg-green-500", "bg-red-500");
+  toastIcon.classList.remove("fa-check-circle", "fa-exclamation-triangle");
+
+  if (type === "error") {
+    toast.classList.add("bg-red-500");
+    toastIcon.classList.add("fa-exclamation-triangle");
+  } else {
+    // 'success' por defecto
+    toast.classList.add("bg-green-500");
+    toastIcon.classList.add("fa-check-circle");
+  }
+
   toast.classList.remove("invisible", "opacity-0", "translate-x-12");
 
-  // 4. Poner timer para ocultar (Animar salida)
   toastTimeout = setTimeout(() => {
     toast.classList.add("opacity-0", "translate-x-12");
-
-    // 5. Ocultar completamente después de la animación
     setTimeout(() => {
       toast.classList.add("invisible");
-    }, 300); // Duración de la transición
-  }, 3000); // 3 segundos visible
+    }, 300);
+  }, 3000);
 }
-
-/* ======================================================================
-  FUNCIONES DEL CARRITO (Modelo)
-====================================================================== */
 
 function loadCart() {
   const cartData = localStorage.getItem("miMenuGobernacionCart");
@@ -106,10 +108,6 @@ function updateCartBadge() {
     }
   });
 }
-
-/* ======================================================================
-  CONTROLADORES DE VISTAS (Modal y Sidebar)
-====================================================================== */
 
 function openCart() {
   renderCartItems();
@@ -174,10 +172,6 @@ function updateModalPrice() {
   priceDisplay.innerHTML = formatCurrency(totalPrice);
 }
 
-/* ======================================================================
-  LÓGICA DE RENDERIZADO Y ACCIONES
-====================================================================== */
-
 function renderCartItems() {
   const container = document.getElementById("cart-items-container");
   const totalDisplayBS = document.getElementById("cart-total-display");
@@ -222,9 +216,9 @@ function renderCartItems() {
               <i class="fa fa-times text-xl"></i>
             </button>
             <div class="flex items-center space-x-2 mt-2">
-                <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" onclick="decrementCartItem(${item.id})">-</button>
-                <span class="font-bold text-sm px-1">${item.cantidad}</span>
-                <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" onclick="incrementCartItem(${item.id})">+</button>
+              <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" onclick="decrementCartItem(${item.id})">-</button>
+              <span class="font-bold text-sm px-1">${item.cantidad}</span>
+              <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" onclick="incrementCartItem(${item.id})">+</button>
             </div>
         </div>
       </div>
@@ -271,17 +265,20 @@ function decrementCartItem(productId) {
 }
 
 function sendOrder() {
-  const clientName = document.getElementById("client-name").value;
-  const clientComments = document.getElementById("client-comments").value;
+  const clientNameInput = document.getElementById("client-name");
+  const clientCommentsInput = document.getElementById("client-comments");
+
+  const clientName = clientNameInput.value;
+  const clientComments = clientCommentsInput.value;
 
   if (clientName.trim() === "") {
-    alert("Por favor, ingresa tu nombre.");
+    showToast("Por favor, ingresa tu nombre.", "error");
     return;
   }
 
   let whatsAppNumber = document.body.dataset.whatsappNumber;
   if (!whatsAppNumber || whatsAppNumber.trim() === "") {
-    alert("Error: No hay un número de WhatsApp configurado para recibir el pedido.");
+    showToast("Error: No hay número de WhatsApp.", "error");
     return;
   }
   if (whatsAppNumber.startsWith("0")) {
@@ -289,7 +286,7 @@ function sendOrder() {
   }
   whatsAppNumber = whatsAppNumber.replace(/[^0-9]/g, "");
 
-  let mensaje = `*¡Hola! 👋 Nuevo Pedido del Menú Digital*\n\n`;
+  let mensaje = `*¡Hola!  Nuevo Pedido del Menú Digital*\n\n`;
   mensaje += `*Cliente:* ${clientName}\n\n`;
   mensaje += `*--- MI PEDIDO ---*\n`;
 
@@ -314,19 +311,19 @@ function sendOrder() {
   const encodedMessage = encodeURIComponent(mensaje);
   const whatsAppUrl = `https://wa.me/${whatsAppNumber}?text=${encodedMessage}`;
 
+  showToast(`¡Gracias ${clientName}! Redirigiendo...`, "success");
   window.open(whatsAppUrl, "_blank");
 
-  alert(`¡Gracias ${clientName}! Serás redirigido a WhatsApp para confirmar tu pedido.`);
   closeCart();
   cart = [];
   saveCart();
   renderCartItems();
   updateCartBadge();
+  clientNameInput.value = "";
+  clientCommentsInput.value = "";
 }
 
-// --- (¡NUEVO!) FUNCIÓN PARA REGISTRAR LISTENERS ---
 function registerAppListeners() {
-  // --- Lógica de Filtro de Categorías ---
   const categoryLinks = document.querySelectorAll("nav a.category-link");
   const productSections = document.querySelectorAll("#product-content-wrapper section.product-section");
   const header = document.querySelector("header");
@@ -403,7 +400,6 @@ function registerAppListeners() {
     });
   });
 
-  // --- Lógica de Botones de Navegación Móvil ---
   const homeTrigger = document.getElementById("mobile-home-trigger");
   const searchTrigger = document.getElementById("mobile-search-trigger");
   const searchInput = document.getElementById("mobile-search-input");
@@ -428,7 +424,6 @@ function registerAppListeners() {
     });
   }
 
-  // --- Lógica del MODAL de Producto ---
   const modal = document.getElementById("product-modal");
   const btnMinus = document.getElementById("btn-minus");
   const btnPlus = document.getElementById("btn-plus");
@@ -451,22 +446,17 @@ function registerAppListeners() {
       }
     });
 
-    // --- ¡AQUÍ ESTÁ EL CAMBIO! ---
     btnAddToCart.addEventListener("click", () => {
       const productToAdd = {
         ...currentModalProduct,
         cantidad: parseInt(quantityDisplay.textContent),
       };
-      // (NUEVO) Obtener nombre para el toast
       const productName = document.getElementById("modal-name").textContent;
 
       addToCart(productToAdd);
       closeModal();
-
-      // (NUEVO) Llamar a la alerta
-      showToast(`¡"${productName}" añadido al carrito!`);
+      showToast(`¡"${productName}" añadido al carrito!`, "success");
     });
-    // --- FIN DEL CAMBIO ---
 
     modal.addEventListener("click", (e) => {
       if (e.target.id === "product-modal") {
@@ -475,7 +465,6 @@ function registerAppListeners() {
     });
   }
 
-  // --- Lógica del SIDEBAR del Carrito ---
   const openCartDesktop = document.getElementById("open-cart-btn-desktop");
   const openCartMobile = document.getElementById("open-cart-btn-mobile");
   const closeCartBtn = document.getElementById("close-cart-btn");
@@ -491,13 +480,8 @@ function registerAppListeners() {
     btnSendOrder.addEventListener("click", sendOrder);
   }
 }
-// --- FIN DE LA FUNCIÓN registerAppListeners ---
 
-/* ======================================================================
-  LISTENERS (DOMContentLoaded)
-====================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
-  // --- INICIALIZACIÓN ---
   loadCart();
   updateCartBadge();
 
@@ -506,14 +490,12 @@ document.addEventListener("DOMContentLoaded", () => {
     originalMainContent = productContentWrapper.innerHTML;
   }
 
-  // --- Lógica de Menú Hamburguesa ---
   const hamburgerMenu = document.querySelector(".hamburger-menu");
   const navLinks = document.querySelector(".nav-links");
   if (hamburgerMenu && navLinks) {
     // ... (Tu código de hamburguesa)
   }
 
-  // --- Lógica de Búsqueda en Tiempo Real ---
   const desktopInput = document.getElementById("desktop-search-input");
   const mobileInput = document.getElementById("mobile-search-input");
   const categoryNav = document.getElementById("category-nav-section");
@@ -522,8 +504,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (query.trim() === "") {
       if (productContentWrapper) productContentWrapper.innerHTML = originalMainContent;
       if (categoryNav) categoryNav.style.display = "block";
-      // --- ¡CORRECCIÓN! ---
-      // Llamamos a la función que re-activa todos los botones
       registerAppListeners();
       return;
     }
@@ -562,13 +542,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (desktopInput) desktopInput.addEventListener("input", onInput);
   if (mobileInput) mobileInput.addEventListener("input", onInput);
 
-  // Registramos los listeners la primera vez que carga la página
   registerAppListeners();
 
-  // --- FIN BLOQUE BÚSQUEDA ---
-
-  // --- Listeners Globales de Cierre (ESC) ---
-  // (Lo dejamos aquí para que solo se registre UNA VEZ)
   document.addEventListener("keydown", (e) => {
     const modal = document.getElementById("product-modal");
     const cartSidebar = document.getElementById("cart-sidebar");
