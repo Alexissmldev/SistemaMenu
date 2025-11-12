@@ -1,6 +1,6 @@
 <?php
 
-require_once "./php/main.php";
+require_once __DIR__ . "/main.php";
 $conexion = conexion();
 
 if ($conexion === null) {

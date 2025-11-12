@@ -4,30 +4,31 @@
         <div class="flex justify-between items-center w-full lg:grid lg:grid-cols-3 lg:gap-4">
 
             <div class="flex items-center space-x-2">
-                <img src="../img/logo.png" alt="" class="w-20 h-15 object-contain" />
+                <img src="../img/logo.png" alt="" class="w-24 h-12 object-contain" />
                 <span class="hidden lg:block text-xs text-gray-500 bg-gray-100 p-1 rounded-full px-2">
                     Tasa USD: **<?php echo $tasa_usd; ?>**
                 </span>
             </div>
 
             <div class="hidden lg:flex justify-center">
-                <div class="relative w-full max-w-lg">
-                    <input type="text" placeholder="Buscar comida..." class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-full focus:ring-red-500 focus:border-red-500" />
-                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
+                <form autocomplete="off" class="relative w-full max-w-lg">
+                    <input
+                        type="text"
+                        id="desktop-search-input" name="txt_buscador"
+                        placeholder="Buscar comida..."
+                        class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-full focus:ring-red-500 focus:border-red-500" />
+                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="fa fa-search"></i>
+                    </span>
+                </form>
             </div>
-
             <div class="flex items-center space-x-3 justify-end">
                 <span class="text-xs text-gray-500 bg-gray-100 p-1 rounded-full px-2 lg:hidden">
                     Tasa USD: **<?php echo $tasa_usd; ?>**
                 </span>
 
                 <button id="open-cart-btn-desktop" class="relative text-gray-600 hover:text-red-500 hidden lg:block">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
+                    <i class="fa fa-shopping-cart text-2xl"></i>
                     <span id="cart-count-badge-desktop" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">
                         0
                     </span>
@@ -36,46 +37,50 @@
             </div>
         </div>
 
-        <section class="mt-4 pt-4 border-t border-gray-100">
+        <section
+            class="mt-4 pt-4 border-t border-gray-100"
+            id="category-nav-section">
             <nav class="flex space-x-6 overflow-x-scroll pb-2 lg:justify-start lg:flex-wrap">
                 <?php
-                // Recorre las categorías ordenadas (PHP)
-                $primera_categoria = true;
+                // Clases para "Todos" (activo por defecto)
+                $clases_todos = 'text-red-600 border-red-600';
+
+                // El href ahora es "#todos" para que JS lo identifique
+                echo '<a href="#todos" class="category-link flex-shrink-0 font-semibold border-b-2 pb-1 hover:text-red-600 hover:border-red-600 transition ' . $clases_todos . '">';
+                echo 'Todos';
+                echo '</a>';
+
+                // Recorrer el resto de categorías
                 foreach ($categorias_ordenadas as $categoria) {
                     $categoria_id = strtolower(str_replace(' ', '', $categoria['categoria_nombre']));
-                    // Clases para destacar la primera categoría como activa
-                    $clases_link = $primera_categoria ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent';
 
-                    echo '<a href="#' . htmlspecialchars($categoria_id) . '" class="flex-shrink-0 font-semibold border-b-2 pb-1 hover:text-red-600 hover:border-red-600 transition ' . $clases_link . '">';
+                    // Clases para el resto (inactivas por defecto)
+                    $clases_link = 'text-gray-500 border-transparent';
+
+                    echo '<a href="#' . htmlspecialchars($categoria_id) . '" class="category-link flex-shrink-0 font-semibold border-b-2 pb-1 hover:text-red-600 hover:border-red-600 transition ' . $clases_link . '">';
                     echo htmlspecialchars($categoria['categoria_nombre']);
                     echo '</a>';
-
-                    $primera_categoria = false;
                 }
                 ?>
             </nav>
         </section>
     </div>
 </header>
+
 <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex justify-around lg:hidden shadow-xl z-20">
-    <button class="text-red-600 flex flex-col items-center">
-        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-        </svg>
+
+    <button id="mobile-home-trigger" class="text-red-600 flex flex-col items-center">
+        <i class="fa fa-home text-2xl"></i>
         <span class="text-xs">Inicio</span>
     </button>
 
-    <button class="text-gray-400 hover:text-red-600 flex flex-col items-center">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-        </svg>
+    <button id="mobile-search-trigger" class="text-gray-400 hover:text-red-600 flex flex-col items-center">
+        <i class="fa fa-search text-2xl"></i>
         <span class="text-xs">Buscador</span>
     </button>
 
     <button id="open-cart-btn-mobile" class="relative text-gray-400 hover:text-red-600 flex flex-col items-center">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-        </svg>
+        <i class="fa fa-shopping-cart text-2xl"></i>
         <span class="text-xs">Carrito</span>
         <span id="cart-count-badge-mobile" class="absolute -top-1 right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">
             0

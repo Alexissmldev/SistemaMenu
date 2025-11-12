@@ -5,6 +5,10 @@ let modalBasePrice = 0;
 let currentModalProduct = {};
 let cart = [];
 
+// Variable para guardar el contenido original de la página
+let originalMainContent = "";
+let debounceTimeout;
+
 function formatCurrency(number) {
   const formatted = (number || 0).toLocaleString("es-VE", {
     minimumFractionDigits: 2,
@@ -79,7 +83,6 @@ function updateCartBadge() {
   CONTROLADORES DE VISTAS (Modal y Sidebar)
 ====================================================================== */
 
-// --- Sidebar del Carrito ---
 function openCart() {
   renderCartItems();
   document.getElementById("cart-backdrop").classList.remove("hidden");
@@ -91,18 +94,15 @@ function closeCart() {
   document.getElementById("cart-backdrop").classList.add("hidden");
   document.getElementById("cart-sidebar").classList.add("translate-x-full");
   if (document.getElementById("product-modal").classList.contains("invisible")) {
-    // Comprobar si el modal de producto está cerrado
     document.body.style.overflow = "";
   }
 }
 
-// --- (MODIFICADO) Modal de Producto (Bottom Sheet) ---
 function openModal(productData) {
   const modal = document.getElementById("product-modal");
   const modalContent = document.getElementById("product-modal-content");
   if (!modal || !modalContent) return;
 
-  // Llenar datos
   modalBasePrice = productData.precio_raw;
   currentModalProduct = productData;
   document.getElementById("modal-image").src = productData.foto;
@@ -111,29 +111,24 @@ function openModal(productData) {
   document.getElementById("modal-price").innerHTML = productData.precio_display;
   document.getElementById("quantity-display").textContent = "1";
 
-  // Mostrar modal (backdrop y sheet)
   modal.classList.remove("invisible");
   modal.classList.remove("opacity-0");
   modalContent.classList.remove("translate-y-full");
   document.body.style.overflow = "hidden";
 }
 
-// --- (MODIFICADO) Modal de Producto (Bottom Sheet) ---
 function closeModal() {
   const modal = document.getElementById("product-modal");
   const modalContent = document.getElementById("product-modal-content");
   if (!modal || !modalContent) return;
 
-  // Ocultar modal (backdrop y sheet)
   modal.classList.add("opacity-0");
   modalContent.classList.add("translate-y-full");
 
-  // Esperar a que termine la animación para poner 'invisible'
   setTimeout(() => {
     modal.classList.add("invisible");
-  }, 300); // 300ms (dura la transición)
+  }, 300);
 
-  // Restaurar scroll si el carrito también está cerrado
   if (document.getElementById("cart-sidebar").classList.contains("translate-x-full")) {
     document.body.style.overflow = "";
   }
@@ -166,9 +161,7 @@ function renderCartItems() {
   if (cart.length === 0) {
     container.innerHTML = `
       <div id="cart-empty-msg" class="text-center text-gray-500 pt-10">
-        <svg class="w-16 h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-        </svg>
+        <i class="fa fa-shopping-cart text-6xl mx-auto text-gray-300"></i>
         <p class="mt-2">Tu carrito está vacío.</p>
       </div>
     `;
@@ -198,7 +191,7 @@ function renderCartItems() {
         </div>
         <div class="flex-shrink-0 flex flex-col items-end justify-between">
             <button class="text-gray-400 hover:text-red-500" onclick="removeItemFromCart(${item.id})">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              <i class="fa fa-times text-xl"></i>
             </button>
             <div class="flex items-center space-x-2 mt-2">
                 <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" onclick="decrementCartItem(${item.id})">-</button>
@@ -311,19 +304,205 @@ document.addEventListener("DOMContentLoaded", () => {
   loadCart();
   updateCartBadge();
 
+  // --- ¡CAMBIO! Apuntamos al nuevo wrapper ---
+  const productContentWrapper = document.getElementById("product-content-wrapper");
+  if (productContentWrapper) {
+    originalMainContent = productContentWrapper.innerHTML;
+  }
+  // --- FIN CAMBIO ---
+
   // --- Lógica de Menú Hamburguesa ---
   const hamburgerMenu = document.querySelector(".hamburger-menu");
   const navLinks = document.querySelector(".nav-links");
   if (hamburgerMenu && navLinks) {
-    // ... (código de hamburguesa)
+    // ... (Tu código de hamburguesa)
   }
 
-  // --- Lógica de Smooth Scroll ---
-  document.querySelectorAll("nav a").forEach((anchor) => {
-    // ... (código de smooth scroll)
-  });
+  // --- Lógica de Filtro de Categorías y Búsqueda en Tiempo Real ---
 
-  // --- (MODIFICADO) Lógica del MODAL de Producto ---
+  const desktopInput = document.getElementById("desktop-search-input");
+  const mobileInput = document.getElementById("mobile-search-input");
+  const categoryNav = document.getElementById("category-nav-section");
+  const header = document.querySelector("header");
+  const activeClasses = ["text-red-600", "border-red-600"];
+  const inactiveClasses = ["text-gray-500", "border-transparent"];
+
+  function registerCategoryListeners() {
+    // --- ¡CAMBIO! Busca las secciones dentro del wrapper ---
+    const categoryLinks = document.querySelectorAll("nav a.category-link");
+    const productSections = document.querySelectorAll("#product-content-wrapper section.product-section");
+    // --- FIN CAMBIO ---
+
+    const isSearchPage = new URLSearchParams(window.location.search).has("busqueda");
+
+    if (isSearchPage) {
+      categoryLinks.forEach((link) => {
+        link.classList.remove(...activeClasses);
+        link.classList.add(...inactiveClasses);
+        if (link.getAttribute("href") === "#todos") {
+          link.classList.add(...activeClasses);
+          link.classList.remove(...inactiveClasses);
+        }
+      });
+    }
+
+    const currentHash = window.location.hash;
+    if (!isSearchPage && currentHash && currentHash.length > 1) {
+      const activeLink = document.querySelector(`nav a.category-link[href="${currentHash}"]`);
+      if (activeLink) {
+        activeLink.click();
+      }
+    }
+
+    categoryLinks.forEach((anchor) => {
+      anchor.addEventListener("click", function (e) {
+        e.preventDefault();
+        const targetId = this.getAttribute("href");
+
+        if (isSearchPage) {
+          window.location.href = "menu.php" + (targetId === "#todos" ? "" : targetId);
+          return;
+        }
+
+        categoryLinks.forEach((link) => {
+          link.classList.remove(...activeClasses);
+          link.classList.add(...inactiveClasses);
+        });
+        this.classList.add(...activeClasses);
+        this.classList.remove(...inactiveClasses);
+
+        let sectionToScrollTo = null;
+        if (targetId === "#todos") {
+          productSections.forEach((section) => {
+            if (section.id !== "search-results") {
+              section.style.display = "block";
+            }
+          });
+          sectionToScrollTo =
+            document.getElementById("desayunos") || (productSections.length > 0 ? productSections[0] : null);
+        } else {
+          productSections.forEach((section) => {
+            section.style.display = "none";
+          });
+          try {
+            const targetElement = document.getElementById(targetId.substring(1));
+            if (targetElement) {
+              targetElement.style.display = "block";
+              sectionToScrollTo = targetElement;
+            }
+          } catch (error) {}
+        }
+
+        if (sectionToScrollTo) {
+          const headerHeight = header ? header.offsetHeight : 0;
+          const elementPosition = sectionToScrollTo.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerHeight - 16;
+          window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      });
+    });
+  }
+
+  // Función que maneja la búsqueda AJAX
+  const handleSearch = (query) => {
+    // 1. Si la búsqueda está vacía, restaura todo
+    if (query.trim() === "") {
+      // --- ¡CAMBIO! Apunta al wrapper ---
+      if (productContentWrapper) productContentWrapper.innerHTML = originalMainContent;
+      if (categoryNav) categoryNav.style.display = "block";
+      registerCategoryListeners();
+      return;
+    }
+
+    // 2. Ocultar categorías
+    if (categoryNav) categoryNav.style.display = "none";
+
+    // 3. Mostrar un 'cargando'
+    // --- ¡CAMBIO! Apunta al wrapper ---
+    if (productContentWrapper)
+      productContentWrapper.innerHTML = '<p class="text-center text-gray-500">Buscando...</p>';
+
+    // 4. Preparar y enviar la petición
+    const formData = new FormData();
+    formData.append("query", query);
+
+    fetch("./php/buscador_cliente.php", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error en la respuesta del servidor");
+        }
+        return response.text();
+      })
+      .then((html) => {
+        // 5. Inyectar el HTML de los resultados
+        // --- ¡CAMBIO! Apunta al wrapper ---
+        if (productContentWrapper) productContentWrapper.innerHTML = html;
+      })
+      .catch((error) => {
+        console.error("Error en fetch:", error);
+        // --- ¡CAMBIO! Apunta al wrapper ---
+        if (productContentWrapper)
+          productContentWrapper.innerHTML =
+            '<p class="text-center text-red-500">Error al cargar resultados.</p>';
+      });
+  };
+
+  // Función que se dispara al escribir
+  const onInput = (event) => {
+    clearTimeout(debounceTimeout);
+    const query = event.target.value;
+
+    debounceTimeout = setTimeout(() => {
+      handleSearch(query);
+    }, 300); // Espera 300ms después de dejar de escribir
+  };
+
+  // Asignar los listeners a AMBAS barras de búsqueda
+  if (desktopInput) desktopInput.addEventListener("input", onInput);
+  if (mobileInput) mobileInput.addEventListener("input", onInput);
+
+  // Registramos los listeners de categorías la primera vez que carga la página
+  registerCategoryListeners();
+
+  // --- FIN BLOQUE BÚSQUEDA ---
+
+  // --- Lógica de Botones de Navegación Móvil ---
+  const homeTrigger = document.getElementById("mobile-home-trigger");
+  const searchTrigger = document.getElementById("mobile-search-trigger");
+  const searchInput = document.getElementById("mobile-search-input");
+  const searchContainer = document.getElementById("mobile-search-form");
+
+  if (homeTrigger) {
+    homeTrigger.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  if (searchTrigger && searchInput && searchContainer) {
+    searchTrigger.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const header = document.querySelector("header");
+      const headerHeight = header ? header.offsetHeight : 0;
+      const elementPosition = searchContainer.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - headerHeight - 16;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+
+      searchInput.focus();
+    });
+  }
+
+  // --- Lógica del MODAL de Producto ---
   const modal = document.getElementById("product-modal");
   const btnMinus = document.getElementById("btn-minus");
   const btnPlus = document.getElementById("btn-plus");
@@ -351,11 +530,10 @@ document.addEventListener("DOMContentLoaded", () => {
         cantidad: parseInt(quantityDisplay.textContent),
       };
       addToCart(productToAdd);
-      closeModal(); // Cierra el modal de producto
-      openCart(); // Abre el carrito
+      closeModal();
+      openCart();
     });
 
-    // (MODIFICADO) Cierra el modal si se hace clic en el fondo (el backdrop)
     modal.addEventListener("click", (e) => {
       if (e.target.id === "product-modal") {
         closeModal();
@@ -379,17 +557,15 @@ document.addEventListener("DOMContentLoaded", () => {
     btnSendOrder.addEventListener("click", sendOrder);
   }
 
-  // --- (MODIFICADO) Listeners Globales de Cierre (ESC) ---
+  // --- Listeners Globales de Cierre (ESC) ---
   document.addEventListener("keydown", (e) => {
     const modal = document.getElementById("product-modal");
     const cartSidebar = document.getElementById("cart-sidebar");
 
     if (e.key === "Escape") {
-      // Cierra en orden: cart -> product
       if (!cartSidebar.classList.contains("translate-x-full")) {
         closeCart();
       } else if (!modal.classList.contains("invisible")) {
-        // Comprobar con 'invisible'
         closeModal();
       }
     }
