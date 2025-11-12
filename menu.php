@@ -47,10 +47,10 @@ include "./php/categorias_ordenadas.php";
 
       <div id="product-content-wrapper">
         <?php
-        // Este script ahora se carga dentro del wrapper
         include "./php/productos_cliente.php";
         ?>
       </div>
+
     </main>
 
   </div>
@@ -58,7 +58,6 @@ include "./php/categorias_ordenadas.php";
   <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center sm:justify-center z-50 p-0 sm:p-4 invisible opacity-0 transition-opacity duration-300 ease-in-out">
 
     <div id="product-modal-content" class="bg-white sm:rounded-xl shadow-2xl w-full sm:max-w-md overflow-hidden transform flex flex-col transition-transform duration-300 ease-in-out translate-y-full h-screen sm:h-auto sm:max-h-[90vh]">
-
       <div class="relative flex-shrink-0">
         <img id="modal-image" src="" alt="Producto" class="w-full h-56 sm:h-64 object-cover" />
         <button onclick="closeModal()" class="absolute top-3 right-3 bg-white p-2 rounded-full shadow-lg text-gray-800 hover:bg-gray-100 transition">
@@ -87,28 +86,24 @@ include "./php/categorias_ordenadas.php";
           </button>
         </div>
       </div>
-
     </div>
   </div>
 
   <div id="cart-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden"></div>
 
   <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
-
     <div class="flex-shrink-0 flex items-center justify-between p-4 border-b">
       <h2 class="text-xl font-bold text-gray-800">Tu Carrito</h2>
       <button id="close-cart-btn" class="text-gray-500 hover:text-red-600">
         <i class="fa fa-times text-2xl"></i>
       </button>
     </div>
-
     <div id="cart-items-container" class="flex-grow p-4 overflow-y-auto space-y-4">
       <div id="cart-empty-msg" class="text-center text-gray-500 pt-10">
         <i class="fa fa-shopping-cart text-6xl mx-auto text-gray-300"></i>
         <p class="mt-2">Tu carrito está vacío.</p>
       </div>
     </div>
-
     <div class="flex-shrink-0 p-4 border-t bg-gray-50">
       <div class="flex justify-between font-bold text-lg text-gray-800">
         <span>Subtotal (Bs.):</span>
@@ -133,7 +128,14 @@ include "./php/categorias_ordenadas.php";
         </button>
       </div>
     </div>
+  </div>
 
+
+  <div
+    id="toast-notification"
+    class="fixed top-20 right-4 z-[60] p-4 rounded-lg shadow-lg bg-green-500 text-white transition-all duration-300 ease-in-out opacity-0 translate-x-12 invisible">
+    <i class="fa fa-check-circle"></i>
+    <span id="toast-message" class="ml-2">Producto añadido</span>
   </div>
   <script src="js/js_cliente.js"></script>
 

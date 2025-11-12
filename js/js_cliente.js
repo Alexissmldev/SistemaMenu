@@ -5,9 +5,9 @@ let modalBasePrice = 0;
 let currentModalProduct = {};
 let cart = [];
 
-// Variable para guardar el contenido original de la página
 let originalMainContent = "";
 let debounceTimeout;
+let toastTimeout; // <-- ¡NUEVO! Timer para el Toast
 
 function formatCurrency(number) {
   const formatted = (number || 0).toLocaleString("es-VE", {
@@ -25,6 +25,34 @@ function formatUSD(number) {
     maximumFractionDigits: 2,
   });
   return formatted;
+}
+
+/* ======================================================================
+  (¡NUEVA!) FUNCIÓN PARA MOSTRAR ALERTA (TOAST)
+====================================================================== */
+function showToast(message) {
+  const toast = document.getElementById("toast-notification");
+  const toastMessage = document.getElementById("toast-message");
+  if (!toast || !toastMessage) return;
+
+  // 1. Limpiar timer anterior
+  clearTimeout(toastTimeout);
+
+  // 2. Poner el mensaje
+  toastMessage.textContent = message;
+
+  // 3. Mostrar (Animar entrada)
+  toast.classList.remove("invisible", "opacity-0", "translate-x-12");
+
+  // 4. Poner timer para ocultar (Animar salida)
+  toastTimeout = setTimeout(() => {
+    toast.classList.add("opacity-0", "translate-x-12");
+
+    // 5. Ocultar completamente después de la animación
+    setTimeout(() => {
+      toast.classList.add("invisible");
+    }, 300); // Duración de la transición
+  }, 3000); // 3 segundos visible
 }
 
 /* ======================================================================
@@ -297,8 +325,6 @@ function sendOrder() {
 }
 
 // --- (¡NUEVO!) FUNCIÓN PARA REGISTRAR LISTENERS ---
-// Esta función registra todos los listeners que se pierden
-// cuando se reemplaza el HTML.
 function registerAppListeners() {
   // --- Lógica de Filtro de Categorías ---
   const categoryLinks = document.querySelectorAll("nav a.category-link");
@@ -403,11 +429,6 @@ function registerAppListeners() {
   }
 
   // --- Lógica del MODAL de Producto ---
-  // (¡IMPORTANTE!) Debemos re-asignar los listeners a los botones
-  // de productos que están en el HTML restaurado.
-  // En lugar de usar 'onclick' en el HTML, lo haremos aquí.
-  // PERO, ya que 'openModal' es global y está en el HTML,
-  // solo necesitamos registrar los botones DENTRO del modal.
   const modal = document.getElementById("product-modal");
   const btnMinus = document.getElementById("btn-minus");
   const btnPlus = document.getElementById("btn-plus");
@@ -429,15 +450,23 @@ function registerAppListeners() {
         updateModalPrice();
       }
     });
+
+    // --- ¡AQUÍ ESTÁ EL CAMBIO! ---
     btnAddToCart.addEventListener("click", () => {
       const productToAdd = {
         ...currentModalProduct,
         cantidad: parseInt(quantityDisplay.textContent),
       };
+      // (NUEVO) Obtener nombre para el toast
+      const productName = document.getElementById("modal-name").textContent;
+
       addToCart(productToAdd);
       closeModal();
-      openCart();
+
+      // (NUEVO) Llamar a la alerta
+      showToast(`¡"${productName}" añadido al carrito!`);
     });
+    // --- FIN DEL CAMBIO ---
 
     modal.addEventListener("click", (e) => {
       if (e.target.id === "product-modal") {
