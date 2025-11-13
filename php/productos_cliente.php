@@ -15,7 +15,7 @@ foreach ($categorias_ordenadas as $categoria) {
         <div class="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 xl:grid-cols-3">
             <?php if (count($productos) > 0): ?>
                 <?php foreach ($productos as $producto):
-                    // ... (Lógica de precios y JSON) ...
+                    //  Lógica de precios y JSON para el modal
                     $precio_usd_num = (float)$producto['producto_precio'];
                     $precio_display = '';
                     $precio_raw_bs = 0;
@@ -57,5 +57,5 @@ foreach ($categorias_ordenadas as $categoria) {
         </div>
     </section>
 <?php
-} 
+}
 ?>
