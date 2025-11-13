@@ -234,8 +234,7 @@ function procesar_imagen_optimizada($archivo_subido, $nombre_base, $dir_original
             throw new Exception("Formato de imagen no soportado: " . $info_imagen['mime']);
     }
 
-    // 5. Crear la versión "large" a partir del recurso en memoria
-    redimensionar_y_guardar_desde_recurso($original_en_memoria, $ancho_original, $alto_original, $ruta_large_webp, 1000, 1000, 75);
+    redimensionar_y_guardar_desde_recurso($original_en_memoria, $ancho_original, $alto_original, $ruta_large_webp, 1024, 768, 85);
 
     // 6. Crear la versión "thumb" a partir del MISMO recurso en memoria
     redimensionar_y_guardar_desde_recurso($original_en_memoria, $ancho_original, $alto_original, $ruta_thumb_webp, 200, 200, 80);

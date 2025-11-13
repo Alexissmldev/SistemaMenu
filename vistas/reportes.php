@@ -2,6 +2,9 @@
 
 include "./php/main.php";
 
+// NO SE NECESITA 'api_tasa_usd.php' para este reporte
+// include "./php/api_tasa_usd.php"; 
+
 // Comprobar autoload de Composer / dompdf
 if (!file_exists('./libreria/dompdf/vendor/autoload.php')) {
     echo 'Falta dompdf. Desde la raíz del proyecto ejecuta: composer require dompdf/dompdf';
@@ -14,8 +17,7 @@ use Dompdf\Dompdf;
 // Obtener la conexión
 $conexion = conexion();
 
-// Consultar productos usando JOIN para obtener el nombre de la categoría
-// NOTA: Revisa que los nombres de tus tablas y columnas coincidan (producto, categoria, categoria_id, categoria_nombre)
+// Consultar productos usando JOIN
 $sql = "
     SELECT 
         p.producto_nombre, 
@@ -31,7 +33,6 @@ $sql = "
 
 $result = $conexion->query($sql);
 if ($result === false) {
-    // Esto es útil si hay errores en el JOIN o nombres de tablas.
     echo 'Error en la consulta: ' . $conexion->errorInfo()[2];
     exit;
 }
@@ -41,10 +42,8 @@ $productos_por_categoria = [];
 if ($result->rowCount() > 0) {
     $all_rows = $result->fetchAll(PDO::FETCH_ASSOC);
     foreach ($all_rows as $row) {
-        // Usamos 'categoria_nombre' que ahora SÍ viene de la consulta JOIN
         $categoria = htmlspecialchars($row['categoria_nombre'] ?? 'Sin Categoría');
         
-        // Agrupa el producto bajo su categoría
         $productos_por_categoria[$categoria][] = [
             'nombre' => htmlspecialchars($row['producto_nombre'] ?? 'Sin nombre'),
             'precio' => (float)($row['producto_precio'] ?? 0),
@@ -52,117 +51,133 @@ if ($result->rowCount() > 0) {
     }
 }
 
-// ... (resto del código HTML y Dompdf) ...
-
 // 2. GENERAR HTML DINÁMICO
 $html = '<!doctype html><html><head><meta charset="utf-8">';
 
-// ESTILOS CSS PARA UN DISEÑO LIMPIO Y ORDENADO CON COLUMNAS
+// ======================================================
+// ¡DISEÑO CSS RESTAURADO A SOLO USD!
+// ======================================================
 $html .= '<style>
-    /* Necesario para caracteres especiales en dompdf */
-    body { font-family: DejaVu Sans, sans-serif; font-size:14px; color: #333; margin: 40px; }
-    
-    /* Diseño del Encabezado */
-    h1 { text-align:center; color: #007bff; border-bottom: 3px solid #007bff; padding-bottom: 10px; margin-bottom: 30px; }
-    
-    /* *** CAMBIO CRÍTICO: USAR COLUMN-COUNT *** */
-    .menu-columns {
-        /* Divide el contenido en 2 columnas */
-        column-count: 2; 
-        /* Espacio entre las columnas */
-        column-gap: 40px; 
+    body { 
+        font-family: \'Helvetica\', \'Arial\', sans-serif, \'DejaVu Sans\'; 
+        font-size: 11pt; 
+        color: #333;
+        margin: 40px; 
+        line-height: 1.4;
     }
     
-    /* Estilo de la Categoría */
+    h1 { 
+        text-align: center; 
+        color: #c53030; 
+        border-bottom: 2px solid #c53030; 
+        padding-bottom: 10px; 
+        margin-bottom: 25px; 
+        font-size: 28pt;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+    
+    .menu-columns {
+        column-count: 2; 
+        column-gap: 30px; 
+    }
+    
     .categoria-header { 
-        font-size: 24px; 
+        font-size: 18pt; 
         font-weight: bold; 
-        color: #28a745; 
-        margin-top: 5px; 
+        color: #111; 
+        margin-top: 25px; 
         margin-bottom: 15px; 
-        border-bottom: 2px solid #28a745; 
+        border-bottom: 2px solid #555; 
         padding-bottom: 5px; 
-        
-        /* MUY IMPORTANTE: Le dice a Dompdf que NO rompa el título de la categoría al pasar de columna */
         break-before: column;
         page-break-inside: avoid;
     }
     
-    /* Lista de Productos */
+    .categoria-header.first {
+       margin-top: 0;
+    }
+    
     .product-list { 
         list-style: none; 
         padding: 0; 
-        margin: 0; 
-        /* MUY IMPORTANTE: Asegura que la lista se mantenga en una sola columna/página si es posible */
+        margin: 0 0 20px 0; 
         page-break-inside: avoid; 
-        /* Le dice a Dompdf que esta lista es un solo bloque y debe ser tratada como tal */
         display: inline-block;
         width: 100%;
-        margin-bottom: 20px;
     }
     
-    /* Estilos de Producto (Flexbox para alineación, que funcionó antes) */
     .product-item {
         display: flex; 
         justify-content: space-between; 
-        align-items: baseline; 
-        padding: 6px 0; 
-        border-bottom: 1px dashed #ddd; 
+        align-items: baseline;
+        padding: 8px 2px; 
+        border-bottom: 1px dotted #aaa; 
         page-break-inside: avoid; 
     }
     
-    .product-name {
-        font-weight: 500;
+    .product-item:last-child {
+       border-bottom: none;
     }
     
+    .product-name {
+        font-weight: 600; 
+        font-size: 11pt;
+        padding-right: 15px; 
+    }
+    
+    /* --- ¡PRECIO ÚNICO RESTAURADO! --- */
     .product-price {
         white-space: nowrap; 
-        font-weight: bold;
-        color: #007bff; 
+        font-weight: bold; /* Más grueso que el nombre */
+        color: #c53030; /* Rojo, como tu marca */
         margin-left: 10px; 
+        font-size: 11pt;
     }
-    /* El resto de estilos se mantiene igual o con ajustes menores */
 </style></head><body>';
+// ======================================================
+// FIN DEL DISEÑO CSS
+// ======================================================
 
 $html .= '<h1>📋 Nuestro Menú</h1>';
 
-// ... (Toda la lógica de PHP hasta el inicio del HTML del menú) ...
 
 if (empty($productos_por_categoria)) {
     $html .= '<p style="text-align: center;">No hay productos para mostrar en el menú.</p>';
 } else {
-    // 3. RECORRER LAS CATEGORÍAS Y PRODUCTOS PARA CREAR EL HTML
-    // Abrimos el contenedor que se dividirá en 2 columnas
+    // 3. RECORRER LAS CATEGORÍAS Y PRODUCTOS
     $html .= '<div class="menu-columns">'; 
+
+    $is_first_category = true;
 
     foreach ($productos_por_categoria as $categoria => $productos) {
         
-        // El contenido de la categoría se inserta directamente en el contenedor de columnas
-        // Dompdf se encargará de distribuirlo entre las columnas
+        $clase_categoria = $is_first_category ? 'categoria-header first' : 'categoria-header';
+        $html .= '<h2 class="' . $clase_categoria . '">' . $categoria . '</h2>';
+        $is_first_category = false;
         
-        // Título de la Categoría
-        $html .= '<h2 class="categoria-header">' . $categoria . '</h2>';
         $html .= '<ul class="product-list">';
 
         foreach ($productos as $producto) {
             $nombre = $producto['nombre'];
+            
+            // --- LÓGICA DE PRECIO SIMPLIFICADA A USD ---
             $precio_formateado = '$' . number_format($producto['precio'], 2, '.', ',');
 
             // Fila de Producto
             $html .= '<li class="product-item">';
             $html .= '  <span class="product-name">' . $nombre . '</span>';
+            // Se usa el estilo .product-price simple
             $html .= '  <span class="product-price">' . $precio_formateado . '</span>';
             $html .= '</li>';
+            // --- FIN DEL BLOQUE ---
         }
 
         $html .= '</ul>';
-        // Aquí no hay que cerrar el div category-section
     }
 
     $html .= '</div>'; // Cierra menu-columns
 }
-
-// ... (El resto del código de Dompdf) ...
 
 $html .= '</body></html>';
 
