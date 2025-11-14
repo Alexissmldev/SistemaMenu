@@ -1,4 +1,4 @@
-<header class="bg-white p-4 shadow-md sticky top-0 z-10">
+<header id="main-header" class="bg-white p-4 shadow-md sticky top-0 z-10" style="transition: top 0.3s ease-in-out;">
     <div class="max-w-7xl mx-auto">
 
         <div class="flex justify-between items-center w-full lg:grid lg:grid-cols-3 lg:gap-4">

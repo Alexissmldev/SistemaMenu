@@ -6,6 +6,23 @@ $conexion = conexion();
 if ($conexion === null) {
   die("<h1>Error Crítico: No se pudo conectar a la base de datos.</h1>");
 }
+
+// -----------------------------------------------------------------
+// ⬇️ INICIO: CÓDIGO AÑADIDO (Lógica de Horarios) ⬇️
+// -----------------------------------------------------------------
+
+// ¡IMPORTANTE! Ajusta esto a la zona horaria de tu restaurante.
+// Ejemplo: 'America/Caracas', 'America/Bogota', 'America/Argentina/Buenos_Aires'
+date_default_timezone_set('America/Caracas');
+
+// Obtenemos la hora actual del servidor (solo la hora, en formato 24h: 0-23)
+$hora_actual_servidor = (int)date('H');
+
+// -----------------------------------------------------------------
+// ⬆️ FIN: CÓDIGO AÑADIDO ⬆️
+// -----------------------------------------------------------------
+
+
 $telefono_whatsapp = "";
 $stmt = $conexion->prepare("SELECT usuario_telefono FROM usuario WHERE usuario_id = 30 LIMIT 1");
 $stmt->execute();
@@ -21,8 +38,23 @@ include "./inc/head_cliente.php";
 include "./php/categorias_ordenadas.php";
 ?>
 
-<body class="bg-gray-50 antialiased" data-whatsapp-number="<?php echo htmlspecialchars($telefono_whatsapp); ?>">
+<body class="bg-gray-50 antialiased"
+  data-whatsapp-number="<?php echo htmlspecialchars($telefono_whatsapp); ?>"
+  data-server-hour="<?php echo $hora_actual_servidor; ?>">
 
+  <div id="banner-horario-desayuno"
+    class="hidden 
+           bg-red-600 text-white font-bold p-3 sticky top-0 z-20 marquee-container shadow-lg" style="transition: all 0.3s ease-in-out;">
+
+    <span class="marquee-content">
+      <span class="mx-4"> 
+        <i class="fa fa-clock banner-shake-icon text-yellow-300 mr-1"></i>
+        ¡Aún estás a tiempo!  El desayuno se sirve de 8:00 AM a 11:00 AM.
+      </span>
+
+    
+    </span>
+</div>
   <div class="min-h-screen">
 
     <?php include "./inc/navbar_cliente.php"; ?>
@@ -47,6 +79,7 @@ include "./php/categorias_ordenadas.php";
 
       <div id="product-content-wrapper">
         <?php
+        // Ahora este 'include' también tiene acceso a la variable $hora_actual_servidor
         include "./php/productos_cliente.php";
         ?>
       </div>

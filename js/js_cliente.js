@@ -61,6 +61,43 @@ function showToast(message, type = "success") {
   }, 3000);
 }
 
+function manejarBannerDeHorario() {
+  try {
+    const banner = document.getElementById("banner-horario-desayuno");
+    const header = document.getElementById("main-header"); // El ID que añadimos al navbar
+
+    if (!banner || !header) {
+      return;
+    }
+
+    // Leemos la hora del servidor que pusimos en la etiqueta <body>
+    const horaServidor = parseInt(document.body.dataset.serverHour, 10);
+
+    // Definir el horario de desayuno (de 8:00 a 10:59)
+    const HORA_INICIO_DESAYUNO = 8;
+    const HORA_FIN_DESAYUNO = 11; // A las 11:00 ya no se muestra
+
+    if (horaServidor >= HORA_INICIO_DESAYUNO && horaServidor < HORA_FIN_DESAYUNO) {
+      // 1. Mostrar el banner
+      banner.classList.remove("hidden");
+
+      // 2. Esperar un breve momento para que el DOM se actualice
+      //    y obtener la altura real del banner.
+      setTimeout(() => {
+        const bannerHeight = banner.offsetHeight;
+        // 3. Empujar el navbar (header) hacia abajo
+        header.style.top = bannerHeight + "px";
+      }, 50); // 50ms es usualmente suficiente
+    } else {
+      // Si no es la hora, simplemente ocultamos el banner
+      banner.classList.add("hidden");
+      header.style.top = "0px"; // Y reseteamos la posición del header
+    }
+  } catch (error) {
+    console.error("Error al procesar el banner de horario:", error);
+  }
+}
+
 function loadCart() {
   const cartData = localStorage.getItem("miMenuGobernacionCart");
   cart = cartData ? JSON.parse(cartData) : [];
@@ -390,9 +427,24 @@ function registerAppListeners() {
       }
 
       if (sectionToScrollTo) {
+        // -----------------------------------------------------------------
+        // ⬇️ INICIO: CÓDIGO MODIFICADO (Cálculo de Scroll) ⬇️
+        // -----------------------------------------------------------------
+        // Considera la altura del header Y del banner (si está visible)
         const headerHeight = header ? header.offsetHeight : 0;
+        const banner = document.getElementById("banner-horario-desayuno");
+        let bannerHeight = 0;
+        if (banner && !banner.classList.contains("hidden")) {
+          bannerHeight = banner.offsetHeight;
+        }
+
+        const totalOffset = headerHeight + bannerHeight;
         const elementPosition = sectionToScrollTo.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.scrollY - headerHeight - 16;
+        const offsetPosition = elementPosition + window.scrollY - totalOffset - 16; // 16px de padding
+        // -----------------------------------------------------------------
+        // ⬆️ FIN: CÓDIGO MODIFICADO ⬆️
+        // -----------------------------------------------------------------
+
         window.scrollTo({ top: offsetPosition, behavior: "smooth" });
       } else {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -417,8 +469,22 @@ function registerAppListeners() {
       e.preventDefault();
       const header = document.querySelector("header");
       const headerHeight = header ? header.offsetHeight : 0;
+
+      // -----------------------------------------------------------------
+      // ⬇️ INICIO: CÓDIGO MODIFICADO (Cálculo de Scroll) ⬇️
+      // -----------------------------------------------------------------
+      const banner = document.getElementById("banner-horario-desayuno");
+      let bannerHeight = 0;
+      if (banner && !banner.classList.contains("hidden")) {
+        bannerHeight = banner.offsetHeight;
+      }
+      const totalOffset = headerHeight + bannerHeight;
+      // -----------------------------------------------------------------
+      // ⬆️ FIN: CÓDIGO MODIFICADO ⬆️
+      // -----------------------------------------------------------------
+
       const elementPosition = searchContainer.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.scrollY - headerHeight - 16;
+      const offsetPosition = elementPosition + window.scrollY - totalOffset - 16;
       window.scrollTo({ top: offsetPosition, behavior: "smooth" });
       searchInput.focus();
     });
@@ -482,6 +548,15 @@ function registerAppListeners() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // -----------------------------------------------------------------
+  // ⬇️ INICIO: CÓDIGO AÑADIDO (Llamada a la función del banner) ⬇️
+  // -----------------------------------------------------------------
+  // Lo ejecutamos al cargar la página
+  manejarBannerDeHorario();
+  // -----------------------------------------------------------------
+  // ⬆️ FIN: CÓDIGO AÑADIDO ⬆️
+  // -----------------------------------------------------------------
+
   loadCart();
   updateCartBadge();
 

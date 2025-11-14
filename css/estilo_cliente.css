@@ -1,334 +1,59 @@
-/* css/style.css */
-/* Nuevos Colores:
- - Fondo general: #f8f8f8 (casi blanco)
- - Header/Footer/Botones: #6a994e (verde oliva suave)
- - Texto principal: #3a5a40 (verde oscuro)
- - Precios/Detalles: #a7c957 (verde lima)
- - Sombra sutil para elementos
+/* animations.css */
+
+/* NUEVA ANIMACIÓN: Marquesina (Cintillo Infinito)
 */
-
-/* Estilos generales */
-body {
-  font-family: 'roboto', sans-serif; /* Fuente más moderna */
-  margin: 0;
-  background-color: #f8f8f8;
-  color: #3a5a40; /* Verde oscuro para texto */
-  line-height: 1.6;
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  } /* Mueve el contenido 100% a la izquierda */
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* Header */
-header {
-  background-color: #6a994e; /* Verde oliva suave */
-  color: white;
-  text-align: center;
-  padding: 20px 0;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-header .logo {
-  width: 120px; /* Un poco más grande */
-  height: auto;
-  margin-bottom: 10px;
-}
-
-header h1 {
-  font-size: 2.8em;
-  margin: 5px 0;
-}
-
-header p {
-  font-size: 1.1em;
-  opacity: 0.9;
-}
-
-/* 🟢 NUEVO ESTILO: Tasa USD */
-.tasa {
-    margin-top: 15px;
-    padding: 8px 15px;
-    background-color: #a7c957; /* Verde lima/Precios */
-    color: #3a5a40; /* Verde oscuro */
-    border-radius: 5px;
-    font-size: 1.1em;
-    font-weight: 600;
-    display: inline-block; /* Para que ocupe solo el ancho del contenido */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-
-.tasa span {
-    color: white; /* Color contrastante para el valor */
-    margin-left: 5px;
-    font-size: 1.1em;
-}
-/* 🟢 FIN NUEVO ESTILO */
-
-/* Nav */
-nav {
-  background-color: #f8f8f8; /* Fondo claro para la nav */
-  padding: 10px 0;
-  border-bottom: 1px solid #e0e0e0;
-  position: sticky; /* Sticky nav */
-  top: 0;
-  z-index: 1000;
-}
-
-nav .container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* NUEVO ESTILO: Contenedor del banner
+  Oculta el texto que se desborda
+*/
+.marquee-container {
+  overflow: hidden; /* ¡Esencial! Oculta el texto que se sale */
   position: relative;
-}
-
-.nav-links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  width: 100%;
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
 }
 
-.nav-links li a {
-  color: #3a5a40; /* Verde oscuro para los enlaces */
-  text-decoration: none;
-  padding: 10px 20px;
-  display: block;
-  font-weight: 500;
-  transition: all 0.3s ease;
+/* NUEVO ESTILO: Contenido que se desliza
+*/
+.marquee-content {
+  display: inline-block;
+  white-space: nowrap; 
+  animation: marquee 15s linear infinite; 
+  padding-left: 100%; 
 }
 
-.nav-links li a:hover {
-  background-color: #e0e0e0; /* Gris muy claro al pasar el ratón */
-  border-radius: 5px;
-}
-
-/* Hamburger Menu (solo visible en móvil) */
-.hamburger-menu {
-  display: none; /* Oculto por defecto */
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 10px;
-  position: absolute;
-  right: 20px;
-  z-index: 10;
-}
-
-.hamburger-menu .bar {
-  display: block;
-  width: 25px;
-  height: 3px;
-  background-color: #3a5a40; /* Verde oscuro */
-  margin: 5px auto;
-  transition: all 0.3s ease-in-out;
-}
-
-/* Cuando el menú hamburguesa está activo */
-.hamburger-menu.active .bar:nth-child(2) {
-  opacity: 0;
-}
-.hamburger-menu.active .bar:nth-child(1) {
-  transform: translateY(8px) rotate(45deg);
-}
-.hamburger-menu.active .bar:nth-child(3) {
-  transform: translateY(-8px) rotate(-45deg);
-}
-
-/* Menu Category */
-.menu-category {
-  margin-top: 40px;
-  margin-bottom: 60px;
-}
-
-.menu-category h2 {
-  text-align: center;
-  color: #6a994e; /* Verde oliva suave */
-  margin-bottom: 40px;
-  font-size: 3em;
-  font-family: 'Playfair Display', serif;
-  position: relative;
-}
-
-.menu-category h2::after {
-  content: '';
-  display: block;
-  width: 60px;
-  height: 3px;
-  background-color: #a7c957; /* Verde lima */
-  margin: 10px auto 0;
-  border-radius: 2px;
-}
-
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
-}
-
-.menu-item {
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 8px 15px rgba(0,0,0,0.08); /* Sombra más pronunciada pero suave */
-  text-align: center;
-  padding: 25px;
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* Para que el botón quede abajo */
-}
-
-.menu-item:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 25px rgba(0,0,0,0.15);
-}
-
-.menu-item img {
-  width: 100%; /* Asegura que ocupe todo el ancho del contenedor */
-  height: 200px; /* Altura fija para consistencia */
-  object-fit: contain; /* Muestra la imagen completa sin recortes, ajustando proporciones */
-  border-radius: 8px;
-  margin-bottom: 18px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.menu-item h3 {
-  margin-top: 0;
-  color: #3a5a40;
-  font-size: 1.6em;
-  font-family: 'Playfair Display', serif;
-}
-
-.menu-item .description {
-  font-size: 0.95em;
-  color: #5a7d60;
-  margin-bottom: 20px;
-  flex-grow: 1; /* Para que ocupe el espacio disponible */
-}
-
-.menu-item .price {
-  font-size: 1.4em;
-  color: #a7c957; /* Verde lima */
-  font-weight: bold;
-  display: block;
-  margin-bottom: 20px;
-}
-
-.menu-item button {
-  background-color: #6a994e; /* Verde oliva suave */
-  color: white;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 50px; /* Botones más redondeados */
-  cursor: pointer;
-  font-size: 1.05em;
-  font-weight: 600;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  align-self: center; /* Centrar el botón */
-}
-
-.menu-item button:hover {
-  background-color: #a7c957; /* Verde lima al pasar el ratón */
-  transform: translateY(-2px);
-}
-
-/* Footer */
-footer {
-  background-color: #6a994e;
-  color: white;
-  text-align: center;
-  padding: 25px 0;
-  margin-top: 60px;
-  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-}
-
-.social-links img {
-  width: 35px;
-  height: 35px;
-  margin: 0 12px;
-  transition: transform 0.3s ease;
-}
-
-.social-links img:hover {
-  transform: scale(1.1);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .hamburger-menu {
-    display: block; /* Muestra el botón hamburguesa */
+/* Animación de sacudida para el icono del reloj (Esta se queda igual)
+*/
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
   }
-
-  .nav-links {
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    background-color: #ffffff; /* Fondo blanco para el menú desplegable */
-    position: absolute;
-    top: 100%; /* Justo debajo de la nav bar */
-    left: 0;
-    transform: translateY(-100%); /* Oculto por defecto */
-    opacity: 0;
-    pointer-events: none; /* No interactuable cuando está oculto */
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-    padding: 10px 0;
-    border-radius: 0 0 8px 8px;
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-3px);
   }
-
-  .nav-links.active {
-    transform: translateY(0); /* Muestra el menú */
-    opacity: 1;
-    pointer-events: all; /* Habilitar interacción */
-  }
-
-  .nav-links li {
-    width: 100%;
-    text-align: center;
-    margin-bottom: 5px;
-  }
-
-  .nav-links li:last-child {
-    margin-bottom: 0;
-  }
-
-  .nav-links li a {
-    padding: 12px 20px;
-    border-bottom: 1px solid #eee; /* Separador */
-  }
-  .nav-links li:last-child a {
-    border-bottom: none;
-  }
-
-
-  .menu-grid {
-    grid-template-columns: 1fr; /* Una columna en pantallas pequeñas */
-  }
-
-  .menu-category h2 {
-    font-size: 2.2em;
-  }
-
-  header h1 {
-    font-size: 2.2em;
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(3px);
   }
 }
 
-@media (max-width: 480px) {
-  header h1 {
-    font-size: 1.8em;
-  }
-  .menu-item h3 {
-    font-size: 1.4em;
-  }
-  .menu-item .price {
-    font-size: 1.2em;
-  }
-  .container {
-    padding: 15px;
-  }
+.banner-shake-icon {
+  display: inline-block;
+  animation: shake 2.5s ease-in-out infinite 0.5s;
+  transform-origin: center;
 }
