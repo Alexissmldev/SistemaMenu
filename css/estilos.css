@@ -34,3 +34,45 @@ html {
   text-transform: capitalize;
 }
 
+.preset-variant-btn {
+		width: 2.5rem;
+		/* 40px */
+		height: 2.5rem;
+		/* 40px */
+		background-color: #f3f4f6;
+		/* bg-gray-100 */
+		color: #374151;
+		/* text-gray-700 */
+		border-radius: 9999px;
+		/* rounded-full */
+		font-weight: 600;
+		/* font-semibold */
+		font-size: 0.875rem;
+		/* text-sm */
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		transition: background-color 0.2s;
+	}
+
+	.preset-variant-btn:hover {
+		background-color: #e5e7eb;
+		/* bg-gray-200 */
+	}
+  .preset-variant-btn {
+		width: 2.5rem;
+		height: 2.5rem;
+		background-color: #f3f4f6;
+		color: #374151;
+		border-radius: 9999px;
+		font-weight: 600;
+		font-size: 0.875rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		transition: background-color 0.2s;
+	}
+
+	.preset-variant-btn:hover {
+		background-color: #e5e7eb;
+	}

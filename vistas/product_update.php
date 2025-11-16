@@ -1,5 +1,4 @@
-c:\Users\alex1\OneDrive\Escritorio\perfil.php<?php
-// Ruta: /vistas/product_update.php
+<?php
 
 require_once "./php/main.php";
 

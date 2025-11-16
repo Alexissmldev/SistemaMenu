@@ -1,24 +1,19 @@
 <?php
 ob_start(); 
 require "inc/session_start.php";
-
-
-
 if (isset($_GET['vista']) && $_GET['vista'] === 'reportes' && isset($_GET['descargar']) && $_GET['descargar'] === 'pdf') {
     if (is_file("./vistas/reportes.php")) {
         require_once "vistas/reportes.php";
         exit; 
     }
 }
-
-
 ?>
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <?php include "inc/head.php" ?>
-</head>
+</head> 
 
 <body>
     <?php

@@ -39,7 +39,7 @@ $categoria_nombre = $categoria ? $categoria['categoria_nombre'] : 'Desconocida';
         <div class="overflow-y-auto p-6">
             <?php
             // 3. Buscar los productos asociados
-            $check_productos = $conexion->prepare("SELECT producto_nombre, producto_precio, producto_stock FROM producto WHERE categoria_id = :id ORDER BY producto_nombre ASC");
+            $check_productos = $conexion->prepare("SELECT producto_nombre, producto_precio FROM producto WHERE categoria_id = :id ORDER BY producto_nombre ASC");
             $check_productos->execute([':id' => $category_id]);
 
             if ($check_productos->rowCount() > 0) {
@@ -58,7 +58,6 @@ $categoria_nombre = $categoria ? $categoria['categoria_nombre'] : 'Desconocida';
                                 <tr class="bg-white border-b hover:bg-gray-50">
                                     <td class="px-6 py-4 font-semibold text-gray-900"><?php echo htmlspecialchars($producto['producto_nombre']); ?></td>
                                     <td class="px-6 py-4 text-green-600 font-bold">$<?php echo htmlspecialchars(number_format($producto['producto_precio'], 2)); ?></td>
-                                    <td class="px-6 py-4 text-center"><?php echo htmlspecialchars($producto['producto_stock']); ?></td>
                                 </tr>
                             <?php } ?>
                         </tbody>

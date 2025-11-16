@@ -2,15 +2,17 @@
 require_once "main.php";
 
 $modulo_buscador = limpiar_cadena($_POST['modulo_buscador']);
-$modulos = ["usuario", "categoria", "producto"];
+// 1. AÑADIMOS "anuncio" A LA LISTA DE MÓDULOS PERMITIDOS
+$modulos = ["usuario", "categoria", "producto", "anuncio"];
 
 if (in_array($modulo_buscador, $modulos)) {
 
-    // Array to map module names to their list view URLs
+    // 2. AÑADIMOS LA RUTA PARA EL MÓDULO "anuncio"
     $modulos_url = [
-        "usuario" => "user_list",
-        "categoria" => "category_list", // Example for the future
-        "producto" => "product_list"   // Example for the future
+        "usuario"   => "user_list",
+        "categoria" => "category_list",
+        "producto"  => "product_list",
+        "anuncio"   => "ad_list" // <-- LÍNEA NUEVA
     ];
     $redirect_url = $modulos_url[$modulo_buscador];
 

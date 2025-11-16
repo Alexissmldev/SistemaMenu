@@ -1,6 +1,6 @@
 //  INICIALIZACIÓN
 document.addEventListener("DOMContentLoaded", () => {
-  // Menú de Perfil 
+  // Menú de Perfil
   const profileMenuButton = document.getElementById("profile-menu-button");
   const profileMenu = document.getElementById("profile-menu");
 
@@ -25,7 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const mobileMenuButton = document.getElementById("mobile-menu-button");
   const mobileMenuPanel = document.getElementById("mobile-menu-panel");
   const mobileMenuBackdrop = document.getElementById("mobile-menu-backdrop");
-  const mobileMenuCloseButton = document.getElementById("mobile-menu-close-button");
+  const mobileMenuCloseButton = document.getElementById(
+    "mobile-menu-close-button"
+  );
 
   const openMobileMenu = () => {
     if (mobileMenuPanel && mobileMenuBackdrop) {
@@ -40,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeMobileMenu = () => {
     if (mobileMenuPanel && mobileMenuBackdrop) {
       mobileMenuBackdrop.classList.remove("opacity-100");
-      setTimeout(() => mobileMenuBackdrop.classList.add("hidden"), 300); 
+      setTimeout(() => mobileMenuBackdrop.classList.add("hidden"), 300);
 
       mobileMenuPanel.classList.remove("translate-x-0");
       mobileMenuPanel.classList.add("-translate-x-full");
@@ -51,12 +53,15 @@ document.addEventListener("DOMContentLoaded", () => {
   mobileMenuCloseButton?.addEventListener("click", closeMobileMenu);
   mobileMenuBackdrop?.addEventListener("click", closeMobileMenu);
 
-  //  LÓGICA PARA CERRAR MODALES 
+  //  LÓGICA PARA CERRAR MODALES
   document.body.addEventListener("click", (event) => {
     const target = event.target;
     const backdrop = target.closest('[data-role="modal-backdrop"]');
 
-    if (target.closest(".modal-close-trigger") || (backdrop && backdrop === target)) {
+    if (
+      target.closest(".modal-close-trigger") ||
+      (backdrop && backdrop === target)
+    ) {
       closeModal();
     }
   });
@@ -64,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       closeModal();
-      closeMobileMenu(); 
+      closeMobileMenu();
     }
   });
 });
@@ -89,7 +94,8 @@ function closeModal() {
 
 async function openModal(vista, id, id_name, initCallback = null) {
   const modalContainer = document.getElementById("modal-container");
-  if (!modalContainer) return console.error("El div #modal-container no existe.");
+  if (!modalContainer)
+    return console.error("El div #modal-container no existe.");
 
   modalContainer.innerHTML =
     '<div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50"><p class="text-white rounded-lg px-4 py-2">Cargando...</p></div>';
@@ -101,7 +107,9 @@ async function openModal(vista, id, id_name, initCallback = null) {
     modalContainer.innerHTML = await response.text();
 
     setTimeout(() => {
-      const modal = modalContainer.querySelector('[data-animation="fade-in-scale"]');
+      const modal = modalContainer.querySelector(
+        '[data-animation="fade-in-scale"]'
+      );
       if (modal) {
         const modalContent = modal.querySelector("#modalContent");
         modal.classList.remove("opacity-0");
@@ -124,7 +132,9 @@ async function openModal(vista, id, id_name, initCallback = null) {
 //Inicializa todos los scripts para el modal de 'Nuevo Producto'.
 function initProductModalScripts() {
   //Selección de todos los elementos del modal
-  const categorySelectorContainer = document.getElementById("categorySelectorContainer");
+  const categorySelectorContainer = document.getElementById(
+    "categorySelectorContainer"
+  );
   const newCategoryForm = document.getElementById("newCategoryForm");
   const addCategoryBtn = document.getElementById("addCategoryBtn");
   const cancelCategoryBtn = document.getElementById("cancelCategoryBtn");
@@ -133,7 +143,8 @@ function initProductModalScripts() {
 
   // Función para MOSTRAR el formulario de nueva categoría
   const showNewCategoryForm = () => {
-    if (categorySelectorContainer) categorySelectorContainer.classList.add("hidden");
+    if (categorySelectorContainer)
+      categorySelectorContainer.classList.add("hidden");
     if (newCategoryForm) newCategoryForm.classList.remove("hidden");
     if (newCategoryAlerts) newCategoryAlerts.innerHTML = "";
 
@@ -144,7 +155,8 @@ function initProductModalScripts() {
   // Función para OCULTAR el formulario de nueva categoría
   const hideNewCategoryForm = () => {
     if (newCategoryForm) newCategoryForm.classList.add("hidden");
-    if (categorySelectorContainer) categorySelectorContainer.classList.remove("hidden");
+    if (categorySelectorContainer)
+      categorySelectorContainer.classList.remove("hidden");
 
     const nameInput = document.getElementById("new_category_name");
     if (nameInput) nameInput.value = "";
@@ -198,7 +210,9 @@ function initProductModalScripts() {
             );
             categorySelect.appendChild(option);
           } else {
-            console.warn("No se encontró #producto_categoria para agregar la nueva opción.");
+            console.warn(
+              "No se encontró #producto_categoria para agregar la nueva opción."
+            );
           }
 
           hideNewCategoryForm();
@@ -236,7 +250,9 @@ function initImagePreview(formId) {
 
   const content = dropZone.querySelector(".drop-zone-content");
 
-  fileInput.addEventListener("change", () => displayPreview(fileInput.files[0]));
+  fileInput.addEventListener("change", () =>
+    displayPreview(fileInput.files[0])
+  );
 
   function displayPreview(file) {
     if (!file) {
@@ -281,14 +297,18 @@ function initImagePreview(formId) {
 function initProductUpdateModal() {
   const selectContainer = document.querySelector("#custom-select-container");
   if (!selectContainer) {
-    console.warn("No se encontró el contenedor del select personalizado en el modal.");
+    console.warn(
+      "No se encontró el contenedor del select personalizado en el modal."
+    );
     return;
   }
 
   const selectButton = selectContainer.querySelector("#custom-select-button");
   const selectPanel = selectContainer.querySelector("#custom-select-panel");
   const selectLabel = selectContainer.querySelector("#custom-select-label");
-  const hiddenInput = selectContainer.querySelector("#producto_categoria_hidden");
+  const hiddenInput = selectContainer.querySelector(
+    "#producto_categoria_hidden"
+  );
   const options = selectPanel.querySelectorAll(".custom-select-option");
 
   //  Mostrar o oculta el panel de opciones
@@ -319,7 +339,10 @@ function initProductUpdateModal() {
 
   //Cerrar el panel si se hace clic fuera de él.
   document.addEventListener("click", (e) => {
-    if (!selectContainer.contains(e.target) && !selectPanel.classList.contains("hidden")) {
+    if (
+      !selectContainer.contains(e.target) &&
+      !selectPanel.classList.contains("hidden")
+    ) {
       selectPanel.classList.add("hidden");
     }
   });
@@ -340,8 +363,6 @@ function initProductImageModalScripts() {
   initImagePreview("formActualizarImagen");
 }
 
-
-
 function initCategoryUpdateModal() {
   const estadoToggle = document.getElementById("categoria_estado_toggle");
   const estadoInput = document.getElementById("categoria_estado");
@@ -353,8 +374,6 @@ function initCategoryUpdateModal() {
     });
   }
 }
-
-
 
 // BLOQUE PARA ELIMIAR USUARIO, PRODUTOS Y CATEGORIAS
 
@@ -377,7 +396,11 @@ function eliminarUsuario(id, nombre) {
       fetch("./php/usuario_eliminar.php", { method: "POST", body: data })
         .then((res) => res.json())
         .then((res) => {
-          return Swal.fire({ icon: res.tipo, title: res.titulo, text: res.texto });
+          return Swal.fire({
+            icon: res.tipo,
+            title: res.titulo,
+            text: res.texto,
+          });
         })
         .then((res) => {
           if (res.isConfirmed || res.isDismissed) {
@@ -434,8 +457,8 @@ function eliminarImagen(id) {
 }
 
 /**
- * @param {number} id 
- * @param {string} nombre 
+ * @param {number} id
+ * @param {string} nombre
  */
 function eliminarProducto(id, nombre) {
   Swal.fire({
@@ -476,8 +499,8 @@ function eliminarProducto(id, nombre) {
   });
 }
 /**
- * @param {number} id 
- * @param {string} nombre 
+ * @param {number} id
+ * @param {string} nombre
  */
 function eliminarCategoria(id, nombre) {
   Swal.fire({
@@ -495,6 +518,49 @@ function eliminarCategoria(id, nombre) {
       data.append("category_id_del", id);
 
       fetch("./php/categoria_eliminar.php", {
+        method: "POST",
+        body: data,
+      })
+        .then((res) => res.json())
+        .then((respuesta) => {
+          Swal.fire({
+            icon: respuesta.tipo,
+            title: respuesta.titulo,
+            text: respuesta.texto,
+          }).then(() => {
+            if (respuesta.tipo === "success") {
+              location.reload();
+            }
+          });
+        })
+        .catch((err) => {
+          console.error("Error en fetch:", err);
+          Swal.fire("Error", "No se pudo comunicar con el servidor.", "error");
+        });
+    }
+  });
+}
+
+/**
+ * @param {number} id
+ * @param {string} mensaje
+ */
+function eliminarAnuncio(id, mensaje) {
+  Swal.fire({
+    title: "¿Estás seguro?",
+    html: `Se eliminará el anuncio: <br><strong>"${mensaje}"</strong><br><br>Esta acción es irreversible.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, ¡eliminar!",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      let data = new FormData();
+      data.append("ad_id_del", id);
+
+      fetch("./php/anuncio_eliminar.php", {
         method: "POST",
         body: data,
       })
