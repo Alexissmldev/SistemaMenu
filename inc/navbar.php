@@ -1,6 +1,10 @@
 <?php
 // Obtenemos la vista actual para resaltar el enlace activo
 $current_vista = $_GET['vista'] ?? 'home';
+
+// Definimos un array de vistas para agrupar
+$vistas_productos = ['product_list', 'promo_list'];
+$vistas_admin = ['ad_list', 'user_list'];
 ?>
 
 <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
@@ -15,7 +19,11 @@ $current_vista = $_GET['vista'] ?? 'home';
                     <div class="flex space-x-4 items-center">
                         <a href="index.php?vista=home" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'home') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">INICIO</a>
                         <a href="index.php?vista=category_list" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'category_list') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">CATEGORIAS</a>
+
                         <a href="index.php?vista=product_list" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'product_list') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">PRODUCTOS</a>
+
+                        <a href="index.php?vista=promo_list" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'promo_list') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">PROMOCIONES</a>
+
                         <a href="index.php?vista=ad_list" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'ad_list') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">ANUNCIOS</a>
 
                     </div>
@@ -82,9 +90,11 @@ $current_vista = $_GET['vista'] ?? 'home';
 
                 <div class="space-y-2 border-t border-gray-200 px-4 py-6">
                     <a href="index.php?vista=home" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'home') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Dashboard</a>
-                    <!-- <a href="index.php?vista=user_list" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'user_list') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Usuarios</a> -->
                     <a href="index.php?vista=category_list" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'category_list') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Categorías</a>
                     <a href="index.php?vista=product_list" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'product_list') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Productos</a>
+
+                    <a href="index.php?vista=promo_list" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'promo_list') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Promociones</a>
+
                     <a href="index.php?vista=ad_list" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'ad_list') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Anuncios</a>
 
                 </div>

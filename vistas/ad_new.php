@@ -1,24 +1,19 @@
 <?php
-// Necesitamos cargar los datos para los selectores antes de que el HTML comience
-// Asumimos que la conexión ya está disponible o la incluimos
 if (!isset($conexion)) {
     require_once "./php/main.php";
     $conexion = conexion();
 }
 
-// 1. Obtener todas las categorías
+// Obtener todas las categorías
 $categorias_stmt = $conexion->query("SELECT categoria_id, categoria_nombre FROM categoria ORDER BY categoria_nombre ASC");
 $categorias = $categorias_stmt->fetchAll();
 
-// 2. Obtener todos los productos
+//  Obtener todos los productos 
 $productos_stmt = $conexion->query("SELECT producto_id, producto_nombre FROM producto ORDER BY producto_nombre ASC");
 $productos = $productos_stmt->fetchAll();
-
-// No cerramos la conexión aquí, puede que se use más abajo
 ?>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
     <div class="mb-6">
         <nav class="flex" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -45,11 +40,10 @@ $productos = $productos_stmt->fetchAll();
         <h1 class="text-3xl font-bold tracking-tight text-gray-900 mt-4">
             Crear Nuevo Anuncio
         </h1>
-        <p class="text-lg text-gray-600 mt-1">Configura el mensaje, horario y los vínculos del anuncio.</p>
+        <p class="text-lg text-gray-600 mt-1">Configura alertas de horario y mensajes informativos.</p>
     </div>
 
-    <form action="./php/anuncio_guardar.php" class="FormularioAjax"  method="POST" autocomplete="off">
-
+    <form action="./php/anuncio_guardar.php" class="FormularioAjax" method="POST" autocomplete="off">
         <div class="lg:grid lg:grid-cols-3 lg:gap-8">
 
             <div class="lg:col-span-2 space-y-6">
@@ -59,7 +53,7 @@ $productos = $productos_stmt->fetchAll();
 
                         <div>
                             <label for="anuncio_mensaje" class="block text-sm font-medium text-gray-700">Mensaje del Anuncio</label>
-                            <textarea id="anuncio_mensaje" name="anuncio_mensaje" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: ¡Hoy 2x1 en hamburguesas!" required></textarea>
+                            <textarea id="anuncio_mensaje" name="anuncio_mensaje" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: ¡El desayuno termina a las 11 AM!" required></textarea>
                             <p class="text-xs text-gray-500 mt-1">Este es el texto que verán los clientes.</p>
                         </div>
 
@@ -79,9 +73,8 @@ $productos = $productos_stmt->fetchAll();
                             <div>
                                 <label for="anuncio_tipo" class="block text-sm font-medium text-gray-700">Tipo de Anuncio</slabel>
                                     <select id="anuncio_tipo" name="anuncio_tipo" class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="info">Info </option>
-                                        <option value="alerta">Alerta </option>
-                                        <option value="oferta">Oferta </option>
+                                        <option value="alerta">Alerta (Banner de horario)</option>
+                                        <option value="info">Info (Mensaje simple)</option>
                                     </select>
                             </div>
                             <div>
@@ -122,7 +115,7 @@ $productos = $productos_stmt->fetchAll();
                         <h3 class="text-xl font-semibold text-gray-800 mb-4">
                             <i class="fa fa-link text-gray-400 mr-2"></i>Vínculos
                         </h3>
-                        <p class="text-sm text-gray-600 mb-4">Opcional: Haz clic en el anuncio para filtrar por categorías o productos. Puedes seleccionar varios.</p>
+                        <p class="text-sm text-gray-600 mb-4">Opcional: Si es una Alerta (ej: Desayuno), vincula la categoría para que el cliente haga scroll al hacer clic.</p>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Vincular a Categorías</label>
@@ -141,13 +134,13 @@ $productos = $productos_stmt->fetchAll();
                                 <?php endforeach; ?>
                             </div>
                         </div>
-
                         <div class="mt-4">
                             <label class="block text-sm font-medium text-gray-700">Vincular a Productos</label>
                             <div class="mt-1 h-48 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
                                 <?php foreach ($productos as $prod): ?>
                                     <div class="flex items-center">
-                                        <input id="prod-<?php echo $prod['producto_id']; ?>"
+                                        <input
+                                            id="prod-<?php echo $prod['producto_id']; ?>"
                                             name="productos_vinculados[]"
                                             type="checkbox"
                                             value="<?php echo $prod['producto_id']; ?>"

@@ -29,19 +29,8 @@ include "./php/categorias_ordenadas.php";
   data-whatsapp-number="<?php echo htmlspecialchars($telefono_whatsapp); ?>"
   data-server-hour="<?php echo $hora_actual_servidor; ?>">
 
-  <div id="banner-horario-desayuno"
-    class="hidden 
-           bg-red-600 text-white font-bold p-3 sticky top-0 z-20 marquee-container shadow-lg" style="transition: all 0.3s ease-in-out;">
 
-    <span class="marquee-content">
-      <span class="mx-4">
-        <i class="fa fa-clock banner-shake-icon text-yellow-300 mr-1"></i>
-        ¡Aún estás a tiempo! El desayuno se sirve de 8:00 AM a 11:00 AM.
-      </span>
-
-
-    </span>
-  </div>
+  <?php include "./php/anuncio_dinamico.php"; ?>
   <div class="min-h-screen">
 
     <?php include "./inc/navbar_cliente.php"; ?>
@@ -63,7 +52,8 @@ include "./php/categorias_ordenadas.php";
           </span>
         </form>
       </div>
-
+      <?php include "./php/anuncios_info.php"; ?>
+      <?php include "./php/anuncio_ofertas.php"; ?>
       <div id="product-content-wrapper">
         <?php
         include "./php/productos_cliente.php";

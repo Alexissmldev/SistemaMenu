@@ -6,7 +6,7 @@ $campos = "anuncio_id, anuncio_mensaje, anuncio_hora_inicio, anuncio_hora_fin, a
 
 $conexion = conexion();
 
-// 2. Lógica de Búsqueda
+// Lógica de Búsqueda
 if (isset($_GET['busqueda']) && !empty($_GET['busqueda'])) {
     $busqueda = limpiar_cadena($_GET['busqueda']);
     $url = "index.php?vista=ad_list&busqueda=" . urlencode($busqueda) . "&page=";
@@ -17,7 +17,7 @@ if (isset($_GET['busqueda']) && !empty($_GET['busqueda'])) {
     $consulta_total = $conexion->prepare("SELECT COUNT(anuncio_id) FROM anuncios WHERE anuncio_mensaje LIKE :busqueda");
     $consulta_total->execute([':busqueda' => "%$busqueda%"]);
 } else {
-    // Lógica por Defecto 
+    //Lógica por Defecto 
     $consulta_datos = $conexion->prepare("SELECT $campos FROM anuncios ORDER BY anuncio_prioridad DESC, anuncio_hora_inicio ASC LIMIT $inicio, $registros");
     $consulta_datos->execute();
 
@@ -34,16 +34,16 @@ if ($total >= 1 && $pagina <= $Npagina) {
     $pag_inicio = $inicio + 1;
 }
 
-//   Construcción del Grid de Anuncios
+//Construcción del Grid de Anuncios
 
 $tabla .= '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">';
 
 if ($total >= 1 && $pagina <= $Npagina) {
     foreach ($datos as $rows) {
 
-        //  Lógica para Badges y Textos 
+        //Lógica para Badges y Textos 
 
-        // Badge de Estado
+        //Badge de Estado
         $estado_badge = ($rows['anuncio_estado'] == 1)
             ? '<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full"><i class="fa fa-check-circle mr-1"></i>Activo</span>'
             : '<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full"><i class="fa fa-times-circle mr-1"></i>Inactivo</span>';
@@ -66,11 +66,7 @@ if ($total >= 1 && $pagina <= $Npagina) {
         }
 
         $tipo_badge = "<span class=\"absolute top-0 right-0 -mt-3 -mr-3 bg-{$tipo_color}-500 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-lg\" title=\"Tipo: {$tipo_texto}\"><i class=\"fa {$tipo_icono}\"></i></span>";
-
-        // Texto de Horario
         $horario_texto = sprintf("De %02d:00 a %02d:00", $rows['anuncio_hora_inicio'], $rows['anuncio_hora_fin']);
-
-        // Texto de Fechas 
         $fecha_texto = '';
         if (!empty($rows['anuncio_fecha_inicio'])) {
             $fecha_inicio_f = date("d/m/Y", strtotime($rows['anuncio_fecha_inicio']));
@@ -126,7 +122,7 @@ $tabla .= '</div>';
 $conexion = null;
 echo $tabla;
 
-//  Paginación
+//Paginación
 if ($total >= 1 && $pagina <= $Npagina) {
     echo paginador_tablas($pagina, $Npagina, $url, 7);
 }

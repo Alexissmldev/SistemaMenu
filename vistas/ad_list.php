@@ -49,7 +49,6 @@
 
         // Lógica para eliminar un anuncio
         if (isset($_GET['ad_id_del'])) {
-            // Debes crear este archivo, similar a producto_eliminar.php
             require_once "./php/anuncio_eliminar.php";
         }
 
@@ -63,10 +62,9 @@
         }
 
         $pagina = limpiar_cadena($pagina);
-        $url = "index.php?vista=ad_list&page="; // URL para paginación
-        $registros = 9; // 9 tarjetas por página (3x3 grid)
+        $url = "index.php?vista=ad_list&page="; 
+        $registros = 9; 
         $busqueda = ""; 
-        // Aquí se carga el archivo de lógica
         require_once "./php/anuncio_lista.php";
         ?>
 

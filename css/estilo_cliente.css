@@ -25,9 +25,9 @@
 */
 .marquee-content {
   display: inline-block;
-  white-space: nowrap; 
-  animation: marquee 15s linear infinite; 
-  padding-left: 100%; 
+  white-space: nowrap;
+  animation: marquee 15s linear infinite;
+  padding-left: 100%;
 }
 
 /* Animación de sacudida para el icono del reloj (Esta se queda igual)
@@ -56,4 +56,17 @@
   display: inline-block;
   animation: shake 2.5s ease-in-out infinite 0.5s;
   transform-origin: center;
+}
+
+#ofertas-carrusel {
+  /* Para Internet Explorer y Edge */
+  -ms-overflow-style: none;
+
+  /* Para Firefox */
+  scrollbar-width: none;
+}
+
+/* Para Chrome, Safari, Opera y navegadores móviles (iOS, Android) */
+#ofertas-carrusel::-webkit-scrollbar {
+  display: none;
 }

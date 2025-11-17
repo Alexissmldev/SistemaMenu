@@ -23,8 +23,8 @@
                 </form>
             </div>
             <div class="flex items-center space-x-3 justify-end">
-                <span class="text-xs text-gray-500 bg-gray-100 p-1 rounded-full px-2 lg:hidden">
-                    Tasa USD: **<?php echo $tasa_usd; ?>**
+                <span class="text-sm font-semibold text-green-800 bg-green-100 p-1.5 rounded-full px-3">
+                    Tasa USD: <strong><?php echo $tasa_usd; ?></strong>
                 </span>
 
                 <button id="open-cart-btn-desktop" class="relative text-gray-600 hover:text-red-500 hidden lg:block">

@@ -54,9 +54,7 @@ if (isset($_GET['vista']) && $_GET['vista'] === 'reportes' && isset($_GET['desca
             include "vistas/404.php";
         }
     }
-    
     ?>
-
 </body>
 </html>
 <?php ob_end_flush(); ?>

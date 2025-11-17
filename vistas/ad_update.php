@@ -1,49 +1,44 @@
 <?php
-// --- 1. OBTENER DATOS PARA EL FORMULARIO ---
 
 if (!isset($conexion)) {
     require_once "./php/main.php";
 }
 
-// Obtenemos el ID del anuncio a editar desde la URL
 $ad_id = (isset($_GET['ad_id_up'])) ? (int)$_GET['ad_id_up'] : 0;
 $conexion = conexion();
 
-// --- Consulta 1: Obtener los datos principales del anuncio ---
+//Obtener los datos principales del anuncio 
 $stmt_anuncio = $conexion->prepare("SELECT * FROM anuncios WHERE anuncio_id = :id");
 $stmt_anuncio->execute([':id' => $ad_id]);
 $anuncio = $stmt_anuncio->fetch();
 
 if (!$anuncio) {
     echo '<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <h1 class="text-3xl font-bold text-red-600">Error</h1>
-            <p class="text-lg text-gray-600 mt-1">El anuncio que intentas editar no existe.</p>
-            <a href="index.php?vista=ad_list" class="mt-4 inline-block text-blue-500 hover:text-blue-700">&larr; Volver a la lista de anuncios</a>
-          </div>';
-    exit(); // Detenemos la ejecución si no se encontró el anuncio
+      <h1 class="text-3xl font-bold text-red-600">Error</h1>
+      <p class="text-lg text-gray-600 mt-1">El anuncio que intentas editar no existe.</p>
+      <a href="index.php?vista=ad_list" class="mt-4 inline-block text-blue-500 hover:text-blue-700">&larr; Volver a la lista de anuncios</a>
+     </div>';
+    exit();
 }
 
-// --- Consulta 2: Obtener TODAS las categorías (para la lista) ---
+//Obtener TODAS las categorías 
 $categorias_stmt = $conexion->query("SELECT categoria_id, categoria_nombre FROM categoria ORDER BY categoria_nombre ASC");
 $todas_categorias = $categorias_stmt->fetchAll();
 
-// --- Consulta 3: Obtener TODOS los productos (para la lista) ---
+//Obtener TODOS los productos 
 $productos_stmt = $conexion->query("SELECT producto_id, producto_nombre FROM producto ORDER BY producto_nombre ASC");
 $todos_productos = $productos_stmt->fetchAll();
 
-// --- Consulta 4: Obtener IDs de categorías YA VINCULADAS ---
+//Obtener IDs de categorías YA VINCULADAS
 $stmt_cats_vinculadas = $conexion->prepare("SELECT categoria_id FROM anuncio_categorias WHERE anuncio_id = :id");
 $stmt_cats_vinculadas->execute([':id' => $ad_id]);
-// Usamos FETCH_COLUMN para tener un array simple: [3, 5, 8]
 $ids_cats_vinculadas = $stmt_cats_vinculadas->fetchAll(PDO::FETCH_COLUMN);
 
-// --- Consulta 5: Obtener IDs de productos YA VINCULADOS ---
+//Obtener IDs de productos YA VINCULADOS 
 $stmt_prods_vinculados = $conexion->prepare("SELECT producto_id FROM anuncio_productos WHERE anuncio_id = :id");
 $stmt_prods_vinculados->execute([':id' => $ad_id]);
-// Usamos FETCH_COLUMN para tener un array simple: [12, 25]
 $ids_prods_vinculados = $stmt_prods_vinculados->fetchAll(PDO::FETCH_COLUMN);
 
-// $conexion = null; // No cerramos la conexión por si se usa más abajo
 ?>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -74,7 +69,7 @@ $ids_prods_vinculados = $stmt_prods_vinculados->fetchAll(PDO::FETCH_COLUMN);
         <h1 class="text-3xl font-bold tracking-tight text-gray-900 mt-4">
             Actualizar Anuncio
         </h1>
-        <p class="text-lg text-gray-600 mt-1">Modifica los datos del anuncio seleccionado.</p>
+        <p class="text-lg text-gray-600 mt-1">Modifica las alertas de horario y mensajes informativos.</p>
     </div>
 
     <form action="./php/anuncio_actualizar.php" class="FormularioAjax" method="POST" autocomplete="off">
@@ -90,7 +85,7 @@ $ids_prods_vinculados = $stmt_prods_vinculados->fetchAll(PDO::FETCH_COLUMN);
 
                         <div>
                             <label for="anuncio_mensaje" class="block text-sm font-medium text-gray-700">Mensaje del Anuncio</label>
-                            <textarea id="anuncio_mensaje" name="anuncio_mensaje" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: ¡Hoy 2x1 en hamburguesas!" required><?php echo htmlspecialchars($anuncio['anuncio_mensaje']); ?></textarea>
+                            <textarea id="anuncio_mensaje" name="anuncio_mensaje" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: ¡El desayuno termina a las 11 AM!" required><?php echo htmlspecialchars($anuncio['anuncio_mensaje']); ?></textarea>
                         </div>
 
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -108,9 +103,8 @@ $ids_prods_vinculados = $stmt_prods_vinculados->fetchAll(PDO::FETCH_COLUMN);
                             <div>
                                 <label for="anuncio_tipo" class="block text-sm font-medium text-gray-700">Tipo de Anuncio</slabel>
                                     <select id="anuncio_tipo" name="anuncio_tipo" class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="info" <?php echo ($anuncio['anuncio_tipo'] == 'info') ? 'selected' : ''; ?>>Info </option>
-                                        <option value="alerta" <?php echo ($anuncio['anuncio_tipo'] == 'alerta') ? 'selected' : ''; ?>>Alerta </option>
-                                        <option value="oferta" <?php echo ($anuncio['anuncio_tipo'] == 'oferta') ? 'selected' : ''; ?>>Oferta </option>
+                                        <option value="alerta" <?php echo ($anuncio['anuncio_tipo'] == 'alerta') ? 'selected' : ''; ?>>Alerta (Banner de horario)</option>
+                                        <option value="info" <?php echo ($anuncio['anuncio_tipo'] == 'info') ? 'selected' : ''; ?>>Info (Mensaje simple)</option>
                                     </select>
                             </div>
                             <div>
@@ -147,9 +141,9 @@ $ids_prods_vinculados = $stmt_prods_vinculados->fetchAll(PDO::FETCH_COLUMN);
                 <div class="bg-white shadow-lg rounded-lg border border-gray-200">
                     <div class="p-6">
                         <h3 class="text-xl font-semibold text-gray-800 mb-4">
-                            <i class="fa fa-link text-gray-400 mr-2"></i>Vínculos
+                            <i class="fa fa-link text-gray-400 mr-2"></i>Vínculos (para Scroll)
                         </h3>
-                        <p class="text-sm text-gray-600 mb-4">Opcional: Marca las categorías o productos a los que este anuncio debe vincularse.</p>
+                        <p class="text-sm text-gray-600 mb-4">Opcional: Si es una Alerta (ej: Desayuno), vincula la categoría para que el cliente haga scroll al hacer clic.</p>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Vincular a Categorías</label>
@@ -174,6 +168,7 @@ $ids_prods_vinculados = $stmt_prods_vinculados->fetchAll(PDO::FETCH_COLUMN);
                         </div>
 
                         <div class="mt-4">
+
                             <label class="block text-sm font-medium text-gray-700">Vincular a Productos</label>
                             <div class="mt-1 h-48 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
                                 <?php foreach ($todos_productos as $prod): ?>
@@ -194,13 +189,10 @@ $ids_prods_vinculados = $stmt_prods_vinculados->fetchAll(PDO::FETCH_COLUMN);
                                 <?php endforeach; ?>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
-
         </div>
-
         <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end gap-3">
             <a href="index.php?vista=ad_list" class="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-full hover:bg-gray-300 transition-colors">
                 Cancelar
@@ -210,6 +202,5 @@ $ids_prods_vinculados = $stmt_prods_vinculados->fetchAll(PDO::FETCH_COLUMN);
                 Actualizar Anuncio
             </button>
         </div>
-
     </form>
 </div>

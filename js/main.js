@@ -583,3 +583,41 @@ function eliminarAnuncio(id, mensaje) {
     }
   });
 }
+
+function eliminarPromocion(id, nombre) {
+  Swal.fire({
+    title: "¿Estás seguro?",
+    text: `Se eliminará la promoción: "${nombre}". Esta acción no se puede revertir.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      let data = new FormData();
+      data.append("promo_id_del", id);
+
+      fetch("./php/promo_eliminar.php", {
+        method: "POST",
+        body: data,
+      })
+        .then((res) => res.json())
+        .then((respuesta) => {
+          Swal.fire({
+            icon: respuesta.tipo,
+            title: respuesta.titulo,
+            text: respuesta.texto,
+          }).then(() => {
+            if (respuesta.tipo === "success") {
+              location.reload();
+            }
+          });
+        })
+        .catch((err) => {
+          Swal.fire("Error", "No se pudo comunicar con el servidor.", "error");
+        });
+    }
+  });
+}
