@@ -26,7 +26,7 @@ foreach ($categorias_ordenadas as $categoria) {
         </h2>
         <div class="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 xl:grid-cols-3">
             <?php
-            
+
             ?>
             <?php foreach ($productos as $producto):
                 $precio_usd_num = (float)$producto['producto_precio'];
@@ -41,10 +41,15 @@ foreach ($categorias_ordenadas as $categoria) {
                     $precio_usd_formateado = number_format($precio_usd_num, 2, ',', '.');
                     $precio_display = '<span class="text-red-600 font-bold">USD ' . $precio_usd_formateado . '</span>';
                 }
+
+                $nombre_producto_capitalizado = ucwords(strtolower($producto['producto_nombre']));
+
+                $descripcion_capitalizada = ucfirst(strtolower($producto['descripcion_producto']));
+
                 $producto_json = htmlspecialchars(json_encode([
                     'id' => $producto['producto_id'],
-                    'nombre' => $producto['producto_nombre'],
-                    'descripcion' => $producto['descripcion_producto'],
+                    'nombre' => $nombre_producto_capitalizado,
+                    'descripcion' => $descripcion_capitalizada,
                     'precio_display' => $precio_display,
                     'precio_raw' => $precio_raw_bs,
                     'precio_usd' => $precio_usd_num,
@@ -53,11 +58,11 @@ foreach ($categorias_ordenadas as $categoria) {
             ?>
                 <div id="producto-<?php echo $producto['producto_id']; ?>" class="flex bg-white rounded-xl shadow-md overflow-hidden p-3 hover:shadow-lg transition cursor-pointer" onclick="openModal(<?php echo $producto_json; ?>)">
                     <div class="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg overflow-hidden mr-4">
-                        <img src="../img/producto/large/<?php echo htmlspecialchars($producto['producto_foto']); ?>" alt="<?php echo htmlspecialchars($producto['producto_nombre']); ?>" class="w-full h-full object-cover" />
+                        <img src="../img/producto/large/<?php echo htmlspecialchars($producto['producto_foto']); ?>" alt="<?php echo htmlspecialchars($nombre_producto_capitalizado); ?>" class="w-full h-full object-cover" />
                     </div>
                     <div class="flex-grow">
-                        <h4 class="text-base font-semibold text-gray-800"><?php echo htmlspecialchars($producto['producto_nombre']); ?></h4>
-                        <p class="text-sm text-gray-500 line-clamp-2 mt-1"><?php echo htmlspecialchars($producto['descripcion_producto']); ?></p>
+                        <h4 class="text-base font-semibold text-gray-800"><?php echo htmlspecialchars($nombre_producto_capitalizado); ?></h4>
+                        <p class="text-sm text-gray-500 line-clamp-2 mt-1"><?php echo htmlspecialchars($descripcion_capitalizada); ?></p>
                         <div class="flex items-center justify-between mt-2">
                             <?php echo $precio_display; ?>
                         </div>
