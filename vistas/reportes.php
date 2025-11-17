@@ -139,7 +139,7 @@ $html .= '<style>
 // FIN DEL DISEÑO CSS
 // ======================================================
 
-$html .= '<h1>📋 Nuestro Menú</h1>';
+$html .= '<h1>Nuestro Menú</h1>';
 
 
 if (empty($productos_por_categoria)) {
