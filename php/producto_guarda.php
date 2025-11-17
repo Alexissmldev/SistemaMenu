@@ -1,57 +1,51 @@
 <?php
 require_once "../inc/session_start.php";
-require_once "main.php"; // Asegúrate que 'main.php' contenga las nuevas funciones de imagen
+require_once "main.php";
 
 /*== Almacenando datos ==*/
 $nombre     = limpiar_cadena($_POST['producto_nombre']);
 $precio     = limpiar_cadena($_POST['producto_precio']);
 $categoria  = limpiar_cadena($_POST['producto_categoria']);
-$descripcion= limpiar_cadena($_POST['producto_descripcion']);
+$descripcion = limpiar_cadena($_POST['producto_descripcion']);
 
 /*== Verificando campos obligatorios ==*/
-if( $nombre=="" || $precio=="" || $categoria=="" || $descripcion=="") {
-    enviar_respuesta_json("error","Campos vacíos","No has llenado todos los campos obligatorios");
+if ($nombre == "" || $precio == "" || $categoria == "" || $descripcion == "") {
+    enviar_respuesta_json("error", "Campos vacíos", "No has llenado todos los campos obligatorios");
 }
 
 /*== Verificando integridad de los datos ==*/
-if(verificar_datos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,$#\-\/ ]{1,70}",$nombre)){
-    enviar_respuesta_json("error","Formato inválido","El nombre no cumple el formato requerido");
+if (verificar_datos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,$#\-\/ ]{1,70}", $nombre)) {
+    enviar_respuesta_json("error", "Formato inválido", "El nombre no cumple el formato requerido");
 }
-if(verificar_datos("[0-9.]{1,25}",$precio)){
-    enviar_respuesta_json("error","Formato inválido","El precio no cumple el formato requerido");
+if (verificar_datos("[0-9.]{1,25}", $precio)) {
+    enviar_respuesta_json("error", "Formato inválido", "El precio no cumple el formato requerido");
 }
 
 /*== Verificando nombre duplicado ==*/
 $check_nombre = conexion()->query("SELECT producto_nombre FROM producto WHERE producto_nombre='$nombre'");
-if($check_nombre->rowCount()>0){
-    enviar_respuesta_json("error","Nombre duplicado","El nombre ingresado ya existe");
+if ($check_nombre->rowCount() > 0) {
+    enviar_respuesta_json("error", "Nombre duplicado", "El nombre ingresado ya existe");
 }
 $check_nombre = null;
 
 /*== Verificando categoría ==*/
 $check_categoria = conexion()->query("SELECT categoria_id FROM categoria WHERE categoria_id='$categoria'");
-if($check_categoria->rowCount()<=0){
-    enviar_respuesta_json("error","Categoría inválida","La categoría seleccionada no existe");
+if ($check_categoria->rowCount() <= 0) {
+    enviar_respuesta_json("error", "Categoría inválida", "La categoría seleccionada no existe");
 }
 $check_categoria = null;
 
-
-/*== Procesamiento de imagen (Sección MODIFICADA) ==*/
-
-// Variable para el nombre de la foto en la DB
+/*== Procesamiento de imagen ==*/
 $foto = ""; 
-// Array para rastrear archivos creados y borrarlos si algo falla
 $archivos_creados = []; 
 
-if($_FILES['producto_foto']['name']!="" && $_FILES['producto_foto']['size']>0){
+if ($_FILES['producto_foto']['name'] != "" && $_FILES['producto_foto']['size'] > 0) {
 
-    /* NUEVO: Directorios para imágenes optimizadas */
     $dir_base = '../img/producto/';
     $dir_original = $dir_base . 'original/';
     $dir_large = $dir_base . 'large/';
     $dir_thumbs = $dir_base . 'thumb/';
 
-    /* NUEVO: Crear directorios si no existen (modo recursivo 'true') */
     if (!file_exists($dir_original) && !mkdir($dir_original, 0777, true)) {
         enviar_respuesta_json("error", "Error en directorio", "No se pudo crear el directorio 'original'");
     }
@@ -62,36 +56,29 @@ if($_FILES['producto_foto']['name']!="" && $_FILES['producto_foto']['size']>0){
         enviar_respuesta_json("error", "Error en directorio", "No se pudo crear el directorio 'thumb'");
     }
 
-    /* Se mantienen las validaciones de tipo y tamaño antes de procesar */
-    if(mime_content_type($_FILES['producto_foto']['tmp_name'])!="image/jpeg" && mime_content_type($_FILES['producto_foto']['tmp_name'])!="image/png"){
-        enviar_respuesta_json("error","Formato inválido","La imagen debe ser JPG o PNG");
+    if (mime_content_type($_FILES['producto_foto']['tmp_name']) != "image/jpeg" && mime_content_type($_FILES['producto_foto']['tmp_name']) != "image/png") {
+        enviar_respuesta_json("error", "Formato inválido", "La imagen debe ser JPG o PNG");
     }
 
-    if(($_FILES['producto_foto']['size']/1024)>3072){
-        enviar_respuesta_json("error","Imagen demasiado grande","La imagen supera el límite de 3MB");
+    if (($_FILES['producto_foto']['size'] / 1024) > 3072) {
+        enviar_respuesta_json("error", "Imagen demasiado grande", "La imagen supera el límite de 3MB");
     }
 
-    /* MODIFICADO: Lógica de nombrado */
-    // Obtenemos el nombre base sin extensión
     $img_nombre = renombrar_foto($nombre); 
-    // El nombre a guardar en la DB será el nombre base con la extensión .webp
     $foto = $img_nombre . '.webp'; 
 
-    /* NUEVO: Bloque try-catch para llamar a la función de procesamiento */
     try {
         
         procesar_imagen_optimizada(
-            $_FILES['producto_foto'], // El archivo subido
-            $img_nombre,              // El nombre base (ej: "nombre-producto-1")
-            $dir_original,            // Directorio para el original
-            $dir_large,               // Directorio para la versión large
-            $dir_thumbs,              // Directorio para la versión thumb
-            $archivos_creados         // Array (pasado por referencia) que se llenará con las rutas
+            $_FILES['producto_foto'], 
+            $img_nombre,              
+            $dir_original,            
+            $dir_large,               
+            $dir_thumbs,              
+            $archivos_creados         
         );
 
     } catch (Exception $e) {
-        // Si la función 'procesar_imagen_optimizada' lanza una excepción
-        // Borramos cualquier archivo que se haya alcanzado a crear
         foreach ($archivos_creados as $archivo) {
             if (is_file($archivo)) { unlink($archivo); }
         }
@@ -100,27 +87,94 @@ if($_FILES['producto_foto']['name']!="" && $_FILES['producto_foto']['size']>0){
 
 } // Fin del if($_FILES...)
 
-/*== Guardando producto ==*/
-$guardar_producto=conexion()->prepare("INSERT INTO producto(producto_nombre,producto_precio,producto_foto,categoria_id,usuario_id,descripcion_producto) VALUES(:nombre,:precio,:foto,:categoria,:usuario,:descripcion)");
+/*== Guardando producto y variantes (con transacción) ==*/
 
-$marcadores=[
-    ":nombre"=>$nombre,
-    ":precio"=>$precio,
-    ":foto"=>$foto, // Aquí se guarda el nombre base con extensión .webp (ej: "producto-1.webp")
-    ":categoria"=>$categoria,
-    ":descripcion"=>$descripcion,
-    ":usuario"=>$_SESSION['id']
-];
+$pdo = conexion(); 
 
-$guardar_producto->execute($marcadores);
+try {
+    // 2. Iniciar la transacción
+    $pdo->beginTransaction();
 
-if($guardar_producto->rowCount()==1){
-    enviar_respuesta_json("success","¡Producto registrado!","El producto se registró con éxito");
-}else{
-    /* MODIFICADO: Si falla el guardado en BD, borra todos los archivos (original, large, thumb) */
+    // 3. Guardar el producto principal
+    $guardar_producto = $pdo->prepare("INSERT INTO producto(producto_nombre,producto_precio,producto_foto,categoria_id,usuario_id,descripcion_producto) VALUES(:nombre,:precio,:foto,:categoria,:usuario,:descripcion)");
+    
+    $marcadores=[
+        ":nombre"=>$nombre,
+        ":precio"=>$precio,
+        ":foto"=>$foto, 
+        ":categoria"=>$categoria,
+        ":descripcion"=>$descripcion,
+        ":usuario"=>$_SESSION['id']
+    ];
+    
+    $guardar_producto->execute($marcadores);
+
+    // 4. Verificar si el producto se guardó
+    if ($guardar_producto->rowCount() != 1) {
+        throw new Exception("No se pudo registrar el producto principal.");
+    }
+    
+    // 5. Obtener el ID del producto
+    $producto_id = $pdo->lastInsertId();
+
+    /*== 6. PROCESAR Y GUARDAR VARIANTES ==*/
+    if (isset($_POST['variante_nombre']) && is_array($_POST['variante_nombre'])) {
+        
+        $variante_nombres = $_POST['variante_nombre'];
+        $variante_precios = $_POST['variante_precio'];
+
+        // Preparar las consultas
+        $stmt_variante = $pdo->prepare("INSERT INTO variante(nombre_variante, precio) VALUES(:nombre, :precio)");
+        $stmt_link = $pdo->prepare("INSERT INTO variante_producto(producto_id, id_variante) VALUES(:pid, :vid)");
+
+        foreach ($variante_nombres as $index => $nombre_variante) {
+            
+            $nombre_variante_limpio = limpiar_cadena($nombre_variante);
+            
+            if (empty($nombre_variante_limpio)) {
+                continue;
+            }
+
+            $precio_variante_limpio = limpiar_cadena($variante_precios[$index]);
+            $precio_final = null; 
+            if (!empty($precio_variante_limpio) && is_numeric($precio_variante_limpio)) {
+                $precio_final = (float)$precio_variante_limpio;
+            }
+
+            // 6a. Guardar en la tabla 'variante'
+            $stmt_variante->execute([
+                ":nombre" => $nombre_variante_limpio,
+                ":precio" => $precio_final
+            ]);
+            
+            // 6b. Obtener el ID de la nueva variante
+            $variante_id = $pdo->lastInsertId();
+
+            // 6c. Enlazar el producto y la variante
+            $stmt_link->execute([
+                ":pid" => $producto_id,
+                ":vid" => $variante_id
+            ]);
+        }
+    }
+    /*== FIN DE PROCESAR VARIANTES ==*/
+
+    // 7. Si todo salió bien, confirmar los cambios
+    $pdo->commit();
+    
+    enviar_respuesta_json("success","¡Producto registrado!","El producto y sus variantes se registraron con éxito");
+
+} catch (Exception $e) {
+    // 8. Si algo falló, revertir todo
+    $pdo->rollBack();
+
+    // Borrar archivos de imagen si la BD falló
     foreach ($archivos_creados as $archivo) {
         if (is_file($archivo)) { unlink($archivo); }
     }
-    enviar_respuesta_json("error","Error inesperado","No se pudo registrar el producto, intente nuevamente");
+    
+    enviar_respuesta_json("error","Error inesperado","No se pudo registrar el producto. " . $e->getMessage());
 }
+
+$pdo = null;
 ?>

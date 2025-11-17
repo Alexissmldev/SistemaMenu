@@ -82,7 +82,7 @@
     <button id="open-cart-btn-mobile" class="relative text-gray-400 hover:text-red-600 flex flex-col items-center">
         <i class="fa fa-shopping-cart text-2xl"></i>
         <span class="text-xs">Carrito</span>
-        <span id="cart-count-badge-mobile" class="absolute -top-1 right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">
+        <span id="cart-count-badge-mobile" class="absolute -top-1 right-2 bg-red-600 text-white text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">
             0
         </span>
     </button>

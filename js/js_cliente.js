@@ -313,7 +313,7 @@ function renderCartItems() {
   const totalDisplayUSD = document.getElementById("cart-total-display-usd");
   const checkoutForm = document.getElementById("btn-send-order").parentElement;
 
-  // 1. Manejar carrito vacío (esto estaba perfecto)
+  // 1. Manejar carrito vacío
   if (cart.length === 0) {
     container.innerHTML = `
             <div id="cart-empty-msg" class="text-center text-gray-500 pt-10">
@@ -334,14 +334,13 @@ function renderCartItems() {
   let subtotal_usd = 0;
 
   // 2. Usar .map() para crear un array de HTML
-  // (Esto reemplaza el forEach)
   const allItemsHTML = cart.map((item) => {
     const itemTotal_bs = item.precio * item.cantidad;
     subtotal_bs += itemTotal_bs;
     const itemTotal_usd = item.precio_usd * item.cantidad;
     subtotal_usd += itemTotal_usd;
 
-    // Tu HTML (con los 'onclick' corregidos) está bien
+    // --- CAMBIO: Se quitan los 'onclick' y se añaden 'data-action' y 'data-id' ---
     return `
             <div class="flex space-x-3 p-2 bg-white rounded-lg border">
                 <img src="${item.foto}" alt="${item.nombre}" class="w-16 h-16 object-cover rounded-md flex-shrink-0">
@@ -350,17 +349,28 @@ function renderCartItems() {
                     <p class="text-sm font-bold text-red-600 mt-1">${formatCurrency(itemTotal_bs)}</p>
                 </div>
                 <div class="flex-shrink-0 flex flex-col items-end justify-between">
-                    <button class="text-gray-400 hover:text-red-500" onclick="removeItemFromCart('${item.id}')">
-                        <i class="fa fa-times text-xl"></i>
+                    
+                    <button class="text-gray-400 hover:text-red-500" 
+                            data-action="remove" 
+                            data-id="${item.id}">
+                        <i class="fa fa-times text-xl pointer-events-none"></i> 
                     </button>
+
                     <div class="flex items-center space-x-2 mt-2">
-                        <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" onclick="decrementCartItem('${item.id}')">-</button>
+                        <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" 
+                                data-action="decrement" 
+                                data-id="${item.id}">-</button>
+                        
                         <span class="font-bold text-sm px-1">${item.cantidad}</span>
-                        <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" onclick="incrementCartItem('${item.id}')">+</button>
+                        
+                        <button class="w-6 h-6 flex items-center justify-center border border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition" 
+                                data-action="increment" 
+                                data-id="${item.id}">+</button>
                     </div>
                 </div>
             </div>
         `;
+    // --- FIN DEL CAMBIO ---
   }); // Fin de .map()
 
   // 3. Unir todo el HTML y dibujarlo UNA SOLA VEZ
@@ -370,39 +380,86 @@ function renderCartItems() {
   totalDisplayBS.innerHTML = formatCurrency(subtotal_bs);
   totalDisplayUSD.innerHTML = formatUSD(subtotal_usd);
 }
-function removeItemFromCart(productId) {
-  cart = cart.filter((item) => item.id !== productId);
-  saveCart();
-  renderCartItems();
-  updateCartBadge();
-  if (cart.length === 0) {
-    closeCart();
+
+// --- FUNCIÓN NUEVA: Escuchador de Clics del Carrito ---
+/**
+ * Inicializa un único 'event listener' en el contenedor del carrito
+ * para manejar todos los clics en botones (delegación de eventos).
+ */
+function setupCartListener() {
+  const container = document.getElementById("cart-items-container");
+
+  container.addEventListener('click', (event) => {
+    // 1. Identifica el botón que fue presionado
+    const button = event.target.closest('button');
+
+    // 2. Si no fue un botón o no tiene 'data-action', no hacemos nada
+    if (!button || !button.dataset.action) {
+      return;
+    }
+
+    // 3. Obtenemos la acción y el ID del producto
+    const action = button.dataset.action;
+    const itemId = button.dataset.id;
+
+    // 4. Ejecutamos la función correspondiente
+    switch (action) {
+      case 'increment':
+        incrementCartItem(itemId);
+        break;
+      case 'decrement':
+        decrementCartItem(itemId);
+        break;
+      case 'remove':
+        removeItemFromCart(itemId);
+        break;
+    }
+  });
+}
+// --- FIN DE FUNCIÓN NUEVA ---
+
+
+function incrementCartItem(itemId) {
+  // --- CAMBIO: Usamos '==' para evitar problemas de tipo (string vs número) ---
+  const item = cart.find(i => i.id == itemId);
+
+  if (item) {
+    item.cantidad++;
+    saveCart();
+    renderCartItems(); // Volvemos a dibujar
+    updateCartBadge(); // --- AÑADIDO: Actualizar el contador del ícono ---
   }
 }
 
-function incrementCartItem(productId) {
-  const itemIndex = cart.findIndex((item) => item.id === productId);
-  if (itemIndex > -1) {
-    cart[itemIndex].cantidad++;
+function decrementCartItem(itemId) {
+  // --- CAMBIO: Usamos '==' ---
+  const item = cart.find(i => i.id == itemId);
+
+  if (item) {
+    if (item.cantidad > 1) {
+      item.cantidad--;
+    } else {
+      // Si la cantidad es 1, al restar se elimina
+      removeItemFromCart(itemId); 
+      // --- CAMBIO: Añadimos 'return' para evitar doble renderizado ---
+      return; 
+    }
+    
     saveCart();
     renderCartItems();
-    updateCartBadge();
+    updateCartBadge(); // --- AÑADIDO: Actualizar el contador del ícono ---
   }
 }
 
-function decrementCartItem(productId) {
-  const itemIndex = cart.findIndex((item) => item.id === productId);
-  if (itemIndex > -1) {
-    if (cart[itemIndex].cantidad > 1) {
-      cart[itemIndex].cantidad--;
-      saveCart();
-      renderCartItems();
-      updateCartBadge();
-    } else {
-      removeItemFromCart(productId);
-    }
-  }
+function removeItemFromCart(itemId) {
+  // --- CAMBIO: Usamos '!=' ---
+  cart = cart.filter(i => i.id != itemId);
+  
+  saveCart();
+  renderCartItems();
+  updateCartBadge(); // --- AÑADIDO: Actualizar el contador del ícono ---
 }
+
 
 function sendOrder() {
   const clientNameInput = document.getElementById("client-name");
@@ -712,6 +769,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (mobileInput) mobileInput.addEventListener("input", onInput);
 
   registerAppListeners();
+
+  // --- AÑADIDO: Inicializa el nuevo escuchador del carrito ---
+  setupCartListener(); 
 
   document.addEventListener("keydown", (e) => {
     const modal = document.getElementById("product-modal");
