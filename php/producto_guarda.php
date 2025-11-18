@@ -123,9 +123,13 @@ try {
         $variante_nombres = $_POST['variante_nombre'];
         $variante_precios = $_POST['variante_precio'];
 
-        // Preparar las consultas
-        $stmt_variante = $pdo->prepare("INSERT INTO variante(nombre_variante, precio) VALUES(:nombre, :precio)");
-        $stmt_link = $pdo->prepare("INSERT INTO variante_producto(producto_id, id_variante) VALUES(:pid, :vid)");
+        /* --- CAMBIO AQUÍ: Ya no guardamos precio en 'variante', solo nombre --- */
+        // Primero buscamos si la variante ya existe (opcional pero recomendado para no duplicar nombres)
+        // O simplemente insertamos una nueva. Aquí insertamos nueva para simplificar tu lógica actual.
+        $stmt_variante = $pdo->prepare("INSERT INTO variante(nombre_variante) VALUES(:nombre)");
+        
+        /* --- CAMBIO AQUÍ: Ahora guardamos precio en 'variante_producto' --- */
+        $stmt_link = $pdo->prepare("INSERT INTO variante_producto(producto_id, id_variante, precio) VALUES(:pid, :vid, :precio)");
 
         foreach ($variante_nombres as $index => $nombre_variante) {
             
@@ -141,19 +145,19 @@ try {
                 $precio_final = (float)$precio_variante_limpio;
             }
 
-            // 6a. Guardar en la tabla 'variante'
+            // 6a. Guardar en la tabla 'variante' (SOLO NOMBRE)
             $stmt_variante->execute([
-                ":nombre" => $nombre_variante_limpio,
-                ":precio" => $precio_final
+                ":nombre" => $nombre_variante_limpio
             ]);
             
             // 6b. Obtener el ID de la nueva variante
             $variante_id = $pdo->lastInsertId();
 
-            // 6c. Enlazar el producto y la variante
+            // 6c. Enlazar producto y variante Y GUARDAR PRECIO AQUÍ
             $stmt_link->execute([
                 ":pid" => $producto_id,
-                ":vid" => $variante_id
+                ":vid" => $variante_id,
+                ":precio" => $precio_final // <-- El precio se guarda aquí ahora
             ]);
         }
     }
