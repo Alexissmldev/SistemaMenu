@@ -97,7 +97,7 @@ $conexion = null;
                     </div>
                 </a>
 
-                <button onclick="openModal('category_new', '' , '' , '')" class="group bg-blue-50 hover:bg-blue-500 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 border border-blue-100 hover:shadow-xl hover:shadow-blue-200 cursor-pointer w-full text-left">
+                <a href="index.php?vista=category_new" class="group bg-blue-50 hover:bg-blue-500 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 border border-blue-100 hover:shadow-xl hover:shadow-blue-200 cursor-pointer w-full text-left">
                     <div class="bg-white text-blue-500 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl shadow-sm group-hover:scale-110 transition-transform shrink-0">
                         <i class="fas fa-folder-plus"></i>
                     </div>
@@ -105,7 +105,7 @@ $conexion = null;
                         <span class="block text-sm md:text-base font-bold text-gray-800 group-hover:text-white">Categoría</span>
                         <span class="text-xs text-blue-600/70 group-hover:text-blue-100">Nueva sección</span>
                     </div>
-                </button>
+                </a>
 
                 <a href="index.php?vista=promo_new" class="group bg-purple-50 hover:bg-purple-500 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 border border-purple-100 hover:shadow-xl hover:shadow-purple-200 cursor-pointer">
                     <div class="bg-white text-purple-500 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl shadow-sm group-hover:scale-110 transition-transform shrink-0">
