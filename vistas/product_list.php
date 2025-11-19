@@ -1,84 +1,92 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+<div class="container mx-auto p-6 lg:p-10 max-w-7xl">
+    <?php include "./inc/breadcrumb.php"; ?>
+    <!-- ENCABEZADO Y BOTONES DE ACCIÓN -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
         <div>
-            <h1 class="text-3xl font-bold tracking-tight text-gray-900">Productos</h1>
-            <h2 class="text-lg text-gray-600 mt-1">Gestiona y visualiza la lista de productos en el inventario.</h2>
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                <span class="bg-orange-100 p-2 rounded-lg text-orange-600">
+                    <i class="fas fa-boxes"></i>
+                </span>
+                Lista de Productos
+            </h1>
+            <h2 class="text-sm text-gray-500 mt-2 ml-1">Gestiona los productos y visualiza el menú disponible.</h2>
         </div>
-        <div>
-            <a  href="index.php?vista=product_new" class="w-full sm:w-auto inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0- 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <span>Nuevo Producto</span>
+
+        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <!-- Botón Imprimir -->
+            <a href="index.php?vista=reportes&descargar=pdf" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-orange-600 transition-all shadow-sm">
+                <i class="fas fa-file-pdf mr-2 text-red-500"></i>
+                Imprimir Menú
+            </a>
+
+            <!-- Botón Nuevo Producto -->
+            <a href="index.php?vista=product_new" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-orange-600 rounded-lg hover:bg-orange-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                <i class="fas fa-plus mr-2"></i>
+                Nuevo Producto
             </a>
         </div>
     </div>
 
-    <div>
-        <a href="index.php?vista=reportes&descargar=pdf" class="w-full sm:w-auto inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0- 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            <span>Imprimir Menu</span>
-        </a>
+    <!-- BARRA DE BÚSQUEDA -->
+    <div class="mb-8">
+        <form action="./php/buscador.php" method="POST" autocomplete="off" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <input type="hidden" name="modulo_buscador" value="producto">
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <div class="md:col-span-9 lg:col-span-10">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" name="txt_buscador" class="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-orange-500 focus:border-orange-500 transition-colors" placeholder="¿Qué producto estás buscando?" value="<?php echo isset($_GET['busqueda']) ? htmlspecialchars($_GET['busqueda']) : ''; ?>">
+                    </div>
+                </div>
+
+                <div class="md:col-span-3 lg:col-span-2 flex gap-2">
+                    <button type="submit" class="w-full flex items-center justify-center text-white bg-gray-800 hover:bg-gray-900 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-3 transition-colors">
+                        Buscar
+                    </button>
+
+                    <?php if (isset($_GET['busqueda']) && !empty($_GET['busqueda'])): ?>
+                        <a href="index.php?vista=product_list" class="flex items-center justify-center px-4 py-3 text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-lg transition-colors" title="Limpiar Búsqueda">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </form>
     </div>
-</div>
 
-<div class="py-4">
-    <form action="./php/buscador.php" method="POST" autocomplete="off" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <input type="hidden" name="modulo_buscador" value="producto">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="sm:col-span-2">
-                <input type="text" name="txt_buscador" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="¿Qué estás buscando?" value="<?php echo isset($_GET['busqueda']) ? htmlspecialchars($_GET['busqueda']) : ''; ?>">
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="w-full flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md">
-                    <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0- 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                    </svg>
-                    Buscar
-                </button>
-                <?php if (isset($_GET['busqueda']) && !empty($_GET['busqueda'])): ?>
-                    <a href="index.php?vista=product_list" class="w-full flex items-center justify-center bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md" title="Limpiar Búsqueda">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0- 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </a>
-                <?php endif; ?>
-            </div>
-        </div>
-    </form>
-</div>
+    <!-- CONTENEDOR DE LA LISTA (PHP) -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
+        <?php
+        require_once "./php/main.php";
 
-<div class="mt-6">
-    <?php
-    require_once "./php/main.php";
-
-
-
-    // eliminar producto
-    if (isset($_GET['product_id_del'])) {
-        require_once "./php/producto_eliminar.php";
-    }
-
-    if (!isset($_GET['page'])) {
-        $pagina = 1;
-    } else {
-        $pagina = (int) $_GET['page'];
-        if ($pagina <= 1) {
-            $pagina = 1;
+        // Eliminar producto (Lógica existente)
+        if (isset($_GET['product_id_del'])) {
+            require_once "./php/producto_eliminar.php";
         }
-    }
 
-    $categoria_id = (isset($_GET['category_id'])) ? $_GET['category_id'] : 0;
-    $pagina = limpiar_cadena($pagina);
-    $url = "index.php?vista=product_list&page=";
-    $registros = 15;
-    $busqueda = "";
+        if (!isset($_GET['page'])) {
+            $pagina = 1;
+        } else {
+            $pagina = (int) $_GET['page'];
+            if ($pagina <= 1) {
+                $pagina = 1;
+            }
+        }
 
-    require_once "./php/producto_lista.php";
-    ?>
+        $categoria_id = (isset($_GET['category_id'])) ? $_GET['category_id'] : 0;
+        $pagina = limpiar_cadena($pagina);
+        $url = "index.php?vista=product_list&page=";
+        $registros = 15;
+        $busqueda = "";
+
+        // Aquí se cargará la tabla o grid de productos
+        require_once "./php/producto_lista.php";
+        ?>
+    </div>
+
+    <!-- MODAL CONTAINER (Para ediciones rápidas si las implementas a futuro) -->
     <div id="modal-container"></div>
-
 </div>

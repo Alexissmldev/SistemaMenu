@@ -1,37 +1,108 @@
+<?php
+require_once "./php/main.php";
+?>
 
-<div id="categoryModal" data-role="modal-backdrop" data-animation="fade-in-scale" class="fixed inset-0 bg-black overflow-y-auto h-full w-full flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out " style="background-color: rgba(0, 0, 0, 0.75);">
-	<div id="modalContent" class="relative mx-auto p-5 border w-full max-w-3xl shadow-2xl rounded-2xl bg-white transition-all duration-300 ease-in-out scale-95">
-		<div class="flex justify-between items-center border-b pb-3">
-			<div class="flex items-center"> <svg class="w-6 h-6 mr-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10.5 11.25h3M12 15V7.5" />
-				</svg>
-				<h3 class="text-2xl font-bold text-gray-800">Añadir Nueva categoria</h3>
-			</div> <button id="closeModalBtn" class="modal-close-trigger text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-				</svg></button>
-		</div>
-		<div class="mt-5 max-h-[70vh] overflow-y-auto pr-2">
-			<form action="./php/categoria_guardar.php" method="POST" class="FormularioAjax" autocomplete="off">
-				<p class="text-sm font-medium text-gray-800 mb-2">Crear nueva categoría</p>
-				<div id="newCategoryAlerts"></div>
-				<div class="grid grid-cols-1 gap-4">
-					<div>
-						<label for="categoria_nombre" class="sr-only">Nombre</label>
-						<input type="text" id="categoria_nombre" name="categoria_nombre"  placeholder="Nombre de la categoría" class="block w-full rounded-md border-gray-300 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+<form action="./php/categoria_guardar.php" class="FormularioAjax w-full min-h-screen bg-slate-50 flex flex-col pb-10 lg:pb-0" method="POST" autocomplete="off">
+
+	<div class="sticky top-16 z-30 bg-white border-b border-slate-200 px-4 py-3 lg:px-6 shadow-sm transition-all">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-3 lg:gap-4">
+				<div class="hidden md:block bg-orange-100 text-orange-600 p-2 rounded-lg">
+					<i class="fas fa-layer-group text-lg"></i>
+				</div>
+				<div>
+					<div class="opacity-70 scale-90 origin-left -mb-1 hidden sm:block">
+						<?php include "./inc/breadcrumb.php"; ?>
 					</div>
-					<div class="flex items-center gap-3"> <span class="text-sm font-medium text-gray-700">Vigente</span>
-						<div class="relative inline-block w-12 h-6">
-							<div class="absolute inset-0 bg-green-500 rounded-full"></div> <!-- Bolita blanca -->
-							<div class="absolute left-6 top-1 w-4 h-4 bg-white rounded-full border border-gray-300"></div>
-						</div>
-					</div> 
-					<input class="input" type="hidden" name="categoria_estado" value="1">
+					<h2 class="text-base lg:text-lg font-bold text-slate-800 leading-tight">Nueva Categoría</h2>
 				</div>
-				<div class="flex justify-end items-center gap-x-3 mt-4">
-					<button type="button" class=" modal-close-trigger text-sm font-medium text-gray-600 hover:text-gray-900">Cancelar</button>
-					<button type="summit" id="saveCategoryBtn" class="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">Guardar</button>
-				</div>
-			</form>
+			</div>
+
+			<div class="flex items-center gap-3">
+				<a href="index.php?vista=category_list" class="hidden md:inline-block text-sm font-medium text-slate-500 hover:text-slate-800">
+					Cancelar
+				</a>
+				<button type="submit" class="inline-flex items-center px-4 py-2 lg:px-6 text-sm font-bold rounded-lg text-white bg-orange-600 hover:bg-orange-700 shadow-md transition-transform hover:-translate-y-0.5">
+					<i class="fas fa-save mr-2"></i> <span class="hidden sm:inline">Guardar Categoría</span><span class="sm:hidden">Guardar</span>
+				</button>
+			</div>
 		</div>
 	</div>
-</div>
+
+	<div class="flex-1 p-4 lg:p-6">
+
+		<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+
+			<div class="md:col-span-7 bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+				<h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 mb-4 flex items-center gap-2">
+					<i class="fas fa-pen text-slate-400"></i> Información General
+				</h3>
+
+				<div class="space-y-5">
+					<div>
+						<label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre de la Categoría</label>
+						<div class="relative">
+							<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+								<i class="fas fa-tag"></i>
+							</div>
+							<input type="text" name="categoria_nombre" id="categoria_nombre" class="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-slate-50" placeholder="Ej: Bebidas Calientes" required>
+						</div>
+						<p class="text-[10px] text-slate-400 mt-1">El nombre que aparecerá en el menú principal.</p>
+					</div>
+
+					<div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+						<div class="flex items-start gap-3">
+							<i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+							<p class="text-xs text-blue-700">
+								<strong>Nota:</strong> Las categorías nuevas aparecerán al final de la lista por defecto.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="md:col-span-5 bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+				<h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 mb-4 flex items-center gap-2">
+					<i class="fas fa-clock text-slate-400"></i> Disponibilidad
+				</h3>
+
+				<div class="space-y-4">
+
+					<div>
+						<label class="block text-xs font-bold text-slate-600 uppercase mb-1">Estado Actual</label>
+						<select name="categoria_estado" class="block w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50">
+							<option value="1">Activa (Visible)</option>
+							<option value="0">Inactiva (Oculta)</option>
+						</select>
+					</div>
+
+					<div class="border-t border-slate-100 pt-4">
+						<p class="text-xs font-bold text-slate-800 mb-2">Horario de Visualización</p>
+						<p class="text-[10px] text-slate-500 mb-3 leading-snug">
+							Define en qué horario esta categoría es visible.<br>
+							<span class="text-orange-600">Ejemplo: Desayunos de 7 a 11.</span>
+						</p>
+
+						<div class="grid grid-cols-2 gap-4">
+							<div>
+								<label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Hora Inicio (0-23)</label>
+								<div class="relative">
+									<input type="number" name="categoria_hora_inicio" min="0" max="23" placeholder="0" class="block w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50 text-center">
+									<span class="absolute right-3 top-2 text-slate-400 text-xs">h</span>
+								</div>
+							</div>
+							<div>
+								<label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Hora Fin (0-23)</label>
+								<div class="relative">
+									<input type="number" name="categoria_hora_fin" min="0" max="23" placeholder="23" class="block w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50 text-center">
+									<span class="absolute right-3 top-2 text-slate-400 text-xs">h</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</form>

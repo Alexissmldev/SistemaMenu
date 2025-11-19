@@ -1,10 +1,9 @@
 <?php
-//OBTENER DATOS PARA EL FORMULARIO 
-
+// OBTENER DATOS PARA EL FORMULARIO 
 if (!isset($conexion)) {
     require_once "./php/main.php";
+    $conexion = conexion();
 }
-$conexion = conexion();
 
 // Obtenemos el ID de la promo a editar
 $promo_id = (isset($_GET['promo_id_up'])) ? (int)$_GET['promo_id_up'] : 0;
@@ -15,172 +14,197 @@ $stmt_promo->execute([':id' => $promo_id]);
 $promo = $stmt_promo->fetch();
 
 if (!$promo) {
-    echo '<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"><div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert"><p class="font-bold">Error</p><p>No se encontró la promoción solicitada.</p></div></div>';
+    echo '
+    <div class="flex items-center justify-center h-screen bg-slate-50">
+        <div class="bg-white p-8 rounded-xl shadow-lg text-center border border-red-100 max-w-md">
+            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fas fa-times"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Error</h3>
+            <p class="text-slate-500 mb-6">No se encontró la promoción solicitada.</p>
+            <a href="index.php?vista=promo_list" class="px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700">Volver</a>
+        </div>
+    </div>';
     exit();
 }
 
-//Obtener TODOS los productos 
+// Obtener TODOS los productos 
 $productos_stmt = $conexion->query("SELECT producto_id, producto_nombre FROM producto WHERE producto_estado = 1 ORDER BY producto_nombre ASC");
 $todos_productos = $productos_stmt->fetchAll();
 
-//Obtener IDs de productos YA VINCULADOS 
+// Obtener IDs de productos YA VINCULADOS 
 $stmt_prods_vinculados = $conexion->prepare("SELECT producto_id FROM promocion_productos WHERE promo_id = :id");
 $stmt_prods_vinculados->execute([':id' => $promo_id]);
 $ids_prods_vinculados = $stmt_prods_vinculados->fetchAll(PDO::FETCH_COLUMN);
 
+// Verificar límite solo si la promo actual está inactiva y se quiere activar
 $check_limite = $conexion->query("SELECT COUNT(promo_id) FROM promociones WHERE estado = 1");
 $total_promos_activas = (int) $check_limite->fetchColumn();
+// El límite afecta si ya hay 5 y esta promo NO es una de las activas (está en 0)
 $limite_alcanzado = ($total_promos_activas >= 5 && $promo['estado'] == 0);
-
 ?>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<form action="./php/promo_actualizar.php" class="FormularioAjax w-full min-h-screen bg-slate-50 flex flex-col pb-10 lg:pb-0" method="POST" autocomplete="off" enctype="multipart/form-data">
 
-    <div class="mb-6">
-        <nav class="flex" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <a href="index.php?vista=home" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
-                        <i class="fa fa-home mr-2"></i> Inicio
-                    </a>
-                </li>
-                <li>
-                    <div class="flex items-center">
-                        <i class="fa fa-chevron-right text-gray-400"></i>
-                        <a href="index.php?vista=promo_list" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2">Promociones</a>
+    <input type="hidden" name="promo_id" value="<?php echo $promo['promo_id']; ?>">
+
+    <div class="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 lg:px-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3 lg:gap-4">
+                <div class="hidden md:block bg-orange-100 text-orange-600 p-2 rounded-lg">
+                    <i class="fas fa-edit text-lg"></i>
+                </div>
+                <div>
+                    <div class="opacity-70 scale-90 origin-left -mb-1 hidden sm:block">
+                        <?php include "./inc/breadcrumb.php"; ?>
                     </div>
-                </li>
-                <li aria-current="page">
-                    <div class="flex items-center">
-                        <i class="fa fa-chevron-right text-gray-400"></i>
-                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Actualizar</span>
-                    </div>
-                </li>
-            </ol>
-        </nav>
-        <h1 class="text-3xl font-bold tracking-tight text-gray-900 mt-4">Actualizar Promoción</h1>
-        <p class="text-lg text-gray-600 mt-1">Modifica los datos de la promoción seleccionada.</p>
+                    <h2 class="text-base lg:text-lg font-bold text-slate-800 leading-tight">Editar Promoción</h2>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="index.php?vista=promo_list" class="hidden md:inline-block text-sm font-medium text-slate-500 hover:text-slate-800">
+                    Cancelar
+                </a>
+
+                <?php if ($limite_alcanzado): ?>
+                    <span class="text-xs font-bold text-orange-600 bg-orange-100 px-3 py-2 rounded-lg mr-2 hidden sm:inline-block">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> Límite alcanzado
+                    </span>
+                <?php endif; ?>
+
+                <button type="submit" class="inline-flex items-center px-4 py-2 lg:px-6 text-sm font-bold rounded-lg text-white bg-orange-600 hover:bg-orange-700 shadow-md transition-transform hover:-translate-y-0.5">
+                    <i class="fas fa-sync-alt mr-2"></i> <span class="hidden sm:inline">Actualizar</span><span class="sm:hidden">Guardar</span>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <?php if ($limite_alcanzado): ?>
-        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
-            <p class="font-bold">Límite de Promociones Activas</p>
-            <p>Ya tienes 5 promociones activas. Si activas esta, superarás el límite. Desactiva otra primero.</p>
-        </div>
-    <?php endif; ?>
+    <div class="flex-1 p-4 lg:p-6">
 
-    <form action="./php/promo_actualizar.php" class="FormularioAjax" method="POST" autocomplete="off" enctype="multipart/form-data">
-        <input type="hidden" name="promo_id" value="<?php echo $promo['promo_id']; ?>">
-        <div class="lg:grid lg:grid-cols-3 lg:gap-8">
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white shadow-lg rounded-lg border border-gray-200">
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Detalles de la Promoción</h3>
-                        <div>
-                            <label for="promo_nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
-                            <input type="text" id="promo_nombre" name="promo_nombre" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" value="<?php echo htmlspecialchars($promo['promo_nombre']); ?>" required>
-                        </div>
+        <?php if ($limite_alcanzado): ?>
+            <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
+                <i class="fas fa-exclamation-circle text-yellow-600 mt-1"></i>
+                <div>
+                    <h4 class="text-sm font-bold text-yellow-800">Límite de Promociones Activas</h4>
+                    <p class="text-xs text-yellow-700 mt-1">Ya tienes 5 promociones activas. Puedes editar el contenido de esta promoción, pero no podrás cambiar su estado a "Activa" hasta que desactives otra.</p>
+                </div>
+            </div>
+        <?php endif; ?>
 
-                        <div class="mt-4">
-                            <label for="promo_precio" class="block text-sm font-medium text-gray-700">Precio Final (en USD)</label>
-                            <input type="number" id="promo_precio" name="promo_precio" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" value="<?php echo htmlspecialchars($promo['promo_precio']); ?>" required>
-                        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
 
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700">Foto Actual</label>
+            <div class="md:col-span-1 lg:col-span-3 bg-white p-4 lg:p-5 rounded-xl shadow-sm border border-slate-100">
+                <h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 mb-4 flex items-center gap-2">
+                    <i class="fas fa-pen text-slate-400"></i> Detalles
+                </h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre</label>
+                        <input type="text" name="promo_nombre" value="<?php echo htmlspecialchars($promo['promo_nombre']); ?>" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Precio Final ($)</label>
+                        <input type="number" name="promo_precio" step="0.01" min="0" value="<?php echo htmlspecialchars($promo['promo_precio']); ?>" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Imagen Actual</label>
+                        <div class="relative group">
                             <?php
                             $img_url = './img/anuncios/estandar.jpg';
                             if (!empty($promo['promo_foto']) && is_file('./img/anuncios/large/' . $promo['promo_foto'])) {
                                 $img_url = './img/anuncios/large/' . $promo['promo_foto'];
                             }
                             ?>
-                            <img src="<?php echo $img_url; ?>" alt="Foto Actual" class="mt-1 w-48 h-24 object-cover rounded-md border bg-gray-100">
+                            <div class="h-32 w-full rounded-lg overflow-hidden border border-slate-200 bg-slate-100 relative">
+                                <img src="<?php echo $img_url; ?>" alt="Promo" class="w-full h-full object-cover">
+                            </div>
 
-                            <label for="promo_foto" class="block text-sm font-medium text-gray-700 mt-4">Cambiar Foto (Opcional)</label>
-                            <input type="file" id="promo_foto" name="promo_foto" class="mt-1 block w-full text-sm text-gray-500
-                                    file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
-                                    file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700
-                                    hover:file:bg-blue-100" accept="image/jpeg, image/png, image/webp">
+                            <label class="block mt-2">
+                                <span class="sr-only">Cambiar foto</span>
+                                <input type="file" name="promo_foto" class="block w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 font-medium transition-colors" accept="image/jpeg, image/png, image/webp">
+                            </label>
                         </div>
-
-                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="hora_inicio" class="block text-sm font-medium text-gray-700">Hora de Inicio (0-23)</label>
-                                <input type="number" id="hora_inicio" name="hora_inicio" min="0" max="23" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" value="<?php echo $promo['hora_inicio']; ?>" required>
-                            </div>
-                            <div>
-                                <label for="hora_fin" class="block text-sm font-medium text-gray-700">Hora de Fin (0-23)</label>
-                                <input type="number" id="hora_fin" name="hora_fin" min="0" max="23" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" value="<?php echo $promo['hora_fin']; ?>" required>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="estado" class="block text-sm font-medium text-gray-700">Estado</label>
-                                <select id="estado" name="estado" class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" <?php echo $limite_alcanzado ? 'disabled' : ''; ?>>
-                                    <option value="1" <?php echo ($promo['estado'] == 1) ? 'selected' : ''; ?>>Activa</option>
-                                    <option value="0" <?php echo ($promo['estado'] == 0) ? 'selected' : ''; ?>>Inactiva</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="prioridad" class="block text-sm font-medium text-gray-700">Prioridad</label>
-                                <input type="number" id="prioridad" name="prioridad" value="<?php echo $promo['prioridad']; ?>" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white shadow-lg rounded-lg border border-gray-200">
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-                            <i class="fa fa-link text-gray-400 mr-2"></i>Productos Incluidos
-                        </h3>
-                        <p class="text-sm text-gray-600 mb-4">Selecciona los productos que forman parte de esta promo.</p>
+            <div class="md:col-span-1 lg:col-span-4 bg-white p-4 lg:p-5 rounded-xl shadow-sm border border-slate-100">
+                <h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 mb-4 flex items-center gap-2">
+                    <i class="fas fa-clock text-slate-400"></i> Configuración
+                </h3>
 
+                <div class="grid grid-cols-2 gap-3 lg:gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Inicio (Hora)</label>
+                        <input type="number" name="hora_inicio" min="0" max="23" value="<?php echo $promo['hora_inicio']; ?>" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Fin (Hora)</label>
+                        <input type="number" name="hora_fin" min="0" max="23" value="<?php echo $promo['hora_fin']; ?>" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 lg:gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Estado</label>
+                        <select name="estado" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400" <?php echo $limite_alcanzado ? 'disabled' : ''; ?>>
+                            <option value="1" <?php echo ($promo['estado'] == 1) ? 'selected' : ''; ?>>Activa</option>
+                            <option value="0" <?php echo ($promo['estado'] == 0) ? 'selected' : ''; ?>>Inactiva</option>
+                        </select>
+                        <?php if ($limite_alcanzado): ?>
+                            <input type="hidden" name="estado" value="0">
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Prioridad</label>
+                        <input type="number" name="prioridad" value="<?php echo $promo['prioridad']; ?>" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50">
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-3 mt-2">
+                    <p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Rango de Fechas (Opcional)</p>
+                    <div class="grid grid-cols-2 gap-3 lg:gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Seleccionar Productos</label>
-
-                            <div class="mt-1 h-96 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
-                                <?php if (empty($todos_productos)): ?>
-                                    <span class="text-sm text-gray-500">No hay productos activos para vincular.</span>
-                                <?php else: ?>
-                                    <?php foreach ($todos_productos as $prod): ?>
-                                        <?php
-                                        $checked = in_array($prod['producto_id'], $ids_prods_vinculados) ? 'checked' : '';
-                                        ?>
-                                        <div class="flex items-center">
-                                            <input id="prod-<?php echo $prod['producto_id']; ?>"
-                                                name="productos_vinculados[]"
-                                                type="checkbox"
-                                                value="<?php echo $prod['producto_id']; ?>"
-                                                class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                                <?php echo $checked; ?>>
-                                            <label for="prod-<?php echo $prod['producto_id']; ?>" class="ml-3 block text-sm text-gray-700">
-                                                <?php echo htmlspecialchars($prod['producto_nombre']); ?>
-                                            </label>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Fecha Inicio</label>
+                            <input type="date" name="fecha_inicio" value="<?php echo $promo['fecha_inicio']; ?>" class="w-full px-2 py-2 border border-slate-200 rounded-lg text-xs text-slate-600 bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1">Fecha Fin</label>
+                            <input type="date" name="fecha_fin" value="<?php echo $promo['fecha_fin']; ?>" class="w-full px-2 py-2 border border-slate-200 rounded-lg text-xs text-slate-600 bg-slate-50">
                         </div>
                     </div>
                 </div>
             </div>
 
-        </div>
+            <div class="md:col-span-2 lg:col-span-5 bg-white p-4 lg:p-5 rounded-xl shadow-sm border border-slate-100 h-full">
+                <h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 mb-4 flex items-center gap-2">
+                    <i class="fas fa-cubes text-slate-400"></i> Productos Incluidos
+                </h3>
 
-        <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end gap-3">
-            <a href="index.php?vista=promo_list" class="px-5 py-2 bg-gray-200 text-gray-800 font-semibold rounded-full hover:bg-gray-300 transition-colors">
-                Cancelar
-            </a>
-            <button type="submit" class="px-5 py-2 bg-blue-600 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 transition-colors disabled:opacity-50" <?php echo $limite_alcanzado ? 'disabled' : ''; ?>>
-                <i class="fa fa-save mr-2"></i>
-                Actualizar Promoción
-            </button>
-        </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[400px] lg:max-h-full overflow-y-auto lg:overflow-visible custom-scrollbar">
+                    <?php if (empty($todos_productos)): ?>
+                        <p class="col-span-2 text-sm text-slate-400 text-center py-4">No hay productos activos.</p>
+                    <?php else: ?>
+                        <?php foreach ($todos_productos as $prod): ?>
+                            <?php
+                            $checked = in_array($prod['producto_id'], $ids_prods_vinculados) ? 'checked' : '';
+                            // Estilo visual para los seleccionados (opcional)
+                            $bg_class = ($checked) ? 'bg-orange-50 border-orange-200' : 'bg-slate-50/50 border-slate-100';
+                            ?>
+                            <label class="flex items-center p-2 border rounded-lg hover:bg-orange-50 cursor-pointer transition-colors <?php echo $bg_class; ?>">
+                                <input name="productos_vinculados[]" type="checkbox" value="<?php echo $prod['producto_id']; ?>" class="h-4 w-4 text-orange-600 border-slate-300 rounded focus:ring-orange-500 shrink-0" <?php echo $checked; ?>>
+                                <span class="ml-2 text-xs font-medium text-slate-700 truncate select-none">
+                                    <?php echo htmlspecialchars($prod['producto_nombre']); ?>
+                                </span>
+                            </label>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
 
-    </form>
-</div>
+        </div>
+    </div>
+</form>

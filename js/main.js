@@ -237,7 +237,7 @@ function initProductModalScripts() {
       }
     });
   }
-  initImagePreview("formNuevoProducto");
+ initImagePreview("productForm");
 }
 
 //previsualización de imágenes.

@@ -1,13 +1,24 @@
 <?php
-// Obtenemos la vista actual para resaltar el enlace activo
 $current_vista = $_GET['vista'] ?? 'home';
 
-// Definimos un array de vistas para agrupar
-$vistas_productos = ['product_list', 'promo_list'];
-$vistas_admin = ['ad_list', 'user_list'];
+function isActive($vistas, $current)
+{
+    if (is_array($vistas)) {
+        return in_array($current, $vistas) ? 'text-indigo-600 bg-indigo-50 font-bold' : 'text-gray-500 hover:text-indigo-600 hover:bg-indigo-50';
+    }
+    return ($current == $vistas) ? 'text-indigo-600 bg-indigo-50 font-bold' : 'text-gray-500 hover:text-indigo-600 hover:bg-indigo-50';
+}
+
+function isActiveText($vistas, $current)
+{
+    if (is_array($vistas)) {
+        return in_array($current, $vistas) ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-600';
+    }
+    return ($current == $vistas) ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-600';
+}
 ?>
 
-<nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+<nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-[100] font-sans">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="relative flex h-16 items-center justify-between">
 
@@ -15,89 +26,169 @@ $vistas_admin = ['ad_list', 'user_list'];
                 <a href="index.php?vista=home" class="flex-shrink-0 flex items-center">
                     <img src="img/logo.png" alt="Tu Compañía" class="h-8 w-auto" />
                 </a>
-                <div class="hidden lg:ml-8 lg:block">
-                    <div class="flex space-x-4 items-center">
-                        <a href="index.php?vista=home" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'home') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">INICIO</a>
-                        <a href="index.php?vista=category_list" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'category_list') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">CATEGORIAS</a>
 
-                        <a href="index.php?vista=product_list" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'product_list') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">PRODUCTOS</a>
+                <div class="hidden lg:ml-10 lg:block">
+                    <div class="flex space-x-1 items-center">
 
-                        <a href="index.php?vista=promo_list" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'promo_list') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">PROMOCIONES</a>
+                        <a href="index.php?vista=home" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo isActiveText('home', $current_vista); ?>">
+                            INICIO
+                        </a>
 
-                        <a href="index.php?vista=ad_list" class="px-3 py-2 rounded-md text-sm font-medium transition-colors <?php echo ($current_vista == 'ad_list') ? 'text-indigo-600 font-semibold' : 'text-gray-500 hover:text-indigo-600'; ?>">ANUNCIOS</a>
+                        <div class="relative group">
+                            <button class="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors group-hover:text-indigo-600 <?php echo isActiveText(['product_list', 'product_new', 'product_update'], $current_vista); ?>">
+                                PRODUCTOS
+                                <i class="fas fa-chevron-down text-xs opacity-50 group-hover:rotate-180 transition-transform duration-200"></i>
+                            </button>
+
+                            <div class="absolute left-0 mt-0 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50">
+                                <div class="p-1">
+                                    <a href="index.php?vista=product_new" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg">
+                                        <i class="fas fa-plus text-xs"></i> Nuevo Producto
+                                    </a>
+                                    <a href="index.php?vista=product_list" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg">
+                                        <i class="fas fa-boxes text-xs"></i> Lista Productos
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="relative group">
+                            <button class="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors group-hover:text-indigo-600 <?php echo isActiveText(['category_list', 'category_new'], $current_vista); ?>">
+                                CATEGORÍAS
+                                <i class="fas fa-chevron-down text-xs opacity-50 group-hover:rotate-180 transition-transform duration-200"></i>
+                            </button>
+
+                            <div class="absolute left-0 mt-0 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50">
+                                <div class="p-1">
+                                    <a href="index.php?vista=category_new" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg">
+                                        <i class="fas fa-plus text-xs"></i> Nueva Categoría
+                                    </a>
+                                    <a href="index.php?vista=category_list" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg">
+                                        <i class="fas fa-list text-xs"></i> Lista Productos
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <div class="relative group">
+                            <button class="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors group-hover:text-indigo-600 <?php echo isActiveText(['promo_list', 'promo_new', 'ad_list', 'ad_new'], $current_vista); ?>">
+                                CAMPAÑAS
+                                <i class="fas fa-chevron-down text-xs opacity-50 group-hover:rotate-180 transition-transform duration-200"></i>
+                            </button>
+
+                            <div class="absolute left-0 mt-0 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50">
+                                <div class="p-1">
+                                    <div class="px-4 py-1 text-xs font-bold text-gray-400 uppercase tracking-wider">Promociones</div>
+                                    <a href="index.php?vista=promo_list" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg">
+                                        <i class="fas fa-tags text-xs"></i> Gestionar Promos
+                                    </a>
+
+                                    <div class="border-t border-gray-100 my-1"></div>
+
+                                    <div class="px-4 py-1 text-xs font-bold text-gray-400 uppercase tracking-wider">Anuncios</div>
+                                    <a href="index.php?vista=ad_list" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg">
+                                        <i class="fas fa-bullhorn text-xs"></i> Gestionar Anuncios
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
 
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center">
+            <div class="flex items-center gap-2">
                 <div class="lg:hidden">
                     <button id="mobile-menu-button" type="button" class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100 focus:outline-none">
-                        <span class="sr-only">Abrir menú principal</span>
-                        <svg id="icon-open" class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                        </svg>
-                        <svg id="icon-close" class="hidden h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <i id="icon-open" class="fas fa-bars text-xl block"></i>
                     </button>
                 </div>
 
-                <div class="relative ml-4">
-                    <button id="profile-menu-button" type="button" class="relative flex rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        <span class="sr-only">Abrir menú de usuario</span>
-                        <img class="h-9 w-9 rounded-full object-cover" src="img/user.jpg" alt="Foto de perfil">
+                <div class="relative ml-2">
+                    <button id="profile-menu-button" type="button" class="relative flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 p-1 hover:bg-gray-50 transition-colors">
+                        <img class="h-8 w-8 rounded-full object-cover border border-gray-300" src="img/user.jpg" alt="Perfil">
+                        <span class="hidden md:block text-sm font-medium text-gray-700 mr-2"><?php echo $_SESSION['usuario']; ?></span>
+                        <i class="fas fa-chevron-down text-xs text-gray-400 hidden md:block"></i>
                     </button>
 
-                    <div id="profile-menu" class="dropdown-menu hidden absolute right-0 z-10 mt-2 w-64 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
-                        <div class="px-4 py-3 border-b border-gray-200">
-                            <p class="text-sm font-semibold text-gray-900"><?php echo $_SESSION['nombre'] . " " . $_SESSION['apellido']; ?></p>
-                            <p class="text-sm text-gray-500 truncate"><?php echo $_SESSION['usuario']; /* Asumiendo que tienes el usuario en la sesión */ ?></p>
+                    <div id="profile-menu" class="hidden absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-xl bg-white py-1 shadow-xl ring-1 ring-black ring-opacity-5 animate-fade-in-down">
+                        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                            <p class="text-sm font-bold text-gray-900"><?php echo $_SESSION['nombre'] . " " . $_SESSION['apellido']; ?></p>
+                            <p class="text-xs text-gray-500 truncate">@<?php echo $_SESSION['usuario']; ?></p>
                         </div>
-                        <a href="index.php?vista=perfil" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-
-                            <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A1.75 1.75 0 0117.748 22H6.252a1.75 1.75 0 01-1.75-1.882z" />
-                            </svg>
-
-                            <span>Perfil</span>
-                        </a>
-                        <a href="index.php?vista=logout" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                            <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                            </svg>
-                            <span>Salir</span>
-                        </a>
+                        <div class="p-1">
+                            <a href="index.php?vista=perfil" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg">
+                                <i class="fas fa-user-circle"></i> Mi Perfil
+                            </a>
+                        </div>
+                        <div class="border-t border-gray-100 p-1">
+                            <a href="index.php?vista=logout" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg">
+                                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="mobile-menu-container" class="lg:hidden" role="dialog" aria-modal="true">
-        <div id="mobile-menu-backdrop" class="fixed inset-0 bg-black bg-opacity-25 transition-opacity opacity-0 hidden"></div>
+    <div id="mobile-menu-container" class="lg:hidden relative z-[110]">
+        <div id="mobile-menu-backdrop" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity opacity-0 hidden"></div>
 
-        <div id="mobile-menu-panel" class="fixed inset-0 z-40 flex transition-transform transform -translate-x-full">
-            <div class="relative flex w-full max-w-xs flex-col overflow-y-auto bg-white pb-12 shadow-xl">
-                <div class="flex px-4 pb-2 pt-5">
-                    <button id="mobile-menu-close-button" type="button" class="-m-2 inline-flex items-center justify-center rounded-md p-2 text-gray-600">
-                        <span class="sr-only">Cerrar menú</span>
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+        <div id="mobile-menu-panel" class="fixed inset-y-0 left-0 z-[120] w-3/4 max-w-xs bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
+
+            <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+                <span class="font-bold text-lg text-indigo-600">Menú</span>
+                <button id="mobile-menu-close-button" class="text-gray-500 hover:text-gray-800 p-2">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+                <a href="index.php?vista=home" class="block rounded-lg px-3 py-2.5 text-base font-medium <?php echo isActive('home', $current_vista); ?>">
+                    <i class="fas fa-home w-6 text-center <?php echo isActive('home', $current_vista); ?>"></i> Inicio
+                </a>
+
+                <div class="pt-4 pb-2">
+                    <p class="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Gestionar</p>
                 </div>
 
-                <div class="space-y-2 border-t border-gray-200 px-4 py-6">
-                    <a href="index.php?vista=home" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'home') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Dashboard</a>
-                    <a href="index.php?vista=category_list" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'category_list') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Categorías</a>
-                    <a href="index.php?vista=product_list" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'product_list') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Productos</a>
-
-                    <a href="index.php?vista=promo_list" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'promo_list') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Promociones</a>
-
-                    <a href="index.php?vista=ad_list" class="block rounded-md px-3 py-2 text-base font-medium <?php echo ($current_vista == 'ad_list') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-900 hover:bg-gray-50'; ?>">Anuncios</a>
-
+                <div class="space-y-1">
+                    <a href="index.php?vista=category_new" class="block rounded-lg px-3 py-2 text-base font-medium <?php echo isActive('category_new', $current_vista); ?>">
+                        <i class="fas fa-plus w-6 text-center <?php echo isActive('category_new', $current_vista); ?>"></i> Nueva Categoría
+                    </a>
+                    <a href="index.php?vista=category_list" class="block rounded-lg px-3 py-2 text-base font-medium <?php echo isActive('category_list', $current_vista); ?>">
+                        <i class="fas fa-list w-6 text-center <?php echo isActive('category_list', $current_vista); ?>"></i> Lista Categorías
+                    </a>
                 </div>
+
+                <div class="space-y-1 mt-2">
+                    <a href="index.php?vista=product_list" class="block rounded-lg px-3 py-2 text-base font-medium <?php echo isActive('product_list', $current_vista); ?>">
+                        <i class="fas fa-box w-6 text-center <?php echo isActive('product_list', $current_vista); ?>"></i> Lista Productos
+                    </a>
+                    <a href="index.php?vista=product_new" class="block rounded-lg px-3 py-2 text-base font-medium <?php echo isActive('product_new', $current_vista); ?>">
+                        <i class="fas fa-plus w-6 text-center <?php echo isActive('product_new', $current_vista); ?>"></i> Nuevo Producto
+                    </a>
+                </div>
+
+                <div class="pt-4 pb-2">
+                    <p class="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Campañas</p>
+                </div>
+
+                <a href="index.php?vista=promo_list" class="block rounded-lg px-3 py-2 text-base font-medium <?php echo isActive('promo_list', $current_vista); ?>">
+                    <i class="fas fa-tags w-6 text-center <?php echo isActive('promo_list', $current_vista); ?>"></i> Promociones
+                </a>
+                <a href="index.php?vista=ad_list" class="block rounded-lg px-3 py-2 text-base font-medium <?php echo isActive('ad_list', $current_vista); ?>">
+                    <i class="fas fa-bullhorn w-6 text-center <?php echo isActive('ad_list', $current_vista); ?>"></i> Anuncios
+                </a>
+            </div>
+
+            <div class="p-4 border-t border-gray-100 bg-gray-50">
+                <a href="index.php?vista=logout" class="flex items-center justify-center gap-2 w-full rounded-lg bg-white border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </a>
             </div>
         </div>
     </div>

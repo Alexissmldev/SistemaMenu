@@ -1,137 +1,257 @@
 <?php
-
 require_once "./php/main.php";
 
 $id = limpiar_cadena($_GET['product_id_up'] ?? 0);
 $conexion = conexion();
 
-// Consulta mejorada con INNER JOIN para obtener también el nombre de la categoría
-$check_producto = $conexion->prepare("
-    SELECT p.*, c.categoria_nombre 
-    FROM producto p 
-    INNER JOIN categoria c ON p.categoria_id = c.categoria_id 
-    WHERE p.producto_id = :id
-");
+/* ==================================================================
+   1. CONSULTA ROBUSTA DEL PRODUCTO (SIN JOINS)
+   Esto garantiza que el producto cargue incluso si su categoría tiene problemas.
+   ================================================================== */
+$check_producto = $conexion->prepare("SELECT * FROM producto WHERE producto_id = :id");
 $check_producto->execute([':id' => $id]);
 
 if ($check_producto->rowCount() > 0) {
-    $datos = $check_producto->fetch();
+    $datos = $check_producto->fetch(PDO::FETCH_ASSOC);
+
+    /* ==================================================================
+       2. CONSULTA DE VARIANTES
+       Traemos las variantes asociadas a este producto
+       ================================================================== */
+    $check_variantes = $conexion->prepare("
+        SELECT vp.id_variante_producto, vp.producto_id, vp.id_variante, vp.precio_variante, v.nombre_variante 
+        FROM variante_producto vp
+        INNER JOIN variante v ON vp.id_variante = v.id_variante
+        WHERE vp.producto_id = :id
+    ");
+    $check_variantes->execute([':id' => $id]);
+    $variantes_existentes = $check_variantes->fetchAll(PDO::FETCH_ASSOC);
+
+    /* ==================================================================
+       3. CONSULTAS PARA LAS LISTAS DESPLEGABLES
+       ================================================================== */
+    // Variantes disponibles para el autocompletado
+    $variantes_db = $conexion->query("SELECT DISTINCT nombre_variante FROM variante ORDER BY nombre_variante ASC");
+    $variantes_disponibles = $variantes_db->fetchAll(PDO::FETCH_COLUMN, 0);
+
+    // Lista de todas las categorías
+    $categorias_db = $conexion->query("SELECT * FROM categoria ORDER BY categoria_nombre ASC");
+    $categorias = $categorias_db->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-    <div id="productUpdateModal" data-role="modal-backdrop" data-animation="fade-in-scale"  class="fixed inset-0 bg-black bg-opacity-75 h-full w-full flex items-center justify-center z-50 transition-opacity duration-300" style="background-color: rgba(0, 0, 0, 0.75);">
-        <div class="relative mx-auto w-full max-w-2xl bg-white rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-            <div class="flex-shrink-0 flex justify-between items-center p-5 border-b border-slate-200">
-                <div class="flex items-center gap-x-3">
-                    <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-full">
-                        <svg class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z M19.5 7.125L18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                        </svg>
+    <form id="productForm" action="./php/producto_actualizar.php" method="POST" class="FormularioAjax w-full min-h-screen bg-slate-50 flex flex-col pb-10 lg:pb-0" autocomplete="off" enctype="multipart/form-data">
+
+        <input type="hidden" name="producto_id" value="<?php echo $datos['producto_id']; ?>">
+
+        <div class="sticky top-16 z-30 bg-white border-b border-slate-200 px-4 py-3 lg:px-6 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 lg:gap-4">
+                    <div class="hidden md:block bg-orange-100 text-orange-600 p-2 rounded-lg">
+                        <i class="fas fa-edit text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold text-slate-800">Actualizar Producto</h3>
-                        <p class="text-sm text-slate-500">
-                            <span class="font-medium text-indigo-600"><?php echo htmlspecialchars($datos['categoria_nombre']); ?></span> // <?php echo htmlspecialchars($datos['descripcion_producto']); ?>
-                        </p>
+                        <div class="opacity-70 scale-90 origin-left -mb-1 hidden sm:block">
+                            <?php include "./inc/breadcrumb.php"; ?>
+                        </div>
+                        <h2 class="text-base lg:text-lg font-bold text-slate-800 leading-tight">
+                            Editar: <?= htmlspecialchars($datos['producto_nombre']) ?>
+                        </h2>
                     </div>
                 </div>
-                <button  class="modal-close-trigger p-2 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
+
+                <div class="flex items-center gap-3">
+                    <a href="index.php?vista=product_list" class="hidden md:inline-block text-sm font-medium text-slate-500 hover:text-slate-800">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 lg:px-6 text-sm font-bold rounded-lg text-white bg-orange-600 hover:bg-orange-700 shadow-md transition-transform hover:-translate-y-0.5">
+                        <i class="fas fa-sync-alt mr-2"></i> <span class="hidden sm:inline">Actualizar Producto</span><span class="sm:hidden">Actualizar</span>
+                    </button>
+                </div>
             </div>
+        </div>
 
-            <div class="flex-grow overflow-y-auto p-6">
-                <form action="./php/producto_actualizar.php" method="POST" class="FormularioAjax" autocomplete="off">
-                    <div class="form-rest mb-5"></div>
-                    <input type="hidden" name="producto_id" value="<?php echo $datos['producto_id']; ?>" required>
+        <div class="flex-1 p-4 lg:p-6">
+            <div class="form-rest mb-4"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                <div class="lg:col-span-8 space-y-6">
 
-                        <div>
-                            <label for="producto_nombre" class="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
-                            <div class="relative">
-                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h13.5m-13.5 7.5h13.5m-1.5-15l-1.5 15m-1.5-15l1.5 15m-6.75-15l1.5 15m-1.5-15l-1.5 15" />
-                                    </svg></div>
-                                <input id="producto_nombre" type="text" name="producto_nombre" class="block w-full rounded-lg border-slate-300 py-2 px-3 pl-10 shadow-sm" required value="<?php echo htmlspecialchars($datos['producto_nombre']); ?>">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                        <h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 mb-4 flex items-center gap-2">
+                            <i class="fas fa-pen text-slate-400"></i> Información Básica
+                        </h3>
+
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre del Producto</label>
+                                <input type="text" name="producto_nombre" value="<?php echo htmlspecialchars($datos['producto_nombre']); ?>" class="block w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-slate-50" required>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Precio Base ($)</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 font-bold">$</span>
+                                        <input type="text" name="producto_precio" id="producto_precio" value="<?php echo htmlspecialchars($datos['producto_precio']); ?>" class="block w-full pl-8 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50" required>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Categoría</label>
+                                    <div id="categorySelectorContainer" class="flex gap-2">
+                                        <select name="producto_categoria" id="producto_categoria" class="block w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50">
+                                            <?php
+                                            foreach ($categorias as $cat):
+                                                // Detección segura del ID (generalmente es categoria_id)
+                                                $cat_id = $cat['categoria_id'];
+                                                $selected = ($cat_id == $datos['categoria_id']) ? 'selected' : '';
+                                            ?>
+                                                <option value="<?= $cat_id ?>" <?= $selected ?>>
+                                                    <?= $cat['categoria_nombre'] ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Descripción (Ingredientes)</label>
+                                <textarea name="producto_descripcion" rows="2" class="block w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 bg-slate-50 resize-none"><?php echo htmlspecialchars($datos['descripcion_producto']); ?></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Estado del Producto</label>
+                                <div class="flex items-center">
+                                    <span class="text-sm text-slate-500 mr-3">No Disponible</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="producto_estado_check" class="sr-only peer" <?php echo ($datos['producto_estado'] == 1) ? 'checked' : ''; ?>>
+                                        <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                                    </label>
+                                    <span class="text-sm font-bold text-slate-700 ml-3">Disponible</span>
+                                    <input type="hidden" name="producto_estado" value="<?php echo $datos['producto_estado']; ?>">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 relative">
+                        <div class="flex justify-between items-end border-b border-slate-100 pb-3 mb-4">
+                            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fas fa-layer-group text-slate-400"></i> Variantes y Sabores
+                            </h3>
+                            <div class="hidden sm:flex gap-2">
+                                <button type="button" class="quick-fill text-[10px] bg-slate-50 border border-slate-200 text-slate-600 hover:border-orange-400 hover:text-orange-600 px-2 py-1 rounded transition-all" data-val="Pequeño">Pequeño</button>
+                                <button type="button" class="quick-fill text-[10px] bg-slate-50 border border-slate-200 text-slate-600 hover:border-orange-400 hover:text-orange-600 px-2 py-1 rounded transition-all" data-val="Grande">Grande</button>
                             </div>
                         </div>
 
-                        <div>
-                            <label for="producto_precio" class="block text-sm font-medium text-slate-700 mb-1">Precio</label>
-                            <div class="relative">
-                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span class="text-slate-500">$</span></div>
-                                <input id="producto_precio" type="text" name="producto_precio" class="block w-full rounded-lg border-slate-300 py-2 px-3 pl-7 shadow-sm" required value="<?php echo htmlspecialchars($datos['producto_precio']); ?>">
-                            </div>
-                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
+                            <div class="grid grid-cols-12 gap-3 items-end">
+                                <div class="col-span-7 sm:col-span-6 relative">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nombre Variante</label>
+                                    <input type="text" id="input_variante_nombre" class="block w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500" placeholder="Ej. Grande, Con Queso..." autocomplete="off">
+                                    <ul id="custom-dropdown-list" class="hidden absolute z-50 w-full bg-white border border-slate-200 rounded-lg shadow-xl max-h-48 overflow-y-auto mt-1">
+                                        <?php foreach ($variantes_disponibles as $v): ?>
+                                            <li class="dropdown-item px-3 py-2 hover:bg-orange-50 hover:text-orange-700 cursor-pointer text-xs text-slate-700 border-b border-slate-50 last:border-0"><?= $v ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
 
-                        <div>
-                            <label for="producto_descripcion" class="block text-sm font-medium text-slate-700 mb-1">Descripcion del producto</label>
-                            <div class="relative">
-                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h13.5m-13.5 7.5h13.5m-1.5-15l-1.5 15m-1.5-15l1.5 15m-6.75-15l1.5 15m-1.5-15l-1.5 15" />
-                                    </svg></div>
-                                <input id="producto_descripcion" type="text" name="producto_descripcion" class="block w-full rounded-lg border-slate-300 py-2 px-3 pl-10 shadow-sm" required value="<?php echo htmlspecialchars($datos['descripcion_producto']); ?>">
-                            </div>
-                        </div>
-               
-                        <div id="custom-select-container" class="md:col-span-2 relative">
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Categoría</label>
-                            <input type="hidden" id="producto_categoria_hidden" name="producto_categoria" value="<?php echo $datos['categoria_id']; ?>">
-                            <button type="button" id="custom-select-button" class="relative w-full cursor-default rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-10 text-left shadow-sm">
-                                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M3.25 4A2.25 2.25 0 001 6.25v7.5A2.25 2.25 0 003.25 16h7.5A2.25 2.25 0 0013 13.75v-7.5A2.25 2.25 0 0010.75 4h-7.5zM19 6.25a2.25 2.25 0 00-2.25-2.25H15v11.5h1.75A2.25 2.25 0 0019 13.75v-7.5z" />
-                                    </svg></span>
-                                <span id="custom-select-label" class="block truncate"><?php echo htmlspecialchars($datos['categoria_nombre']); ?></span>
-                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 3a.75.75 0 01.53.22l3.5 3.5a.75.75 0 01-1.06 1.06L10 4.81 6.53 8.28a.75.75 0 01-1.06-1.06l3.5-3.5A.75.75 0 0110 3zm-3.72 9.28a.75.75 0 011.06 0L10 15.19l2.67-2.91a.75.75 0 111.06 1.06l-3.5 3.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 010-1.06z" clip-rule="evenodd" />
-                                    </svg></span>
-                            </button>
-                            <div id="custom-select-panel" class="absolute z-10 top-full mt-2 w-full rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 hidden">
-                                <div class="max-h-56 overflow-auto py-1">
-                                    <?php
-                                    $categorias = $conexion->query("SELECT * FROM categoria ORDER BY categoria_nombre ASC");
-                                    if ($categorias->rowCount() > 0) {
-                                        foreach ($categorias as $row) {
-                                            $isSelected = $datos['categoria_id'] == $row['categoria_id'];
-                                            echo '<div class="custom-select-option text-gray-900 relative cursor-pointer select-none py-2 pl-10 pr-4 hover:bg-indigo-600 hover:text-white" data-value="' . $row['categoria_id'] . '" data-label="' . htmlspecialchars($row['categoria_nombre']) . '">
-                                                   <span class="font-normal block truncate">' . htmlspecialchars($row['categoria_nombre']) . '</span>
-                                                   ' . ($isSelected ? '<span class="selected-tick absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg></span>' : '') . '
-                                              </div>';
-                                        }
-                                    }
-                                    ?>
+                                <div class="col-span-5 sm:col-span-4">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Precio ($)</label>
+                                    <input type="number" id="input_variante_precio" step="0.01" class="block w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500" placeholder="0.00">
+                                </div>
+
+                                <div class="col-span-12 sm:col-span-2">
+                                    <button type="button" id="btn-add-variant" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-lg text-sm py-2 transition-colors shadow-sm">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Estado</label>
-                            <div class="flex items-center">
-                                <span class="text-sm text-slate-500 mr-3">No Disponible</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="estado_toggle" class="sr-only peer" <?php echo ($datos['producto_estado'] == 1) ? 'checked' : ''; ?>>
-                                    <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                </label>
-                                <span class="text-sm font-medium text-slate-700 ml-3">Disponible</span>
-                                <input type="hidden" name="producto_estado" id="producto_estado" value="<?php echo $datos['producto_estado']; ?>">
-                            </div>
-                        </div>
-                    </div>
+                        <div class="overflow-hidden rounded-lg border border-slate-200">
+                            <table class="w-full text-sm text-left text-slate-500">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th class="px-4 py-3">Variante</th>
+                                        <th class="px-4 py-3">Precio</th>
+                                        <th class="px-4 py-3 text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-variantes-body" class="bg-white divide-y divide-slate-100">
+                                    <?php if (count($variantes_existentes) > 0): ?>
+                                        <?php foreach ($variantes_existentes as $ve): ?>
+                                            <tr class="variant-row group hover:bg-orange-50 transition-colors">
+                                                <td class="px-4 py-3 font-medium text-slate-800">
+                                                    <?= htmlspecialchars($ve['nombre_variante']) ?>
 
-                    <div class="flex-shrink-0 flex justify-end items-center gap-x-3 pt-5 mt-6 border-t border-slate-200">
-                        <button type="button" class=" modal-close-trigger px-4 py-2 bg-slate-100 text-slate-800 rounded-lg font-medium hover:bg-slate-200 transition-colors">Cancelar</button>
-                        <button type="submit" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors">Actualizar Producto</button>
+                                                    <input type="hidden" name="variante_nombre[]" value="<?= htmlspecialchars($ve['nombre_variante']) ?>">
+                                                </td>
+                                                <td class="px-4 py-3 text-slate-600">
+                                                    $<?= number_format($ve['precio_variante'], 2) ?>
+                                                    <input type="hidden" name="variante_precio[]" value="<?= $ve['precio_variante'] ?>">
+                                                </td>
+                                                <td class="px-4 py-3 text-right">
+                                                    <button type="button" class="btn-remove-variant text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-all" title="Eliminar variante">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr id="row-empty-state">
+                                            <td colspan="3" class="px-6 py-8 text-center text-slate-400">
+                                                <p class="text-xs italic">No hay variantes agregadas aún.</p>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="hidden-inputs-container"></div>
                     </div>
-                </form>
+                </div>
+
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 h-full">
+                        <h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 mb-4 flex items-center gap-2">
+                            <i class="fas fa-image text-slate-400"></i> Imagen del Producto
+                        </h3>
+
+                        <?php if (is_file("./img/producto/" . $datos['producto_foto'])): ?>
+                            <div class="mb-4 text-center">
+                                <p class="text-xs font-bold text-slate-500 mb-2 uppercase">Imagen Actual</p>
+                                <img src="./img/producto/<?php echo $datos['producto_foto']; ?>" alt="Imagen actual" class="w-full h-48 object-cover rounded-lg border border-slate-200">
+                            </div>
+                        <?php endif; ?>
+
+                        <label class="drop-zone group relative flex flex-col items-center justify-center w-full h-64 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-orange-50 hover:border-orange-300 transition-all">
+                            <div class="drop-zone-content flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center z-10">
+                                <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <i class="fas fa-cloud-upload-alt text-orange-500 text-xl"></i>
+                                </div>
+                                <p class="text-sm text-slate-500 mb-1"><span class="font-bold text-slate-700">Cambiar imagen</span></p>
+                                <p class="text-[10px] text-slate-400">JPG, PNG, JPEG (Max 5MB)</p>
+                                <p id="file-name-display" class="mt-4 text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded hidden"></p>
+                            </div>
+                            <input id="producto_foto" name="producto_foto" type="file" class="hidden" accept=".jpg, .png, .jpeg" />
+                        </label>
+                    </div>
+                </div>
+
             </div>
         </div>
-    </div>
+
+    </form>
+    <script src="./js/product_new.js"></script>
+
 <?php
 } else {
-    echo '<div role="alert" class="rounded border-s-4 border-red-500 bg-red-50 p-4"><strong class="block font-medium text-red-800">Error</strong><p class="mt-2 text-sm text-red-700">No se encontró el producto solicitado.</p></div>';
+    echo '<div class="w-full h-screen flex items-center justify-center"><div role="alert" class="rounded border-s-4 border-red-500 bg-red-50 p-4"><strong class="block font-medium text-red-800">Error</strong><p class="mt-2 text-sm text-red-700">No se encontró el producto solicitado.</p></div></div>';
 }
 $check_producto = null;
 $conexion = null;

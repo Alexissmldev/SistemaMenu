@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 17-11-2025 a las 04:34:36
+-- Tiempo de generación: 18-11-2025 a las 22:41:23
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -45,8 +45,9 @@ CREATE TABLE `anuncios` (
 --
 
 INSERT INTO `anuncios` (`anuncio_id`, `anuncio_mensaje`, `anuncio_hora_inicio`, `anuncio_hora_fin`, `anuncio_tipo`, `anuncio_prioridad`, `anuncio_estado`, `anuncio_fecha_inicio`, `anuncio_fecha_fin`, `anuncio_creado`) VALUES
-(9, 'El Desayuno termina a las 11:00 AM', 8, 23, 'alerta', 1, 1, NULL, NULL, '2025-11-17 00:34:57'),
-(10, 'Contamos con Delivery', 0, 23, 'info', 3, 1, NULL, NULL, '2025-11-17 00:41:31');
+(9, 'El Desayuno termina a las 11:00 AM', 8, 11, 'alerta', 1, 1, NULL, NULL, '2025-11-17 00:34:57'),
+(10, 'Contamos con Delivery', 0, 23, 'info', 3, 1, NULL, NULL, '2025-11-17 00:41:31'),
+(11, 'holaaaaaaaaaaaaaaaaaaa', 8, 13, 'alerta', 0, 0, NULL, NULL, '2025-11-17 14:59:44');
 
 -- --------------------------------------------------------
 
@@ -76,6 +77,13 @@ CREATE TABLE `anuncio_productos` (
   `anuncio_id` int(11) NOT NULL,
   `producto_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `anuncio_productos`
+--
+
+INSERT INTO `anuncio_productos` (`anuncio_id`, `producto_id`) VALUES
+(11, 105);
 
 -- --------------------------------------------------------
 
@@ -124,7 +132,6 @@ CREATE TABLE `producto` (
 --
 
 INSERT INTO `producto` (`producto_id`, `producto_nombre`, `producto_precio`, `producto_estado`, `producto_foto`, `categoria_id`, `usuario_id`, `descripcion_producto`) VALUES
-(98, 'Empanada', 1.70, 1, 'Empanada_75.webp', 44, 30, 'pollo, carne, jamon y queso'),
 (99, 'botella agua', 0.50, 1, 'botella_agua_72.webp', 45, 30, 'botella de 440ml'),
 (100, 'Pabellon criollo', 3.00, 1, 'Pabellon_criollo_53.webp', 43, 30, 'pabellon criollo clasico'),
 (101, 'pasticho', 2.90, 1, 'pasticho_45.webp', 43, 30, 'pasticho venezolano'),
@@ -136,7 +143,13 @@ INSERT INTO `producto` (`producto_id`, `producto_nombre`, `producto_precio`, `pr
 (107, 'club house', 3.00, 1, 'club_house_57.webp', 43, 30, 'normal'),
 (108, 'prueba', 2.00, 1, 'prueba_40.webp', 44, 30, 'mouse'),
 (109, 'prueba2', 2.00, 1, 'prueba2_81.webp', 46, 30, 'horizontal'),
-(110, 'prueba3', 2.00, 1, 'prueba3_46.webp', 46, 30, 'lejos horizontal');
+(110, 'prueba3', 2.00, 1, 'prueba3_46.webp', 46, 30, 'lejos horizontal'),
+(113, 'ggggg', 1.00, 1, '', 43, 30, 'ugyfih'),
+(114, 'dan', 2.00, 1, '', 43, 30, 'se'),
+(117, 'pasta', 2.00, 1, '', 43, 30, 'ddd'),
+(118, 'dedos de maiz', 1.00, 1, '', 43, 30, 'des'),
+(120, 'erd', 2.00, 1, '', 43, 30, 'efef'),
+(121, 'dd', 3.00, 1, '', 43, 30, 'ejhcjehc');
 
 -- --------------------------------------------------------
 
@@ -163,7 +176,9 @@ CREATE TABLE `promociones` (
 
 INSERT INTO `promociones` (`promo_id`, `promo_nombre`, `promo_precio`, `promo_foto`, `hora_inicio`, `hora_fin`, `fecha_inicio`, `fecha_fin`, `prioridad`, `estado`) VALUES
 (1, '2 empanas y un jugo', 2.00, '2_empana_y_un_jugo_65.webp', 0, 23, NULL, NULL, 1, 1),
-(2, '2x1 en Arepas', 3.00, '2x1_en_Arepas_10.webp', 0, 23, NULL, NULL, 2, 1);
+(2, '2x1 en Arepas', 3.00, '2x1_en_Arepas_10.webp', 0, 23, NULL, NULL, 2, 1),
+(3, 'arepa', 4.00, '', 1, 23, NULL, NULL, 3, 1),
+(4, '1', 3.00, '', 2, 22, NULL, NULL, 4, 1);
 
 -- --------------------------------------------------------
 
@@ -181,9 +196,10 @@ CREATE TABLE `promocion_productos` (
 --
 
 INSERT INTO `promocion_productos` (`promo_id`, `producto_id`) VALUES
-(1, 98),
 (1, 104),
-(2, 105);
+(2, 105),
+(3, 105),
+(4, 105);
 
 -- --------------------------------------------------------
 
@@ -206,7 +222,63 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`usuario_id`, `usuario_nombre`, `usuario_apellido`, `usuario_usuario`, `usuario_clave`, `usuario_email`, `usuario_telefono`) VALUES
-(30, 'Administrador', 'Administrador', 'admin', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', '', '4124618344');
+(30, 'Administrador', 'Administrador', 'admin', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', '', '4144474438');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `variante`
+--
+
+CREATE TABLE `variante` (
+  `id_variante` int(11) NOT NULL,
+  `nombre_variante` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `variante`
+--
+
+INSERT INTO `variante` (`id_variante`, `nombre_variante`) VALUES
+(8, 'salsa'),
+(9, 'pollo'),
+(10, 'Pequeño'),
+(11, 'Mediano'),
+(12, 'Grande'),
+(13, 'Pequeño'),
+(14, 'Pequeño'),
+(15, 'Pequeño'),
+(16, 'Mediano'),
+(17, 'Pequeño');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `variante_producto`
+--
+
+CREATE TABLE `variante_producto` (
+  `id_variante_producto` int(11) NOT NULL,
+  `producto_id` int(11) NOT NULL,
+  `id_variante` int(11) NOT NULL,
+  `precio` float DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `variante_producto`
+--
+
+INSERT INTO `variante_producto` (`id_variante_producto`, `producto_id`, `id_variante`, `precio`) VALUES
+(8, 117, 8, NULL),
+(9, 117, 9, NULL),
+(10, 118, 10, NULL),
+(11, 118, 11, NULL),
+(12, 118, 12, NULL),
+(13, 118, 13, NULL),
+(14, 118, 14, NULL),
+(15, 120, 15, 3),
+(16, 120, 16, 3.4),
+(17, 121, 17, NULL);
 
 --
 -- Índices para tablas volcadas
@@ -266,6 +338,20 @@ ALTER TABLE `usuario`
   ADD PRIMARY KEY (`usuario_id`);
 
 --
+-- Indices de la tabla `variante`
+--
+ALTER TABLE `variante`
+  ADD PRIMARY KEY (`id_variante`);
+
+--
+-- Indices de la tabla `variante_producto`
+--
+ALTER TABLE `variante_producto`
+  ADD PRIMARY KEY (`id_variante_producto`),
+  ADD KEY `producto_id` (`producto_id`),
+  ADD KEY `id_variante` (`id_variante`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
@@ -273,7 +359,7 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `anuncios`
 --
 ALTER TABLE `anuncios`
-  MODIFY `anuncio_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `anuncio_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `categoria`
@@ -285,19 +371,31 @@ ALTER TABLE `categoria`
 -- AUTO_INCREMENT de la tabla `producto`
 --
 ALTER TABLE `producto`
-  MODIFY `producto_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=111;
+  MODIFY `producto_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=122;
 
 --
 -- AUTO_INCREMENT de la tabla `promociones`
 --
 ALTER TABLE `promociones`
-  MODIFY `promo_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `promo_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
   MODIFY `usuario_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- AUTO_INCREMENT de la tabla `variante`
+--
+ALTER TABLE `variante`
+  MODIFY `id_variante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT de la tabla `variante_producto`
+--
+ALTER TABLE `variante_producto`
+  MODIFY `id_variante_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- Restricciones para tablas volcadas
@@ -330,6 +428,13 @@ ALTER TABLE `producto`
 ALTER TABLE `promocion_productos`
   ADD CONSTRAINT `promocion_productos_ibfk_1` FOREIGN KEY (`promo_id`) REFERENCES `promociones` (`promo_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `promocion_productos_ibfk_2` FOREIGN KEY (`producto_id`) REFERENCES `producto` (`producto_id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `variante_producto`
+--
+ALTER TABLE `variante_producto`
+  ADD CONSTRAINT `variante_producto_ibfk_1` FOREIGN KEY (`producto_id`) REFERENCES `producto` (`producto_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `variante_producto_ibfk_2` FOREIGN KEY (`id_variante`) REFERENCES `variante` (`id_variante`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

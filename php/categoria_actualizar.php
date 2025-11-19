@@ -1,11 +1,14 @@
 <?php
-require_once "main.php"; // Asegúrate de que tu función enviar_respuesta_json() esté aquí
+require_once "main.php";
 
 // --- 1. Recibir y limpiar los datos del formulario ---
 $id = limpiar_cadena($_POST['categoria_id']);
 $nombre = limpiar_cadena($_POST['categoria_nombre']);
-// El estado debe ser 1 (vigente) o 0 (no vigente)
-$estado = limpiar_cadena($_POST['categoria_estado']);
+$estado = limpiar_cadena($_POST['categoria_estado']); // 1 o 0
+
+// Recibimos las horas. Si vienen vacías o nulas, aseguramos valores por defecto lógicos (0 y 23).
+$hora_inicio = (isset($_POST['categoria_hora_inicio']) && $_POST['categoria_hora_inicio'] !== "") ? (int)limpiar_cadena($_POST['categoria_hora_inicio']) : 0;
+$hora_fin    = (isset($_POST['categoria_hora_fin']) && $_POST['categoria_hora_fin'] !== "") ? (int)limpiar_cadena($_POST['categoria_hora_fin']) : 23;
 
 // --- 2. Validar los datos recibidos ---
 if (empty($nombre)) {
@@ -16,6 +19,11 @@ if (verificar_datos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{4,50}", $nombre)) {
 }
 if (!in_array($estado, ['0', '1'])) {
     enviar_respuesta_json('error', 'Estado Inválido', 'El estado de la categoría no es válido.');
+}
+
+// Validar rango de horas
+if ($hora_inicio < 0 || $hora_inicio > 23 || $hora_fin < 0 || $hora_fin > 23) {
+    enviar_respuesta_json('error', "Horario Inválido", "Las horas deben estar comprendidas entre 0 y 23.");
 }
 
 // --- 3. Verificar que la categoría exista ---
@@ -39,12 +47,15 @@ if ($nombre != $datos['categoria_nombre']) {
 }
 
 // --- 5. Actualizar los datos en la base de datos ---
-$actualizar_categoria = $conexion->prepare("UPDATE categoria SET categoria_nombre = :nombre, categoria_estado = :estado WHERE categoria_id = :id");
+// Se agregan los campos de hora al UPDATE
+$actualizar_categoria = $conexion->prepare("UPDATE categoria SET categoria_nombre = :nombre, categoria_estado = :estado, categoria_hora_inicio = :inicio, categoria_hora_fin = :fin WHERE categoria_id = :id");
 
 $marcadores = [
     ":nombre" => $nombre,
     ":estado" => $estado,
-    ":id" => $id
+    ":inicio" => $hora_inicio,
+    ":fin"    => $hora_fin,
+    ":id"     => $id
 ];
 
 if ($actualizar_categoria->execute($marcadores)) {
