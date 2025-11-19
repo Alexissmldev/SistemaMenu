@@ -2,7 +2,7 @@
 $inicio = ($pagina > 0) ? (($registros * $pagina) - $registros) : 0;
 $tabla = "";
 
-// MODIFICADO: Se eliminó 'p.producto_codigo' de la lista de campos
+// CAMPOS
 $campos = "p.producto_id, p.producto_nombre, p.producto_precio,p.descripcion_producto, p.producto_foto, p.producto_estado, c.categoria_nombre, u.usuario_nombre, u.usuario_apellido";
 
 $conexion = conexion();
@@ -11,23 +11,20 @@ if (isset($_GET['busqueda']) && !empty($_GET['busqueda'])) {
     $url = "index.php?vista=product_list&busqueda=" . urlencode($busqueda) . "&page=";
 }
 
+// CONSULTAS SQL
 if (isset($busqueda) && $busqueda != "") {
-    // CORRECTO: La búsqueda por 'producto_codigo' ya estaba quitada
     $consulta_datos = $conexion->prepare("SELECT $campos FROM producto p INNER JOIN categoria c ON p.categoria_id=c.categoria_id INNER JOIN usuario u ON p.usuario_id=u.usuario_id WHERE p.producto_nombre LIKE :busqueda ORDER BY p.producto_nombre ASC LIMIT $inicio, $registros");
     $consulta_datos->execute([':busqueda' => "%$busqueda%"]);
 
-    // CORRECTO: La búsqueda por 'producto_codigo' ya estaba quitada
     $consulta_total = $conexion->prepare("SELECT COUNT(producto_id) FROM producto WHERE producto_nombre LIKE :busqueda");
     $consulta_total->execute([':busqueda' => "%$busqueda%"]);
 } elseif ($categoria_id > 0) {
-    // SIN CAMBIOS
     $consulta_datos = $conexion->prepare("SELECT $campos FROM producto p INNER JOIN categoria c ON p.categoria_id=c.categoria_id INNER JOIN usuario u ON p.usuario_id=u.usuario_id WHERE p.categoria_id = :cat_id ORDER BY p.producto_nombre ASC LIMIT $inicio, $registros");
     $consulta_datos->execute([':cat_id' => $categoria_id]);
 
     $consulta_total = $conexion->prepare("SELECT COUNT(producto_id) FROM producto WHERE categoria_id = :cat_id");
     $consulta_total->execute([':cat_id' => $categoria_id]);
 } else {
-    // SIN CAMBIOS
     $consulta_datos = $conexion->prepare("SELECT $campos FROM producto p INNER JOIN categoria c ON p.categoria_id=c.categoria_id INNER JOIN usuario u ON p.usuario_id=u.usuario_id ORDER BY p.producto_nombre ASC LIMIT $inicio, $registros");
     $consulta_datos->execute();
 
@@ -40,11 +37,11 @@ $total = (int) $consulta_total->fetchColumn();
 $Npagina = ceil($total / $registros);
 
 if ($total >= 1 && $pagina <= $Npagina) {
-    $contador = $inicio + 1;    
+    $contador = $inicio + 1;
     $pag_inicio = $inicio + 1;
 }
 
-
+// INICIO DE LA TABLA HTML
 $tabla .= '
 <div class="bg-white rounded-lg shadow-md border border-gray-200">
     <div class="hidden md:block">
@@ -85,11 +82,12 @@ if ($total >= 1 && $pagina <= $Npagina) {
                 <td class="px-6 py-4 text-center">' . $estado_badge . '</td>
                 <td class="px-6 py-4 text-center">
                     <div class="flex items-center justify-center space-x-3">
-                        <button onclick="openModal(\'product_img\', \'' . $rows['producto_id'] . '\', \'product_id_up\', \'initProductImageModalScripts\')" type="button" class="text-gray-500 hover:text-indigo-600" title="Gestionar Imagen"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5.25 12.862a.75.75 0 10-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 10-1.06-1.06L10.5 14.22V8.25a.75.75 0 00-1.5 0v5.97l-1.22-1.22zM3.5 4.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 10h10.5A2.75 2.75 0 0018 7.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" /></svg></button>
                         <a href="index.php?vista=product_update&product_id_up=' . $rows['producto_id'] . '" class="text-gray-500 hover:text-blue-600" title="Actualizar Producto">
-                            <i class="fa fa-pencil h-5 w-5"></i>
+                            <i class="fa fa-pencil"></i>
                         </a>                        
-                        <button onclick="eliminarProducto(' . $rows['producto_id'] . ', \'' . htmlspecialchars($rows['producto_nombre'], ENT_QUOTES) . '\')" type="button" class="text-gray-500 hover:text-red-600" title="Eliminar Producto"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
+                        <button onclick="eliminarProducto(' . $rows['producto_id'] . ', \'' . htmlspecialchars($rows['producto_nombre'], ENT_QUOTES) . '\')" type="button" class="text-gray-500 hover:text-red-600" title="Eliminar Producto">
+                            <i class="fa fa-trash"></i>
+                        </button>
                     </div>
                 </td>
             </tr>';
@@ -105,6 +103,7 @@ $tabla .= '
 
     <div class="md:hidden divide-y divide-gray-200">';
 
+// VISTA MOVIL
 if ($total >= 1 && $pagina <= $Npagina) {
     foreach ($datos as $rows) {
         $estado_badge = ($rows['producto_estado'] == 1)
@@ -125,9 +124,12 @@ if ($total >= 1 && $pagina <= $Npagina) {
                 <div class="mt-4 flex justify-between items-center">
                   
                     <div class="flex items-center space-x-3">
-                        <button onclick="openModal(\'product_img\', \'' . $rows['producto_id'] . '\', \'product_id_up\', \'initProductImageModalScripts\')" type="button" class="text-gray-500 hover:text-indigo-600" title="Gestionar Imagen"><svg class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M5.25 12.862a.75.75 0 10-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 10-1.06-1.06L10.5 14.22V8.25a.75.75 0 00-1.5 0v5.97l-1.22-1.22zM3.5 4.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 10h10.5A2.75 2.75 0 0018 7.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" /></svg></button>
-                        <button onclick="openModal(\'product_update\', \'' . $rows['producto_id'] . '\', \'product_id_up\', \'initProductUpdateModal\')" type="button" class="text-gray-500 hover:text-blue-600" title="Actualizar Producto"><svg class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
-                        <button onclick="eliminarProducto(' . $rows['producto_id'] . ', \'' . htmlspecialchars($rows['producto_nombre'], ENT_QUOTES) . '\')" type="button" class="text-gray-500 hover:text-red-600" title="Eliminar Producto"><svg class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
+                        <a href="index.php?vista=product_update&product_id_up=' . $rows['producto_id'] . '" class="text-gray-500 hover:text-blue-600" title="Actualizar Producto">
+                            <i class="fa fa-pencil fa-lg"></i>
+                        </a>
+                        <button onclick="eliminarProducto(' . $rows['producto_id'] . ', \'' . htmlspecialchars($rows['producto_nombre'], ENT_QUOTES) . '\')" type="button" class="text-gray-500 hover:text-red-600" title="Eliminar Producto">
+                            <i class="fa fa-trash fa-lg"></i>
+                        </button>
                     </div>
                 </div>
             </div>';
