@@ -1,13 +1,10 @@
-<header id="main-header" class="bg-white p-4 shadow-md sticky top-0 z-10" style="transition: top 0.3s ease-in-out;">
+<header id="main-header" class="bg-white py-2 px-4 shadow-md sticky top-0 z-10" style="transition: top 0.3s ease-in-out;">
     <div class="max-w-7xl mx-auto">
 
         <div class="flex justify-between items-center w-full lg:grid lg:grid-cols-3 lg:gap-4">
 
             <div class="flex items-center space-x-2">
-                <img src="../img/logo.png" alt="" class="w-24 h-12 object-contain" />
-                <span class="hidden lg:block text-xs text-gray-500 bg-gray-100 p-1 rounded-full px-2">
-                    Tasa USD: **<?php echo $tasa_usd; ?>**
-                </span>
+                <img src="../img/logo_sin_fondo.png" alt="Logo" class="w-auto h-16 md:h-20 object-contain" />
             </div>
 
             <div class="hidden lg:flex justify-center">
@@ -38,9 +35,9 @@
         </div>
 
         <section
-            class="mt-4 pt-4 border-t border-gray-100"
+            class="mt-2 pt-2 border-t border-gray-100"
             id="category-nav-section">
-            <nav class="flex space-x-6 overflow-x-scroll pb-2 lg:justify-start lg:flex-wrap">
+            <nav class="flex space-x-6 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 lg:justify-start lg:flex-wrap">
                 <?php
                 // Clases para "Todos" (activo por defecto)
                 $clases_todos = 'text-red-600 border-red-600';
@@ -68,7 +65,6 @@
 </header>
 
 <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex justify-around lg:hidden shadow-xl z-20">
-
     <button id="mobile-home-trigger" class="text-red-600 flex flex-col items-center">
         <i class="fa fa-home text-2xl"></i>
         <span class="text-xs">Inicio</span>

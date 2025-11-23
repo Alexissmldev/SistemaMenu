@@ -1,28 +1,21 @@
 /* animations.css */
 
-/* NUEVA ANIMACIÓN: Marquesina (Cintillo Infinito)
-*/
+/* =========================================
+   1. ANIMACIONES DECORATIVAS (Marquesina y Reloj)
+   ========================================= */
+
 @keyframes marquee {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-100%);
-  } /* Mueve el contenido 100% a la izquierda */
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
 }
 
-/* NUEVO ESTILO: Contenedor del banner
-  Oculta el texto que se desborda
-*/
 .marquee-container {
-  overflow: hidden; /* ¡Esencial! Oculta el texto que se sale */
+  overflow: hidden;
   position: relative;
   width: 100%;
   display: flex;
 }
 
-/* NUEVO ESTILO: Contenido que se desliza
-*/
 .marquee-content {
   display: inline-block;
   white-space: nowrap;
@@ -30,26 +23,10 @@
   padding-left: 100%;
 }
 
-/* Animación de sacudida para el icono del reloj (Esta se queda igual)
-*/
 @keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-3px);
-  }
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(3px);
-  }
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+  20%, 40%, 60%, 80% { transform: translateX(3px); }
 }
 
 .banner-shake-icon {
@@ -58,15 +35,25 @@
   transform-origin: center;
 }
 
-#ofertas-carrusel {
-  /* Para Internet Explorer y Edge */
-  -ms-overflow-style: none;
+/* =========================================
+   2. UTILIDADES DE SCROLL (Ocultar barra)
+   ========================================= */
 
-  /* Para Firefox */
-  scrollbar-width: none;
+#ofertas-carrusel {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
-/* Para Chrome, Safari, Opera y navegadores móviles (iOS, Android) */
 #ofertas-carrusel::-webkit-scrollbar {
-  display: none;
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* =========================================
+   3. MOTOR DE ANIMACIÓN DEL MODAL (Importante)
+   ========================================= */
+
+/* Solo necesitamos la curva de velocidad. 
+   El movimiento (translate, opacity) lo controla Tailwind en el JS. */
+.ease-out-expo {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
