@@ -158,11 +158,19 @@ if ($actualizar->execute($marcadores)) {
                 if (is_file($archivo)) unlink($archivo);
             }
             enviar_respuesta_json("error", "Error al procesar imagen", $e->getMessage());
+
             exit();
         }
     }
 
-    enviar_respuesta_json("success", "¡Actualizado!", "El producto y sus variantes se han guardado correctamente.");
+    $respuesta = [
+        "tipo" => "success",
+        "titulo" => "¡Actualizado!",
+        "texto" => "El producto se actualizó correctamente.",
+        "url" => "index.php?vista=product_list" 
+    ];
+    echo json_encode($respuesta);
+    exit();
 } else {
     enviar_respuesta_json("error", "Error", "Ocurrió un error al actualizar el producto.");
 }

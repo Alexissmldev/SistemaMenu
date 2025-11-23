@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", function () {
   document.body.addEventListener("submit", function (e) {
     let form = e.target.closest(".FormularioAjax");
@@ -28,7 +27,15 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmButtonText: "Aceptar",
           }).then((result) => {
             if (result.isConfirmed && respuesta.tipo === "success") {
-              location.reload();
+              // --- MODIFICACIÓN AQUÍ ---
+              // Si el PHP envió una variable "url", redireccionamos allí
+              if (respuesta.url) {
+                window.location.href = respuesta.url;
+              } else {
+                // Si no, hacemos lo de siempre (recargar)
+                location.reload();
+              }
+              // -------------------------
             }
           });
         })

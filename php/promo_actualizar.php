@@ -232,7 +232,15 @@ WHERE promo_id = :id"
 
     // 4.3. Finalizar transacción
     $conexion->commit();
-    enviar_respuesta_json('success', '¡Promoción Actualizada!', 'La promoción se actualizó con éxito.');
+    $respuesta = [
+        "tipo" => "success",
+        "titulo" => "¡Actualizado!",
+        "texto" => "El producto se actualizó correctamente.",
+        "url" => "index.php?vista=promo_list" 
+    ];
+    echo json_encode($respuesta);
+    
+
 } catch (Exception $e) {
     $conexion->rollBack();
 

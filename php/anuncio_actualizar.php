@@ -154,7 +154,14 @@ try {
     }
 
     $conexion->commit();
-    enviar_respuesta_json('success', '¡Anuncio Actualizado!', 'El anuncio se actualizó con éxito.');
+    $respuesta = [
+        "tipo" => "success",
+        "titulo" => "¡Actualizado!",
+        "texto" => "El producto se actualizó correctamente.",
+        "url" => "index.php?vista=ad_list"
+    ];
+    echo json_encode($respuesta);
+    exit();
 } catch (Exception $e) {
     $conexion->rollBack();
     enviar_respuesta_json('error', 'Error al Actualizar', 'No se pudo actualizar el anuncio. Detalles: ' . $e->getMessage());

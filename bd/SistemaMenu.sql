@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-11-2025 a las 22:41:23
+-- Tiempo de generación: 23-11-2025 a las 04:06:42
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -46,8 +46,7 @@ CREATE TABLE `anuncios` (
 
 INSERT INTO `anuncios` (`anuncio_id`, `anuncio_mensaje`, `anuncio_hora_inicio`, `anuncio_hora_fin`, `anuncio_tipo`, `anuncio_prioridad`, `anuncio_estado`, `anuncio_fecha_inicio`, `anuncio_fecha_fin`, `anuncio_creado`) VALUES
 (9, 'El Desayuno termina a las 11:00 AM', 8, 11, 'alerta', 1, 1, NULL, NULL, '2025-11-17 00:34:57'),
-(10, 'Contamos con Delivery', 0, 23, 'info', 3, 1, NULL, NULL, '2025-11-17 00:41:31'),
-(11, 'holaaaaaaaaaaaaaaaaaaa', 8, 13, 'alerta', 0, 0, NULL, NULL, '2025-11-17 14:59:44');
+(10, 'Contamos con Delivery', 0, 23, 'info', 3, 1, NULL, NULL, '2025-11-17 00:41:31');
 
 -- --------------------------------------------------------
 
@@ -78,13 +77,6 @@ CREATE TABLE `anuncio_productos` (
   `producto_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Volcado de datos para la tabla `anuncio_productos`
---
-
-INSERT INTO `anuncio_productos` (`anuncio_id`, `producto_id`) VALUES
-(11, 105);
-
 -- --------------------------------------------------------
 
 --
@@ -94,21 +86,21 @@ INSERT INTO `anuncio_productos` (`anuncio_id`, `producto_id`) VALUES
 CREATE TABLE `categoria` (
   `categoria_id` int(11) NOT NULL,
   `categoria_nombre` varchar(50) DEFAULT NULL,
-  `categoria_ubicacion` varchar(150) DEFAULT NULL,
-  `categoria_estado` int(11) NOT NULL
+  `categoria_estado` int(11) NOT NULL,
+  `categoria_hora_inicio` int(2) NOT NULL DEFAULT 0,
+  `categoria_hora_fin` int(2) NOT NULL DEFAULT 23
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `categoria`
 --
 
-INSERT INTO `categoria` (`categoria_id`, `categoria_nombre`, `categoria_ubicacion`, `categoria_estado`) VALUES
-(43, 'Almuerzos', NULL, 1),
-(44, 'Desayunos', NULL, 1),
-(45, 'Bebidas', NULL, 1),
-(46, 'Especiales', NULL, 1),
-(47, 'dededed', NULL, 1),
-(48, 'platos especiales', NULL, 1);
+INSERT INTO `categoria` (`categoria_id`, `categoria_nombre`, `categoria_estado`, `categoria_hora_inicio`, `categoria_hora_fin`) VALUES
+(43, 'Almuerzos', 1, 0, 23),
+(44, 'Desayunos', 1, 7, 11),
+(45, 'Bebidas', 1, 0, 23),
+(46, 'Especiales', 1, 0, 23),
+(48, 'platos especiales', 1, 0, 23);
 
 -- --------------------------------------------------------
 
@@ -138,18 +130,12 @@ INSERT INTO `producto` (`producto_id`, `producto_nombre`, `producto_precio`, `pr
 (102, 'arroz chino', 2.00, 1, 'arroz_chino_40.webp', 43, 30, 'arroz chinos especial'),
 (103, 'jugo de melon pequeño', 0.50, 1, 'jugo_de_melon_pequeño_26.webp', 45, 30, 'pequeño'),
 (104, 'jugo de guayaba pequeño', 0.50, 1, 'jugo_de_guayaba_pequeño_0.webp', 45, 30, 'pequeño'),
-(105, 'Arepas', 1.70, 1, 'Arepas_35.webp', 44, 30, 'pelua, domino, reina pepiada, catira'),
-(106, 'jugo de mango', 0.30, 1, 'jugo_de_mango_42.webp', 45, 30, 'mango'),
+(105, 'Arepas', 1.70, 1, 'Arepas_35.webp', 45, 30, 'pelua, domino, reina pepiadka, catira'),
+(106, 'jugo de mangos', 0.11, 1, 'jugo_de_mangos_36.webp', 45, 30, 'mango'),
 (107, 'club house', 3.00, 1, 'club_house_57.webp', 43, 30, 'normal'),
 (108, 'prueba', 2.00, 1, 'prueba_40.webp', 44, 30, 'mouse'),
 (109, 'prueba2', 2.00, 1, 'prueba2_81.webp', 46, 30, 'horizontal'),
-(110, 'prueba3', 2.00, 1, 'prueba3_46.webp', 46, 30, 'lejos horizontal'),
-(113, 'ggggg', 1.00, 1, '', 43, 30, 'ugyfih'),
-(114, 'dan', 2.00, 1, '', 43, 30, 'se'),
-(117, 'pasta', 2.00, 1, '', 43, 30, 'ddd'),
-(118, 'dedos de maiz', 1.00, 1, '', 43, 30, 'des'),
-(120, 'erd', 2.00, 1, '', 43, 30, 'efef'),
-(121, 'dd', 3.00, 1, '', 43, 30, 'ejhcjehc');
+(110, 'prueba3', 2.00, 1, 'prueba3_46.webp', 46, 30, 'lejos horizontal');
 
 -- --------------------------------------------------------
 
@@ -222,7 +208,7 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`usuario_id`, `usuario_nombre`, `usuario_apellido`, `usuario_usuario`, `usuario_clave`, `usuario_email`, `usuario_telefono`) VALUES
-(30, 'Administrador', 'Administrador', 'admin', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', '', '4144474438');
+(30, 'Administrador', 'Administrador', 'admin', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', '', '4124618344');
 
 -- --------------------------------------------------------
 
@@ -240,16 +226,8 @@ CREATE TABLE `variante` (
 --
 
 INSERT INTO `variante` (`id_variante`, `nombre_variante`) VALUES
-(8, 'salsa'),
-(9, 'pollo'),
-(10, 'Pequeño'),
-(11, 'Mediano'),
-(12, 'Grande'),
-(13, 'Pequeño'),
-(14, 'Pequeño'),
-(15, 'Pequeño'),
-(16, 'Mediano'),
-(17, 'Pequeño');
+(26, 'Pequeño'),
+(27, 'Grande');
 
 -- --------------------------------------------------------
 
@@ -261,24 +239,16 @@ CREATE TABLE `variante_producto` (
   `id_variante_producto` int(11) NOT NULL,
   `producto_id` int(11) NOT NULL,
   `id_variante` int(11) NOT NULL,
-  `precio` float DEFAULT NULL
+  `precio_variante` float DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `variante_producto`
 --
 
-INSERT INTO `variante_producto` (`id_variante_producto`, `producto_id`, `id_variante`, `precio`) VALUES
-(8, 117, 8, NULL),
-(9, 117, 9, NULL),
-(10, 118, 10, NULL),
-(11, 118, 11, NULL),
-(12, 118, 12, NULL),
-(13, 118, 13, NULL),
-(14, 118, 14, NULL),
-(15, 120, 15, 3),
-(16, 120, 16, 3.4),
-(17, 121, 17, NULL);
+INSERT INTO `variante_producto` (`id_variante_producto`, `producto_id`, `id_variante`, `precio_variante`) VALUES
+(40, 106, 26, 0.11),
+(41, 106, 27, 0.11);
 
 --
 -- Índices para tablas volcadas
@@ -365,13 +335,13 @@ ALTER TABLE `anuncios`
 -- AUTO_INCREMENT de la tabla `categoria`
 --
 ALTER TABLE `categoria`
-  MODIFY `categoria_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `categoria_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT de la tabla `producto`
 --
 ALTER TABLE `producto`
-  MODIFY `producto_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=122;
+  MODIFY `producto_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=132;
 
 --
 -- AUTO_INCREMENT de la tabla `promociones`
@@ -389,13 +359,13 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `variante`
 --
 ALTER TABLE `variante`
-  MODIFY `id_variante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id_variante` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT de la tabla `variante_producto`
 --
 ALTER TABLE `variante_producto`
-  MODIFY `id_variante_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id_variante_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- Restricciones para tablas volcadas
