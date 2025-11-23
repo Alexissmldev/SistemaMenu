@@ -25,7 +25,9 @@ foreach ($categorias_ordenadas as $categoria) {
         data-numeric-id="categoria-<?php echo $id_de_esta_categoria; ?>"
         class="mb-8 product-section pt-10 mt-2">
 
-       
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 border-l-4 border-red-500 pl-4">
+            <?php echo htmlspecialchars($categoria_nombre); ?>
+        </h2>
 
         <div class="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 xl:grid-cols-3">
 
