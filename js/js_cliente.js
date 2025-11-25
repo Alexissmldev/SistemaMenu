@@ -1,8 +1,11 @@
 /* =========================================
    VARIABLES GLOBALES
    ========================================= */
+ 
+let currentProductId = null; 
+let currentProductPrice = 0;
 let currentModalProduct = {};
-let currentSelection = {}; // Almacena: { 'id_variante': {datos...} }
+let currentSelection = {}; 
 let cart = [];
 let originalMainContent = "";
 let debounceTimeout;
@@ -90,6 +93,7 @@ function inicializarAnunciosClicables() {
           addToCart([
             {
               id: promoData.id,
+              producto_id: promoData.id, // Aseguramos ID real
               nombre: promoData.nombre,
               foto: promoData.foto,
               precio_raw: promoData.precio_raw,
@@ -183,7 +187,6 @@ function addToCart(itemOrArray) {
     if (quantity <= 0) return;
 
     // Buscamos si existe un item con el mismo ID Y la misma nota
-    // Esto permite tener "Hamburguesa (Sin cebolla)" y "Hamburguesa (Con todo)" separados
     const existingIndex = cart.findIndex(
       (item) =>
         item.id === product.id && (item.nota || "") === (product.nota || "")
@@ -194,13 +197,16 @@ function addToCart(itemOrArray) {
     } else {
       cart.push({
         id: product.id,
+        // CORRECCIÓN: Guardamos el ID REAL del producto para la base de datos
+        // Si viene producto_id lo usamos, si no usamos el id normal
+        producto_id: product.producto_id || product.id, 
         nombre: product.nombre,
         foto: product.foto,
         precio: product.precio_raw,
         precio_usd: product.precio_usd,
         cantidad: quantity,
         descripcion: product.descripcion || "",
-        nota: product.nota || "", // Guardamos la nota específica
+        nota: product.nota || "", 
       });
     }
     addedCount++;
@@ -232,14 +238,11 @@ function updateCartBadge() {
 }
 
 // --- NUEVO DISEÑO DEL CARRITO (LIMPIO) ---
-// ==========================================
-// 1. RENDERIZADO DEL CARRITO (Solo Vista 1)
-// ==========================================
 function renderCartItems() {
   const container = document.getElementById("cart-items-container");
   const step1Bs = document.getElementById("step1-bs");
   const step1Usd = document.getElementById("step1-usd");
-  const step2Bs = document.getElementById("step2-bs"); // Total en la vista 2
+  const step2Bs = document.getElementById("step2-bs"); 
 
   if (cart.length === 0) {
     container.innerHTML = `
@@ -300,7 +303,6 @@ function renderCartItems() {
   if (step2Bs) step2Bs.textContent = totalTexto;
 }
 
-// Helpers para botones inline (para no usar data-attributes si prefieres onclick directo)
 function updateItemQty(id, change) {
   const itemIndex = cart.findIndex((i) => i.id === id);
   if (itemIndex > -1) {
@@ -330,7 +332,6 @@ function goToCheckout() {
     showToast("El carrito está vacío", "error");
     return;
   }
-  // Ocultar paso 1, mostrar paso 2
   document.getElementById("cart-step-1").classList.add("hidden");
   document.getElementById("cart-step-2").classList.remove("hidden");
   document.getElementById("cart-step-2").classList.add("flex");
@@ -338,14 +339,12 @@ function goToCheckout() {
 }
 
 function backToCart() {
-  // Ocultar paso 2, mostrar paso 1
   document.getElementById("cart-step-2").classList.add("hidden");
   document.getElementById("cart-step-2").classList.remove("flex");
   document.getElementById("cart-step-1").classList.remove("hidden");
   document.getElementById("cart-title-step").textContent = "Tu Pedido";
 }
 
-// Toggle Pago Móvil Details
 function togglePaymentDetails() {
   const pmRadio = document.querySelector(
     'input[name="payment_method"][value="pago_movil"]'
@@ -359,7 +358,6 @@ function togglePaymentDetails() {
   }
 }
 
-// Función Copiar al Portapapeles
 function copyToClipboard(text) {
   navigator.clipboard
     .writeText(text)
@@ -403,53 +401,44 @@ function setupCartListener() {
 }
 
 function openCart() {
-  renderCartItems(); // Actualiza datos antes de mostrar
+  renderCartItems(); 
 
   const backdrop = document.getElementById("cart-backdrop");
   const sidebar = document.getElementById("cart-sidebar");
 
   if (!backdrop || !sidebar) return;
 
-  // 1. Mostrar Backdrop (Fondo oscuro)
   backdrop.classList.remove("hidden");
-  // Pequeño delay para permitir que el navegador pinte el display:block
   setTimeout(() => {
     backdrop.classList.remove("opacity-0");
     backdrop.classList.add("opacity-100", "duration-500", "ease-out-expo");
   }, 10);
 
-  // 2. Deslizar Sidebar (Entrada)
   sidebar.classList.remove("translate-x-full");
-  sidebar.classList.add("translate-x-0", "duration-500", "ease-out-expo"); // Misma física que el modal
+  sidebar.classList.add("translate-x-0", "duration-500", "ease-out-expo"); 
 
-  document.body.style.overflow = "hidden"; // Bloquear scroll del fondo
+  document.body.style.overflow = "hidden"; 
 }
 
 function closeCart() {
   const backdrop = document.getElementById("cart-backdrop");
   const sidebar = document.getElementById("cart-sidebar");
-  const modal = document.getElementById("product-modal"); // Verificamos si el modal está abierto
+  const modal = document.getElementById("product-modal"); 
 
   if (!backdrop || !sidebar) return;
 
-  // 1. Deslizar Sidebar (Salida)
-  sidebar.classList.remove("translate-x-0", "duration-500"); // Quitamos clases de entrada
+  sidebar.classList.remove("translate-x-0", "duration-500"); 
   sidebar.classList.add("translate-x-full", "duration-300", "ease-out-expo");
 
-  // 2. Ocultar Backdrop
   backdrop.classList.remove("opacity-100");
   backdrop.classList.add("opacity-0", "duration-300");
 
-  // 3. Limpieza final (Esperar a que termine la animación)
   setTimeout(() => {
     backdrop.classList.add("hidden");
-    // Limpiamos clases de animación para la próxima vez
     backdrop.classList.remove("duration-300", "ease-out-expo");
     sidebar.classList.remove("duration-300", "ease-out-expo");
   }, 300);
 
-  // Solo devolvemos el scroll si el modal de producto NO está abierto
-  // (Si cierras el carrito pero el modal sigue atrás, no queremos que se mueva la página)
   if (!modal || modal.classList.contains("invisible")) {
     document.body.style.overflow = "";
   }
@@ -469,7 +458,12 @@ function openModal(productData) {
 
   // 1. Resetear Estado Global
   currentModalProduct = productData;
+  // CORRECCIÓN: Aquí estaba el error. 'element' no existía.
+  // Ahora usamos productData.id para que nunca sea undefined.
+  currentProductId = productData.id; 
   currentSelection = {};
+
+  console.log("Producto seleccionado ID:", currentProductId); // Ahora sí mostrará el ID correcto
 
   // 2. Resetear Scroll y Header Sticky
   const scrollContainer = document.getElementById("modal-scroll-container");
@@ -480,7 +474,6 @@ function openModal(productData) {
   // 3. Limpiar Input de Notas
   const noteInput = document.getElementById("modal-note");
   if (noteInput) noteInput.value = "";
-
   // 4. Cargar Imágenes
   const imgDesktop = document.getElementById("modal-image-desktop");
   const imgMobile = document.getElementById("modal-image-mobile");
@@ -538,21 +531,12 @@ function openModal(productData) {
   }
 
   calculateModalTotal();
-
-  // Activar lógica de scroll (cortina móvil)
   if (typeof setupModalScroll === "function") setupModalScroll();
 
-  // ============================================================
-  // 8. MOSTRAR MODAL CON ANIMACIÓN FLUIDA (PREMIUM)
-  // ============================================================
-
-  // A. Quitar invisibilidad (pero mantiene opacidad 0 por clases previas)
+  // 8. MOSTRAR MODAL CON ANIMACIÓN
   modal.classList.remove("invisible");
-
-  // B. Forzar Reflow (Truco para que el navegador detecte el cambio de estado)
   void modal.offsetWidth;
 
-  // C. Animar Fondo (Backdrop)
   if (modal.firstElementChild) {
     modal.firstElementChild.classList.remove("opacity-0", "backdrop-blur-none");
     modal.firstElementChild.classList.add(
@@ -563,15 +547,12 @@ function openModal(productData) {
     );
   }
 
-  // D. Animar Contenido (Slide Up Suave)
-  // Quitamos estados de salida
   modalContent.classList.remove(
     "translate-y-full",
     "md:translate-y-10",
     "opacity-0"
   );
 
-  // Agregamos estados de entrada con la curva personalizada
   modalContent.classList.add(
     "translate-y-0",
     "opacity-100",
@@ -624,7 +605,9 @@ window.updateModalVariant = function (variantId, change) {
   if (newQty > 0) {
     currentSelection[variantId] = {
       id: variantId,
-      // Nombre compuesto si no es estándar
+      // CORRECCIÓN: Agregamos explícitamente el producto_id base
+      // para que el backend sepa cuál es el producto real, independientemente de la variante
+      producto_id: currentModalProduct.id, 
       nombre:
         variantData.nombre === "Estándar"
           ? currentModalProduct.nombre
@@ -705,8 +688,6 @@ function closeModal() {
   if (!modal || !modalContent) return;
 
   // 1. ANIMACIÓN DE SALIDA
-
-  // Fondo: Desaparece
   if (modal.firstElementChild) {
     modal.firstElementChild.classList.remove("opacity-100", "backdrop-blur-sm");
     modal.firstElementChild.classList.add(
@@ -716,7 +697,6 @@ function closeModal() {
     );
   }
 
-  // Contenido: Baja y desaparece
   modalContent.classList.remove("translate-y-0", "opacity-100");
   modalContent.classList.add(
     "translate-y-full",
@@ -726,30 +706,25 @@ function closeModal() {
     "ease-out-expo"
   );
 
-  // 2. LIMPIEZA FINAL (Espera a que termine la animación)
   setTimeout(() => {
     modal.classList.add("invisible");
 
-    // Limpiamos las clases de duración
     modalContent.classList.remove("duration-300", "ease-out-expo");
     if (modal.firstElementChild) {
       modal.firstElementChild.classList.remove("duration-300", "ease-out-expo");
     }
 
-    // --- SOLUCIÓN AL PARPADEO DE IMAGEN ---
-    // Borramos la imagen anterior para que no aparezca al abrir el siguiente producto
+    // Limpiar imagen para evitar parpadeo
     const imgDesktop = document.getElementById("modal-image-desktop");
     const imgMobile = document.getElementById("modal-image-mobile");
 
-    // Usamos una imagen transparente en base64 o string vacío para limpiar
-    // Esto evita que se vea el producto anterior
     if (imgDesktop)
       imgDesktop.src =
         "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
     if (imgMobile)
       imgMobile.src =
         "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
-  }, 300); // 300ms = tiempo de la animación de salida
+  }, 300); 
 
   // Restaurar Scroll
   if (!sidebar || sidebar.classList.contains("translate-x-full")) {
@@ -769,7 +744,6 @@ function setupModalScroll() {
   scrollContainer.onscroll = null;
 
   scrollContainer.onscroll = () => {
-    // En móvil (<768px), mostramos header al bajar 200px
     if (window.innerWidth < 768) {
       if (scrollContainer.scrollTop > 200) {
         stickyHeader.classList.remove("-translate-y-full");
@@ -781,10 +755,10 @@ function setupModalScroll() {
 }
 
 /* =========================================
-   PEDIDOS (WHATSAPP)
+   PEDIDOS (WHATSAPP + BD)
    ========================================= */
 
-function sendOrder() {
+async function sendOrder() {
   const nameInput = document.getElementById("client-name");
   const noteInput = document.getElementById("cart-general-note");
   const paymentRadio = document.querySelector(
@@ -795,12 +769,8 @@ function sendOrder() {
   if (!nameInput.value.trim()) {
     showToast("Por favor, escribe tu nombre", "error");
     nameInput.focus();
-    // Efecto visual de error
     nameInput.classList.add("ring-2", "ring-red-500");
-    setTimeout(
-      () => nameInput.classList.remove("ring-2", "ring-red-500"),
-      1500
-    );
+    setTimeout(() => nameInput.classList.remove("ring-2", "ring-red-500"), 1500);
     return;
   }
   if (!paymentRadio) {
@@ -808,30 +778,28 @@ function sendOrder() {
     return;
   }
 
-  // 2. Preparar Datos WhatsApp
+  const btnSend = document.querySelector('button[onclick="sendOrder()"]');
+  const btnText = btnSend.innerHTML;
+  btnSend.disabled = true;
+  btnSend.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+  // 2. Preparar Datos para WhatsApp y BD
   let whatsAppNumber = document.body.dataset.whatsappNumber || "584120000000";
-  if (whatsAppNumber.startsWith("0"))
-    whatsAppNumber = "58" + whatsAppNumber.substring(1);
+  if (whatsAppNumber.startsWith("0")) whatsAppNumber = "58" + whatsAppNumber.substring(1);
   whatsAppNumber = whatsAppNumber.replace(/[^0-9]/g, "");
 
-  const metodoPago =
-    paymentRadio.value === "pago_movil" ? "Pago Móvil" : "En Caja";
+  const metodoPago = paymentRadio.value === "pago_movil" ? "Pago Móvil" : "En Caja";
   const notaGeneral = noteInput ? noteInput.value.trim() : "";
 
-  // 3. Construir Mensaje
+  let totalBs = 0;
+  let totalUsd = 0;
+  
   let mensaje = `*¡Hola! Nuevo Pedido*\n\n`;
   mensaje += ` *Cliente:* ${nameInput.value.trim()}\n`;
   mensaje += ` *Pago:* ${metodoPago}\n`;
   mensaje += ` *Fecha:* ${new Date().toLocaleDateString()}\n`;
-
-  if (notaGeneral) {
-    mensaje += `*Nota General:* ${notaGeneral}\n`;
-  }
-
+  if (notaGeneral) mensaje += `*Nota General:* ${notaGeneral}\n`;
   mensaje += `--------------------------------\n`;
-
-  let totalBs = 0;
-  let totalUsd = 0;
 
   cart.forEach((item) => {
     mensaje += `▪️ *${item.cantidad}x* ${item.nombre}\n`;
@@ -844,51 +812,69 @@ function sendOrder() {
   mensaje += `*TOTAL: ${formatCurrency(totalBs).replace("Bs. ", "")} Bs*\n`;
   mensaje += `_(Ref: ${formatUSD(totalUsd)})_`;
 
-  // 4. Enviar y Limpiar
-  const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(mensaje)}`;
+  // 3. ENVIAR A LA BASE DE DATOS
+  try {
+    const ordenData = {
+        nombre: nameInput.value.trim(),
+        metodo_pago: paymentRadio.value, 
+        items: cart,
+        total_bs: totalBs,
+        total_usd: totalUsd,
+        nota: notaGeneral
+    };
 
-  showToast("¡Procesando! Redirigiendo a WhatsApp...", "success");
+    const respuestaBackend = await fetch('./php/pedido_guardar.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ordenData)
+    });
 
-  setTimeout(() => {
-    // A. Abrir WhatsApp
-    window.open(url, "_blank");
+    const resultado = await respuestaBackend.json();
 
-    // B. Limpiar Carrito (Array y LocalStorage)
-    cart = [];
-    saveCart();
+    if (resultado.status === 'success') {
+        showToast("¡Registrado! Abriendo WhatsApp...", "success");
+        const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(mensaje)}`;
+        
+        setTimeout(() => {
+            window.open(url, "_blank");
 
-    // C. Limpiar Inputs y Radios
-    nameInput.value = "";
-    if (noteInput) noteInput.value = "";
+            cart = [];
+            saveCart();
 
-    const radios = document.querySelectorAll('input[name="payment_method"]');
-    radios.forEach((r) => (r.checked = false));
+            nameInput.value = "";
+            if (noteInput) noteInput.value = "";
+            const radios = document.querySelectorAll('input[name="payment_method"]');
+            radios.forEach((r) => (r.checked = false));
+            const pmDetails = document.getElementById("pago-movil-details");
+            if (pmDetails) pmDetails.classList.add("hidden");
 
-    // Ocultar detalles de pago móvil si estaban abiertos
-    const pmDetails = document.getElementById("pago-movil-details");
-    if (pmDetails) pmDetails.classList.add("hidden");
+            renderCartItems();
+            updateCartBadge();
+            closeCart();
+            
+            setTimeout(() => { backToCart(); }, 500);
 
-    // D. Actualizar UI (Contadores y totales a 0)
-    renderCartItems();
-    updateCartBadge();
+        }, 1000);
 
-    // E. Cerrar Sidebar
-    closeCart();
+   } else {
+        console.error(resultado);
+        showToast(resultado.message, "error"); 
+    }
 
-    // F. Volver al Paso 1 (Para que la próxima vez empiece desde el principio)
-    setTimeout(() => {
-      backToCart();
-    }, 500); // Esperamos medio segundo a que se cierre la animación
-  }, 1250);
+  } catch (error) {
+    console.error(error);
+    showToast("Error de conexión con el servidor", "error");
+  } finally {
+    btnSend.disabled = false;
+    btnSend.innerHTML = btnText;
+  }
 }
 
 function copyAllPagoMovil() {
-  // Obtener los textos (Asegúrate de que los IDs coincidan con tu HTML)
   const banco = document.getElementById("pm-bank").innerText;
   const telefono = document.getElementById("pm-phone").innerText;
   const cedula = document.getElementById("pm-id").innerText;
 
-  // Formato del texto a copiar
   const textoCompleto = `${banco}\n  ${telefono}\n ${cedula}`;
 
   navigator.clipboard
@@ -917,7 +903,6 @@ function registerAppListeners() {
     "busqueda"
   );
 
-  // Estado inicial links
   if (isSearchPage) {
     categoryLinks.forEach((link) => {
       link.classList.remove(...activeClasses);
@@ -929,7 +914,6 @@ function registerAppListeners() {
     });
   }
 
-  // Hash en URL
   const currentHash = window.location.hash;
   if (!isSearchPage && currentHash && currentHash.length > 1) {
     const activeLink = document.querySelector(
@@ -938,7 +922,6 @@ function registerAppListeners() {
     if (activeLink) activeLink.click();
   }
 
-  // Click Categorías
   categoryLinks.forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
       e.preventDefault();
@@ -992,7 +975,6 @@ function registerAppListeners() {
     });
   });
 
-  // Buscador Móvil Scroll
   const searchTrigger = document.getElementById("mobile-search-trigger");
   const searchInput = document.getElementById("mobile-search-input");
   const searchContainer = document.getElementById("mobile-search-form");
@@ -1018,16 +1000,13 @@ function registerAppListeners() {
     });
   }
 
-  // Listeners Botón "Agregar" del Modal
   const modalBtn = document.getElementById("btn-add-modal-selection");
   if (modalBtn) {
-    // Clonar para limpiar listeners viejos
     const newBtn = modalBtn.cloneNode(true);
     modalBtn.parentNode.replaceChild(newBtn, modalBtn);
     newBtn.addEventListener("click", addModalSelectionToCart);
   }
 
-  // Botones del Carrito UI
   const openCartDesktop = document.getElementById("open-cart-btn-desktop");
   const openCartMobile = document.getElementById("open-cart-btn-mobile");
   const closeCartBtn = document.getElementById("close-cart-btn");
@@ -1059,7 +1038,6 @@ document.addEventListener("DOMContentLoaded", () => {
     originalMainContent = productContentWrapper.innerHTML;
   }
 
-  // Buscador AJAX
   const desktopInput = document.getElementById("desktop-search-input");
   const mobileInput = document.getElementById("mobile-search-input");
   const categoryNav = document.getElementById("category-nav-section");
@@ -1111,7 +1089,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   registerAppListeners();
 
-  // Tecla Escape cierra todo
   document.addEventListener("keydown", (e) => {
     const modal = document.getElementById("product-modal");
     const cartSidebar = document.getElementById("cart-sidebar");
