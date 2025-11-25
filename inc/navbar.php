@@ -34,7 +34,17 @@ function isActiveText($vistas, $current)
                             INICIO
                         </a>
 
+
                         <div class="relative group">
+
+                            <a href="index.php?vista=orders_list" class="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors group-hover:text-indigo-600 <?php echo isActiveText(['product_list', 'product_new', 'product_update'], $current_vista); ?>">
+                                PEDIDOS
+                                <i class="fas fa-chevron-down text-xs opacity-50 group-hover:rotate-180 transition-transform duration-200"></i>
+                            </a>
+
+                        </div>
+                        <div class="relative group">
+
                             <button class="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors group-hover:text-indigo-600 <?php echo isActiveText(['product_list', 'product_new', 'product_update'], $current_vista); ?>">
                                 PRODUCTOS
                                 <i class="fas fa-chevron-down text-xs opacity-50 group-hover:rotate-180 transition-transform duration-200"></i>
@@ -151,6 +161,13 @@ function isActiveText($vistas, $current)
                     <i class="fas fa-home w-6 text-center <?php echo isActive('home', $current_vista); ?>"></i> Inicio
                 </a>
 
+
+
+                <a href="index.php?vista=orders_list" class="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors group-hover:text-indigo-600 <?php echo isActiveText(['product_list', 'product_new', 'product_update'], $current_vista); ?>">
+                    PEDIDOS
+                    <i class="fas fa-chevron-down text-xs opacity-50 group-hover:rotate-180 transition-transform duration-200"></i>
+                </a>
+                
                 <div class="pt-4 pb-2">
                     <p class="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Gestionar</p>
                 </div>
