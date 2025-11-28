@@ -1,11 +1,11 @@
 /* =========================================
    VARIABLES GLOBALES
    ========================================= */
- 
-let currentProductId = null; 
+
+let currentProductId = null;
 let currentProductPrice = 0;
 let currentModalProduct = {};
-let currentSelection = {}; 
+let currentSelection = {};
 let cart = [];
 let originalMainContent = "";
 let debounceTimeout;
@@ -93,7 +93,7 @@ function inicializarAnunciosClicables() {
           addToCart([
             {
               id: promoData.id,
-              producto_id: promoData.id, // Aseguramos ID real
+              producto_id: null, // Es promo, no producto base
               nombre: promoData.nombre,
               foto: promoData.foto,
               precio_raw: promoData.precio_raw,
@@ -101,6 +101,7 @@ function inicializarAnunciosClicables() {
               cantidad: 1,
               descripcion: "Promoción rápida",
               nota: "",
+              type: "promo", // Identificador de promoción
             },
           ]);
           showToast(`¡"${promoData.nombre}" añadido al carrito!`, "success");
@@ -187,6 +188,7 @@ function addToCart(itemOrArray) {
     if (quantity <= 0) return;
 
     // Buscamos si existe un item con el mismo ID Y la misma nota
+    // Esto agrupa productos iguales para que la BD reciba la cantidad correcta
     const existingIndex = cart.findIndex(
       (item) =>
         item.id === product.id && (item.nota || "") === (product.nota || "")
@@ -197,16 +199,15 @@ function addToCart(itemOrArray) {
     } else {
       cart.push({
         id: product.id,
-        // CORRECCIÓN: Guardamos el ID REAL del producto para la base de datos
-        // Si viene producto_id lo usamos, si no usamos el id normal
-        producto_id: product.producto_id || product.id, 
+        producto_id: product.producto_id || product.id,
         nombre: product.nombre,
         foto: product.foto,
         precio: product.precio_raw,
         precio_usd: product.precio_usd,
         cantidad: quantity,
         descripcion: product.descripcion || "",
-        nota: product.nota || "", 
+        nota: product.nota || "",
+        type: product.type || "producto", // Guardamos el tipo (promo/producto)
       });
     }
     addedCount++;
@@ -237,12 +238,11 @@ function updateCartBadge() {
   });
 }
 
-// --- NUEVO DISEÑO DEL CARRITO (LIMPIO) ---
 function renderCartItems() {
   const container = document.getElementById("cart-items-container");
   const step1Bs = document.getElementById("step1-bs");
   const step1Usd = document.getElementById("step1-usd");
-  const step2Bs = document.getElementById("step2-bs"); 
+  const step2Bs = document.getElementById("step2-bs");
 
   if (cart.length === 0) {
     container.innerHTML = `
@@ -296,7 +296,6 @@ function renderCartItems() {
 
   container.innerHTML = itemsHTML;
 
-  // Actualizar Totales en ambas vistas
   const totalTexto = formatCurrency(subtotal_bs);
   if (step1Bs) step1Bs.textContent = totalTexto;
   if (step1Usd) step1Usd.textContent = formatUSD(subtotal_usd);
@@ -349,12 +348,22 @@ function togglePaymentDetails() {
   const pmRadio = document.querySelector(
     'input[name="payment_method"][value="pago_movil"]'
   );
-  const detailsDiv = document.getElementById("pago-movil-details");
+  const cajaRadio = document.querySelector(
+    'input[name="payment_method"][value="en_caja"]'
+  );
 
-  if (pmRadio && pmRadio.checked) {
-    detailsDiv.classList.remove("hidden");
-  } else {
-    detailsDiv.classList.add("hidden");
+  const pmDetails = document.getElementById("pago-movil-details");
+  const cajaDetails = document.getElementById("en-caja-details");
+
+  if (pmDetails) pmDetails.classList.add("hidden");
+  if (cajaDetails) cajaDetails.classList.add("hidden");
+
+  if (pmRadio && pmRadio.checked && pmDetails) {
+    pmDetails.classList.remove("hidden");
+  }
+
+  if (cajaRadio && cajaRadio.checked && cajaDetails) {
+    cajaDetails.classList.remove("hidden");
   }
 }
 
@@ -368,6 +377,7 @@ function copyToClipboard(text) {
       showToast("Error al copiar", "error");
     });
 }
+
 function setupCartListener() {
   const container = document.getElementById("cart-items-container");
   if (!container) return;
@@ -401,7 +411,9 @@ function setupCartListener() {
 }
 
 function openCart() {
-  renderCartItems(); 
+  renderCartItems();
+  // NUEVO: Intentar cargar datos del usuario si existen
+  cargarDatosLocales();
 
   const backdrop = document.getElementById("cart-backdrop");
   const sidebar = document.getElementById("cart-sidebar");
@@ -415,19 +427,19 @@ function openCart() {
   }, 10);
 
   sidebar.classList.remove("translate-x-full");
-  sidebar.classList.add("translate-x-0", "duration-500", "ease-out-expo"); 
+  sidebar.classList.add("translate-x-0", "duration-500", "ease-out-expo");
 
-  document.body.style.overflow = "hidden"; 
+  document.body.style.overflow = "hidden";
 }
 
 function closeCart() {
   const backdrop = document.getElementById("cart-backdrop");
   const sidebar = document.getElementById("cart-sidebar");
-  const modal = document.getElementById("product-modal"); 
+  const modal = document.getElementById("product-modal");
 
   if (!backdrop || !sidebar) return;
 
-  sidebar.classList.remove("translate-x-0", "duration-500"); 
+  sidebar.classList.remove("translate-x-0", "duration-500");
   sidebar.classList.add("translate-x-full", "duration-300", "ease-out-expo");
 
   backdrop.classList.remove("opacity-100");
@@ -445,7 +457,7 @@ function closeCart() {
 }
 
 /* =========================================
-   LÓGICA DEL MODAL (MULTI-VARIANTE + NOTAS + CORTINA)
+   LÓGICA DEL MODAL
    ========================================= */
 
 function openModal(productData) {
@@ -456,37 +468,28 @@ function openModal(productData) {
 
   if (!modal || !modalContent) return;
 
-  // 1. Resetear Estado Global
   currentModalProduct = productData;
-  // CORRECCIÓN: Aquí estaba el error. 'element' no existía.
-  // Ahora usamos productData.id para que nunca sea undefined.
-  currentProductId = productData.id; 
+  currentProductId = productData.id;
   currentSelection = {};
 
-  console.log("Producto seleccionado ID:", currentProductId); // Ahora sí mostrará el ID correcto
-
-  // 2. Resetear Scroll y Header Sticky
   const scrollContainer = document.getElementById("modal-scroll-container");
   if (scrollContainer) scrollContainer.scrollTop = 0;
 
   if (stickyHeader) stickyHeader.classList.add("-translate-y-full");
 
-  // 3. Limpiar Input de Notas
   const noteInput = document.getElementById("modal-note");
   if (noteInput) noteInput.value = "";
-  // 4. Cargar Imágenes
+
   const imgDesktop = document.getElementById("modal-image-desktop");
   const imgMobile = document.getElementById("modal-image-mobile");
   if (imgDesktop) imgDesktop.src = productData.foto;
   if (imgMobile) imgMobile.src = productData.foto;
 
-  // 5. Cargar Textos
   const nameEl = document.getElementById("modal-name");
   const descEl = document.getElementById("modal-description");
   if (nameEl) nameEl.textContent = productData.nombre;
   if (descEl) descEl.textContent = productData.descripcion;
 
-  // 6. Renderizar Variantes
   if (variantsContainer) {
     variantsContainer.innerHTML = "";
 
@@ -515,13 +518,10 @@ function openModal(productData) {
                 <span class="font-bold text-gray-800 text-base">${variant.nombre}</span>
                 <span class="text-red-600 font-bold text-sm mt-0.5">${priceText}</span>
             </div>
-            
             <div class="flex items-center bg-gray-50 rounded-full h-10 border border-gray-200">
                 <button type="button" class="w-10 h-full flex items-center justify-center text-gray-500 hover:text-red-600 font-bold rounded-l-full transition active:scale-90 select-none" 
                         onclick="updateModalVariant('${variant.id}', -1)">−</button>
-                
                 <span id="qty-${variant.id}" class="w-8 text-center font-bold text-gray-900 text-base select-none">0</span>
-                
                 <button type="button" class="w-10 h-full flex items-center justify-center text-red-600 hover:text-red-700 font-bold rounded-r-full transition active:scale-90 select-none" 
                         onclick="updateModalVariant('${variant.id}', 1)">+</button>
             </div>
@@ -533,7 +533,6 @@ function openModal(productData) {
   calculateModalTotal();
   if (typeof setupModalScroll === "function") setupModalScroll();
 
-  // 8. MOSTRAR MODAL CON ANIMACIÓN
   modal.classList.remove("invisible");
   void modal.offsetWidth;
 
@@ -563,7 +562,6 @@ function openModal(productData) {
   document.body.style.overflow = "hidden";
 }
 
-// Función Global para onclicks del HTML inyectado
 window.updateModalVariant = function (variantId, change) {
   const variantes =
     currentModalProduct.variantes && currentModalProduct.variantes.length > 0
@@ -585,12 +583,10 @@ window.updateModalVariant = function (variantId, change) {
   let newQty = currentQty + change;
   if (newQty < 0) newQty = 0;
 
-  // Actualizar UI Contador
   const qtyDisplay = document.getElementById(`qty-${variantId}`);
   const row = document.getElementById(`row-${variantId}`);
   if (qtyDisplay) qtyDisplay.textContent = newQty;
 
-  // Actualizar Estilo Fila
   if (row) {
     if (newQty > 0) {
       row.classList.add("border-red-500", "bg-red-50");
@@ -601,13 +597,10 @@ window.updateModalVariant = function (variantId, change) {
     }
   }
 
-  // Actualizar Datos Selección
   if (newQty > 0) {
     currentSelection[variantId] = {
       id: variantId,
-      // CORRECCIÓN: Agregamos explícitamente el producto_id base
-      // para que el backend sepa cuál es el producto real, independientemente de la variante
-      producto_id: currentModalProduct.id, 
+      producto_id: currentModalProduct.id,
       nombre:
         variantData.nombre === "Estándar"
           ? currentModalProduct.nombre
@@ -657,11 +650,8 @@ function calculateModalTotal() {
   }
 }
 
-// Añadir al carrito con NOTA
 function addModalSelectionToCart() {
   const itemsToAdd = Object.values(currentSelection);
-
-  // Capturar Nota
   const noteInput = document.getElementById("modal-note");
   const userNote = noteInput ? noteInput.value.trim() : "";
 
@@ -670,7 +660,6 @@ function addModalSelectionToCart() {
     return;
   }
 
-  // Inyectar nota en cada item
   const itemsWithNote = itemsToAdd.map((item) => {
     return { ...item, nota: userNote };
   });
@@ -687,7 +676,6 @@ function closeModal() {
 
   if (!modal || !modalContent) return;
 
-  // 1. ANIMACIÓN DE SALIDA
   if (modal.firstElementChild) {
     modal.firstElementChild.classList.remove("opacity-100", "backdrop-blur-sm");
     modal.firstElementChild.classList.add(
@@ -708,33 +696,26 @@ function closeModal() {
 
   setTimeout(() => {
     modal.classList.add("invisible");
-
     modalContent.classList.remove("duration-300", "ease-out-expo");
     if (modal.firstElementChild) {
       modal.firstElementChild.classList.remove("duration-300", "ease-out-expo");
     }
-
-    // Limpiar imagen para evitar parpadeo
     const imgDesktop = document.getElementById("modal-image-desktop");
     const imgMobile = document.getElementById("modal-image-mobile");
-
     if (imgDesktop)
       imgDesktop.src =
         "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
     if (imgMobile)
       imgMobile.src =
         "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
-  }, 300); 
+  }, 300);
 
-  // Restaurar Scroll
   if (!sidebar || sidebar.classList.contains("translate-x-full")) {
     document.body.style.overflow = "";
   }
-
   currentSelection = {};
 }
 
-// Lógica de "Cortina" Móvil
 function setupModalScroll() {
   const scrollContainer = document.getElementById("modal-scroll-container");
   const stickyHeader = document.getElementById("mobile-sticky-header");
@@ -742,7 +723,6 @@ function setupModalScroll() {
   if (!scrollContainer || !stickyHeader) return;
 
   scrollContainer.onscroll = null;
-
   scrollContainer.onscroll = () => {
     if (window.innerWidth < 768) {
       if (scrollContainer.scrollTop > 200) {
@@ -760,22 +740,67 @@ function setupModalScroll() {
 
 async function sendOrder() {
   const nameInput = document.getElementById("client-name");
+  const phoneInput = document.getElementById("client-phone");
+  const idInput = document.getElementById("client-id");
   const noteInput = document.getElementById("cart-general-note");
+
   const paymentRadio = document.querySelector(
     'input[name="payment_method"]:checked'
   );
+  const orderTypeRadio = document.querySelector(
+    'input[name="order_type"]:checked'
+  );
+  const cashTypeRadio = document.querySelector(
+    'input[name="cash_type"]:checked'
+  );
+  const pmReference = document.getElementById("pm-reference");
 
-  // 1. Validaciones
   if (!nameInput.value.trim()) {
     showToast("Por favor, escribe tu nombre", "error");
     nameInput.focus();
     nameInput.classList.add("ring-2", "ring-red-500");
-    setTimeout(() => nameInput.classList.remove("ring-2", "ring-red-500"), 1500);
+    setTimeout(
+      () => nameInput.classList.remove("ring-2", "ring-red-500"),
+      1500
+    );
     return;
   }
+
+  if (!phoneInput.value.trim()) {
+    showToast("Por favor, escribe tu teléfono", "error");
+    phoneInput.focus();
+    phoneInput.classList.add("ring-2", "ring-red-500");
+    setTimeout(
+      () => phoneInput.classList.remove("ring-2", "ring-red-500"),
+      1500
+    );
+    return;
+  }
+
+  if (!idInput.value.trim()) {
+    showToast("Por favor, escribe tu Cédula/RIF", "error");
+    idInput.focus();
+    idInput.classList.add("ring-2", "ring-red-500");
+    setTimeout(() => idInput.classList.remove("ring-2", "ring-red-500"), 1500);
+    return;
+  }
+
   if (!paymentRadio) {
     showToast("Selecciona un método de pago", "error");
     return;
+  }
+
+  if (paymentRadio.value === "pago_movil") {
+    if (!pmReference.value || pmReference.value.length < 4) {
+      showToast("Ingresa los últimos 4 dígitos de la referencia", "error");
+      pmReference.focus();
+      pmReference.classList.add("ring-2", "ring-red-500");
+      setTimeout(
+        () => pmReference.classList.remove("ring-2", "ring-red-500"),
+        1500
+      );
+      return;
+    }
   }
 
   const btnSend = document.querySelector('button[onclick="sendOrder()"]');
@@ -783,22 +808,40 @@ async function sendOrder() {
   btnSend.disabled = true;
   btnSend.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
-  // 2. Preparar Datos para WhatsApp y BD
   let whatsAppNumber = document.body.dataset.whatsappNumber || "584120000000";
-  if (whatsAppNumber.startsWith("0")) whatsAppNumber = "58" + whatsAppNumber.substring(1);
+  if (whatsAppNumber.startsWith("0"))
+    whatsAppNumber = "58" + whatsAppNumber.substring(1);
   whatsAppNumber = whatsAppNumber.replace(/[^0-9]/g, "");
 
-  const metodoPago = paymentRadio.value === "pago_movil" ? "Pago Móvil" : "En Caja";
+  const tipoOrden =
+    orderTypeRadio && orderTypeRadio.value === "llevar"
+      ? "Para Llevar 🛍️"
+      : "Comer Aquí 🍽️";
   const notaGeneral = noteInput ? noteInput.value.trim() : "";
+
+  let metodoPagoTexto = "";
+  if (paymentRadio.value === "pago_movil") {
+    metodoPagoTexto = `Pago Móvil (Ref: ${pmReference.value})`;
+  } else {
+    const tipoCaja = cashTypeRadio
+      ? cashTypeRadio.value === "efectivo"
+        ? "Efectivo"
+        : "Tarjeta"
+      : "Caja";
+    metodoPagoTexto = `En Caja (${tipoCaja})`;
+  }
 
   let totalBs = 0;
   let totalUsd = 0;
-  
+
   let mensaje = `*¡Hola! Nuevo Pedido*\n\n`;
   mensaje += ` *Cliente:* ${nameInput.value.trim()}\n`;
-  mensaje += ` *Pago:* ${metodoPago}\n`;
+  mensaje += ` *Tel:* ${phoneInput.value.trim()}\n`;
+  mensaje += ` *Cédula:* ${idInput.value.trim()}\n`;
+  mensaje += ` *Tipo:* ${tipoOrden}\n`;
+  mensaje += ` *Pago:* ${metodoPagoTexto}\n`;
   mensaje += ` *Fecha:* ${new Date().toLocaleDateString()}\n`;
-  if (notaGeneral) mensaje += `*Nota General:* ${notaGeneral}\n`;
+  if (notaGeneral) mensaje += ` *Nota Gral:* ${notaGeneral}\n`;
   mensaje += `--------------------------------\n`;
 
   cart.forEach((item) => {
@@ -812,55 +855,72 @@ async function sendOrder() {
   mensaje += `*TOTAL: ${formatCurrency(totalBs).replace("Bs. ", "")} Bs*\n`;
   mensaje += `_(Ref: ${formatUSD(totalUsd)})_`;
 
-  // 3. ENVIAR A LA BASE DE DATOS
   try {
     const ordenData = {
-        nombre: nameInput.value.trim(),
-        metodo_pago: paymentRadio.value, 
-        items: cart,
-        total_bs: totalBs,
-        total_usd: totalUsd,
-        nota: notaGeneral
+      nombre: nameInput.value.trim(),
+      telefono: phoneInput.value.trim(),
+      cedula: idInput.value.trim(),
+      tipo_orden: orderTypeRadio ? orderTypeRadio.value : "comer",
+      metodo_pago: paymentRadio.value,
+      referencia:
+        paymentRadio.value === "pago_movil" ? pmReference.value : null,
+      tipo_caja:
+        paymentRadio.value === "en_caja" && cashTypeRadio
+          ? cashTypeRadio.value
+          : null,
+      items: cart,
+      total_bs: totalBs,
+      total_usd: totalUsd,
+      nota: notaGeneral,
     };
 
-    const respuestaBackend = await fetch('./php/pedido_guardar.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ordenData)
+    const respuestaBackend = await fetch("./php/pedido_guardar.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ordenData),
     });
 
     const resultado = await respuestaBackend.json();
 
-    if (resultado.status === 'success') {
-        showToast("¡Registrado! Abriendo WhatsApp...", "success");
-        const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(mensaje)}`;
-        
+    if (resultado.status === "success") {
+      // --- NUEVO: GUARDAR DATOS EN LOCALSTORAGE PARA FUTURAS COMPRAS ---
+      guardarDatosLocales(
+        ordenData.nombre,
+        ordenData.telefono,
+        ordenData.cedula
+      );
+
+      showToast("¡Registrado! Abriendo WhatsApp...", "success");
+      const url = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(mensaje)}`;
+
+      setTimeout(() => {
+        window.open(url, "_blank");
+
+        cart = [];
+        saveCart();
+
+        // No borramos datos del cliente (UX)
+        if (noteInput) noteInput.value = "";
+        if (pmReference) pmReference.value = "";
+
+        const radios = document.querySelectorAll(
+          'input[name="payment_method"]'
+        );
+        radios.forEach((r) => (r.checked = false));
+
+        togglePaymentDetails();
+        renderCartItems();
+        updateCartBadge();
+        closeCart();
+
         setTimeout(() => {
-            window.open(url, "_blank");
-
-            cart = [];
-            saveCart();
-
-            nameInput.value = "";
-            if (noteInput) noteInput.value = "";
-            const radios = document.querySelectorAll('input[name="payment_method"]');
-            radios.forEach((r) => (r.checked = false));
-            const pmDetails = document.getElementById("pago-movil-details");
-            if (pmDetails) pmDetails.classList.add("hidden");
-
-            renderCartItems();
-            updateCartBadge();
-            closeCart();
-            
-            setTimeout(() => { backToCart(); }, 500);
-
-        }, 1000);
-
-   } else {
-        console.error(resultado);
-        showToast(resultado.message, "error"); 
+          backToCart();
+        }, 500);
+      }, 1000);
+    } else {
+      console.error(resultado);
+      showToast(resultado.message, "error");
     }
-
   } catch (error) {
     console.error(error);
     showToast("Error de conexión con el servidor", "error");
@@ -874,8 +934,7 @@ function copyAllPagoMovil() {
   const banco = document.getElementById("pm-bank").innerText;
   const telefono = document.getElementById("pm-phone").innerText;
   const cedula = document.getElementById("pm-id").innerText;
-
-  const textoCompleto = `${banco}\n  ${telefono}\n ${cedula}`;
+  const textoCompleto = `Banco: ${banco}\nTel: ${telefono}\nCI: ${cedula}`;
 
   navigator.clipboard
     .writeText(textoCompleto)
@@ -886,6 +945,34 @@ function copyAllPagoMovil() {
       showToast("Error al copiar", "error");
     });
 }
+
+/* =========================================
+   LOCAL STORAGE (FUNCIONALIDAD NUEVA)
+   ========================================= */
+
+// 1. Guardar en el navegador
+function guardarDatosLocales(nombre, telefono, cedula) {
+  const datosUsuario = { nombre, telefono, cedula };
+  localStorage.setItem("datos_usuario_menu", JSON.stringify(datosUsuario));
+}
+
+// 2. Cargar automáticamente al entrar
+function cargarDatosLocales() {
+  const datosGuardados = localStorage.getItem("datos_usuario_menu");
+  if (datosGuardados) {
+    const datos = JSON.parse(datosGuardados);
+
+    const inName = document.getElementById("client-name");
+    const inPhone = document.getElementById("client-phone");
+    const inCedula = document.getElementById("client-id");
+
+    // Solo rellenar si los inputs existen en la página
+    if (inName) inName.value = datos.nombre || "";
+    if (inPhone) inPhone.value = datos.telefono || "";
+    if (inCedula) inCedula.value = datos.cedula || "";
+  }
+}
+
 /* =========================================
    NAVEGACIÓN Y BÚSQUEDA
    ========================================= */
@@ -1030,6 +1117,9 @@ document.addEventListener("DOMContentLoaded", () => {
   loadCart();
   updateCartBadge();
   setupCartListener();
+
+  // NUEVO: Intentar cargar datos del usuario al iniciar la página
+  cargarDatosLocales();
 
   const productContentWrapper = document.getElementById(
     "product-content-wrapper"

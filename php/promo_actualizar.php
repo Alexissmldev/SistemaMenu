@@ -24,10 +24,11 @@ $fecha_fin_raw = (isset($_POST['fecha_fin']) && trim($_POST['fecha_fin']) !== ""
 $fecha_inicio_db = null;
 $fecha_fin_db = null;
 
-// Vínculos
+// Vínculos y Cantidades (NUEVO: Recibimos el array de cantidades)
 $productos_vinculados = isset($_POST['productos_vinculados']) ? (array)$_POST['productos_vinculados'] : [];
+$cantidades = isset($_POST['cantidades']) ? (array)$_POST['cantidades'] : [];
 
-// Directorio de imágenes (desde /php/ -> ../img/anuncios/)
+// Directorio de imágenes
 $img_dir_base = "../img/anuncios/";
 
 //============================================================
@@ -39,7 +40,19 @@ if ($promo_id == "" || $nombre == "" || $precio == "" || $hora_inicio == "" || $
     enviar_respuesta_json("error", "Campos vacíos", "No has llenado todos los campos obligatorios");
 }
 
-// Formatos
+// Verificar límite de 5 promos activas (Seguridad Backend)
+// Solo verificamos si el usuario intenta poner estado = 1 (Activa)
+if ($estado == '1') {
+    $check_limite = $conexion->prepare("SELECT COUNT(promo_id) FROM promociones WHERE estado = 1 AND promo_id != :id");
+    $check_limite->execute([':id' => $promo_id]);
+    $total_activas = (int) $check_limite->fetchColumn();
+
+    if ($total_activas >= 5) {
+        enviar_respuesta_json("error", "Límite Alcanzado", "Ya tienes 5 promociones activas. Debes desactivar otra para activar esta.");
+    }
+}
+
+// Formatos básicos
 if (verificar_datos(".{1,100}", $nombre)) {
     enviar_respuesta_json("error", "Formato inválido", "El nombre no puede tener más de 100 caracteres");
 }
@@ -53,99 +66,72 @@ if (!is_numeric($hora_fin) || $hora_fin < 0 || $hora_fin > 23) {
     enviar_respuesta_json("error", "Formato inválido", "La hora de fin debe ser un número entre 0 y 23");
 }
 if ((int)$hora_fin <= (int)$hora_inicio) {
-    enviar_respuesta_json("error", "Horario inválido", "La hora de fin debe ser mayor que la hora de inicio");
-}
-if (!in_array($estado, ['0', '1'])) {
-    enviar_respuesta_json("error", "Formato inválido", "El estado no es válido");
+    enviar_respuesta_json("error", "Horario inválido", "La hora de fin debe ser mayor que la hora de inicio"); // Ojo: Si tu negocio cierra después de media noche, esta lógica cambia.
 }
 if (empty($productos_vinculados)) {
     enviar_respuesta_json("error", "Datos incompletos", "Debes seleccionar al menos un producto para la promoción.");
 }
 
-// Validación de Fechas (copiada de tu referencia)
+// Validación de Fechas
 if ($fecha_inicio_raw !== null) {
     $fecha_str = str_replace('/', '-', $fecha_inicio_raw);
-    if (verificar_datos("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", $fecha_str)) {
-        $fecha_obj = DateTime::createFromFormat('Y-m-d', $fecha_str);
-        if ($fecha_obj && $fecha_obj->format('Y-m-d') === $fecha_str) {
-            $fecha_inicio_db = $fecha_obj->format('Y-m-d');
-        }
-    } elseif (verificar_datos("^[0-9]{2}-[0-9]{2}-[0-9]{4}$", $fecha_str)) {
-        $fecha_obj = DateTime::createFromFormat('d-m-Y', $fecha_str);
-        if ($fecha_obj && $fecha_obj->format('d-m-Y') === $fecha_str) {
-            $fecha_inicio_db = $fecha_obj->format('Y-m-d');
-        }
-    }
-    if ($fecha_inicio_db === null) {
-        enviar_respuesta_json("error", "Formato inválido", "La fecha de inicio no es válida. Use DD-MM-YYYY o YYYY-MM-DD.");
+    $fecha_obj = DateTime::createFromFormat('Y-m-d', $fecha_str) ?: DateTime::createFromFormat('d-m-Y', $fecha_str);
+
+    if ($fecha_obj) {
+        $fecha_inicio_db = $fecha_obj->format('Y-m-d');
+    } else {
+        enviar_respuesta_json("error", "Formato inválido", "La fecha de inicio no es válida.");
     }
 }
 if ($fecha_fin_raw !== null) {
     $fecha_str = str_replace('/', '-', $fecha_fin_raw);
-    if (verificar_datos("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", $fecha_str)) {
-        $fecha_obj = DateTime::createFromFormat('Y-m-d', $fecha_str);
-        if ($fecha_obj && $fecha_obj->format('Y-m-d') === $fecha_str) {
-            $fecha_fin_db = $fecha_obj->format('Y-m-d');
-        }
-    } elseif (verificar_datos("^[0-9]{2}-[0-9]{2}-[0-9]{4}$", $fecha_str)) {
-        $fecha_obj = DateTime::createFromFormat('d-m-Y', $fecha_str);
-        if ($fecha_obj && $fecha_obj->format('d-m-Y') === $fecha_str) {
-            $fecha_fin_db = $fecha_obj->format('Y-m-d');
-        }
-    }
-    if ($fecha_fin_db === null) {
-        enviar_respuesta_json("error", "Formato inválido", "La fecha de fin no es válida. Use DD-MM-YYYY o YYYY-MM-DD.");
+    $fecha_obj = DateTime::createFromFormat('Y-m-d', $fecha_str) ?: DateTime::createFromFormat('d-m-Y', $fecha_str);
+
+    if ($fecha_obj) {
+        $fecha_fin_db = $fecha_obj->format('Y-m-d');
+    } else {
+        enviar_respuesta_json("error", "Formato inválido", "La fecha de fin no es válida.");
     }
 }
 
 
 //============================================================
-// 3. VERIFICAR PROMOCIÓN Y GESTIONAR FOTO
+// 3. GESTIONAR IMAGEN (NUEVA O EXISTENTE)
 //============================================================
 
-// Verificar que la promoción exista y obtener la foto antigua
+// Verificar promo y obtener foto actual
 $check_promo = $conexion->prepare("SELECT promo_foto FROM promociones WHERE promo_id = :id");
 $check_promo->execute([':id' => $promo_id]);
 
 if ($check_promo->rowCount() <= 0) {
-    enviar_respuesta_json('error', 'No Encontrado', 'La promoción que intenta actualizar no existe.');
+    enviar_respuesta_json('error', 'No Encontrado', 'La promoción no existe.');
 }
 $datos_promo_actual = $check_promo->fetch();
-$nombre_foto_db = $datos_promo_actual['promo_foto']; // Por defecto, mantenemos la foto antigua
+$nombre_foto_db = $datos_promo_actual['promo_foto'];
 
-$check_promo = null;
-$archivos_creados = []; // Para rastrear archivos nuevos
+$archivos_creados = []; // Array para rollback de archivos
 
-// Comprobar si se subió una NUEVA foto
+// Si se sube nueva foto
 if (isset($_FILES['promo_foto']) && $_FILES['promo_foto']['error'] === UPLOAD_ERR_OK && $_FILES['promo_foto']['size'] > 0) {
 
-    // --- INICIO DE LA LÓGICA DE IMAGEN CORREGIDA ---
-    // (Basada en tu referencia de producto_guardar.php)
-
-    // Definir directorios
     $dir_original = $img_dir_base . 'original/';
     $dir_large = $img_dir_base . 'large/';
     $dir_thumbs = $img_dir_base . 'thumb/';
 
-    // Crear directorios (por si acaso)
     if (!file_exists($dir_original)) mkdir($dir_original, 0777, true);
     if (!file_exists($dir_large)) mkdir($dir_large, 0777, true);
     if (!file_exists($dir_thumbs)) mkdir($dir_thumbs, 0777, true);
 
-    // Validar tipo y tamaño
-    if (mime_content_type($_FILES['promo_foto']['tmp_name']) != "image/jpeg" && mime_content_type($_FILES['promo_foto']['tmp_name']) != "image/png" && mime_content_type($_FILES['promo_foto']['tmp_name']) != "image/webp") {
-        enviar_respuesta_json("error", "Formato inválido", "La imagen debe ser JPG, PNG o WEBP");
-    }
     if (($_FILES['promo_foto']['size'] / 1024) > 3072) {
         enviar_respuesta_json("error", "Imagen demasiado grande", "La imagen supera el límite de 3MB");
     }
 
-    // Generar nuevo nombre (basado en el nombre de la promo y .webp)
-    $img_nombre_base = renombrar_foto($nombre);
+    // Generar nombre y procesar
+    $img_nombre_base = renombrar_foto($nombre); // Asumo que esta función existe en main.php
     $nombre_foto_db_nuevo = $img_nombre_base . '.webp';
 
     try {
-        // Llamar a la función de procesamiento
+        // Asumo que esta función existe en main.php según tu código anterior
         procesar_imagen_optimizada(
             $_FILES['promo_foto'],
             $img_nombre_base,
@@ -154,57 +140,50 @@ if (isset($_FILES['promo_foto']) && $_FILES['promo_foto']['error'] === UPLOAD_ER
             $dir_thumbs,
             $archivos_creados
         );
-    } catch (Exception $e) {
-        // Si la función 'procesar_imagen_optimizada' falla
-        foreach ($archivos_creados as $archivo) {
-            if (is_file($archivo)) {
-                unlink($archivo);
-            }
+
+        // Si éxito, marcamos para borrar la vieja DESPUÉS de confirmar transacción DB (o aquí si prefieres)
+        // Borrado de foto antigua:
+        $foto_antigua = $datos_promo_actual['promo_foto'];
+        if (!empty($foto_antigua) && $foto_antigua != 'default-offer.png') {
+            if (is_file($dir_original . $foto_antigua)) unlink($dir_original . $foto_antigua);
+            if (is_file($dir_large . $foto_antigua)) unlink($dir_large . $foto_antigua);
+            if (is_file($dir_thumbs . $foto_antigua)) unlink($dir_thumbs . $foto_antigua);
         }
-        enviar_respuesta_json("error", "Error al procesar imagen", $e->getMessage());
+
+        $nombre_foto_db = $nombre_foto_db_nuevo;
+    } catch (Exception $e) {
+        // Limpiar archivos nuevos si falla el proceso de imagen
+        foreach ($archivos_creados as $archivo) {
+            if (is_file($archivo)) unlink($archivo);
+        }
+        enviar_respuesta_json("error", "Error imagen", $e->getMessage());
     }
-
-    // Si la nueva imagen se procesó con éxito, eliminamos la FOTO ANTIGUA
-    $foto_antigua = $datos_promo_actual['promo_foto'];
-    if (!empty($foto_antigua) && $foto_antigua != 'default-offer.png') {
-        // Borramos todas las versiones de la foto antigua
-        if (is_file($dir_original . $foto_antigua)) unlink($dir_original . $foto_antigua);
-        if (is_file($dir_large . $foto_antigua)) unlink($dir_large . $foto_antigua);
-        if (is_file($dir_thumbs . $foto_antigua)) unlink($dir_thumbs . $foto_antigua);
-    }
-
-    // Actualizamos el nombre de la foto para la DB
-    $nombre_foto_db = $nombre_foto_db_nuevo;
-
-    // --- FIN DE LA LÓGICA DE IMAGEN CORREGIDA ---
 }
 
 
 //============================================================
-// 4. ACTUALIZAR LOS DATOS (TRANSACCIÓN)
+// 4. ACTUALIZAR BASE DE DATOS (TRANSACCIÓN)
 //============================================================
 try {
     $conexion->beginTransaction();
 
-    // 4.1. Actualizar la tabla principal 'promociones'
-    $actualizar_promo = $conexion->prepare(
-        "UPDATE promociones SET 
-promo_nombre = :nombre, 
-promo_precio = :precio,
-promo_foto = :foto,
-hora_inicio = :h_inicio, 
-hora_fin = :h_fin, 
-estado = :estado, 
-prioridad = :prioridad, 
-fecha_inicio = :f_inicio, 
-fecha_fin = :f_fin 
-WHERE promo_id = :id"
-    );
+    // 4.1. Actualizar Promo
+    $actualizar_promo = $conexion->prepare("UPDATE promociones SET 
+        promo_nombre = :nombre, 
+        promo_precio = :precio,
+        promo_foto = :foto,
+        hora_inicio = :h_inicio, 
+        hora_fin = :h_fin, 
+        estado = :estado, 
+        prioridad = :prioridad, 
+        fecha_inicio = :f_inicio, 
+        fecha_fin = :f_fin 
+        WHERE promo_id = :id");
 
-    $marcadores = [
+    $actualizar_promo->execute([
         ":nombre" => $nombre,
         ":precio" => (float)$precio,
-        ":foto" => $nombre_foto_db, // Nombre de la foto (nueva .webp o la que ya estaba)
+        ":foto" => $nombre_foto_db,
         ":h_inicio" => (int)$hora_inicio,
         ":h_fin" => (int)$hora_fin,
         ":estado" => (int)$estado,
@@ -212,48 +191,45 @@ WHERE promo_id = :id"
         ":f_inicio" => $fecha_inicio_db,
         ":f_fin" => $fecha_fin_db,
         ":id" => $promo_id
-    ];
+    ]);
 
-    $actualizar_promo->execute($marcadores);
-
-    // 4.2. Actualizar vínculos de Productos (Borrar y Re-insertar)
+    // 4.2. Actualizar Productos (Borrar anteriores -> Insertar nuevos con cantidad)
     $del_prods = $conexion->prepare("DELETE FROM promocion_productos WHERE promo_id = :id");
     $del_prods->execute([':id' => $promo_id]);
 
     if (!empty($productos_vinculados)) {
-        $stmt_prod = $conexion->prepare("INSERT INTO promocion_productos (promo_id, producto_id) VALUES (:promo_id, :producto_id)");
+        // Preparamos la consulta incluyendo la CANTIDAD
+        $stmt_prod = $conexion->prepare("INSERT INTO promocion_productos (promo_id, producto_id, cantidad) VALUES (:promo_id, :producto_id, :cantidad)");
+
         foreach ($productos_vinculados as $prod_id) {
+            // Obtenemos la cantidad del array 'cantidades', si no existe o es inválida, ponemos 1
+            $qty = (isset($cantidades[$prod_id]) && (int)$cantidades[$prod_id] > 0) ? (int)$cantidades[$prod_id] : 1;
+
             $stmt_prod->execute([
                 ':promo_id' => $promo_id,
-                ':producto_id' => (int)$prod_id
+                ':producto_id' => (int)$prod_id,
+                ':cantidad' => $qty
             ]);
         }
     }
 
-    // 4.3. Finalizar transacción
     $conexion->commit();
-    $respuesta = [
+
+    echo json_encode([
         "tipo" => "success",
         "titulo" => "¡Actualizado!",
-        "texto" => "El producto se actualizó correctamente.",
-        "url" => "index.php?vista=promo_list" 
-    ];
-    echo json_encode($respuesta);
-    
-
+        "texto" => "La promoción y sus productos se actualizaron correctamente.",
+        "url" => "index.php?vista=promo_list"
+    ]);
 } catch (Exception $e) {
     $conexion->rollBack();
 
-    // ==========================================================
-    // ¡BLOQUE CATCH CORREGIDO!
-    // ==========================================================
-    // Si la transacción falla, borramos los archivos NUEVOS que se crearon
+    // Si la DB falla, borramos las fotos NUEVAS creadas en este intento
     foreach ($archivos_creados as $archivo) {
-        if (is_file($archivo)) {
-            unlink($archivo);
-        }
+        if (is_file($archivo)) unlink($archivo);
     }
-    enviar_respuesta_json('error', 'Error al Actualizar', 'No se pudo actualizar la promoción. Detalles: ' . $e->getMessage());
+
+    enviar_respuesta_json('error', 'Error BD', 'No se pudo guardar los cambios: ' . $e->getMessage());
 }
 
 $conexion = null;

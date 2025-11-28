@@ -1,103 +1,84 @@
-<div class="container pb-6 pt-6">
-    <h2 class="title is-3 has-text-centered">Gestión de Pedidos</h2>
+    <div class="container mx-auto p-6 lg:p-10 max-w-7xl">
+        <?php include "./inc/breadcrumb.php"; ?>
 
-    <div class="table-container">
-        <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
-            <thead>
-                <tr class="has-text-centered">
-                    <th>#</th>
-                    <th>Cliente</th>
-                    <th class="has-text-centered">Productos</th> <th>Fecha</th>
-                    <th>Método</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                    require_once "./php/main.php";
-                    $conexion = conexion();
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <span class="bg-indigo-100 p-2 rounded-lg text-indigo-600">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </span>
+                    Lista de Pedidos
+                </h1>
+                <h2 class="text-sm text-gray-500 mt-2 ml-1">Administra las ventas, pagos y despachos.</h2>
+            </div>
 
-                    // Seleccionamos todos los datos del pedido (incluyendo resumen_pedido) y el nombre del cliente
-                    $datos = $conexion->query("SELECT p.*, c.nombre_cliente 
-                                               FROM pedido p 
-                                               INNER JOIN cliente c ON p.id_cliente = c.id_cliente 
-                                               ORDER BY p.fecha DESC");
+            <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                <a href="index.php?vista=orders_kanban" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-all shadow-sm">
+                    <i class="fas fa-columns mr-2"></i>
+                    Ver Tablero
+                </a>
 
-                    while($rows = $datos->fetch()){
-                ?>
-                <tr class="has-text-centered">
-                    <td><?php echo $rows['id_pedido']; ?></td>
-                    <td><?php echo $rows['nombre_cliente']; ?></td>
-                    
-                    <td class="has-text-left">
-                        <small><?php echo $rows['resumen_pedido']; ?></small>
-                    </td>
+                <a href="index.php?vista=order_new" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nuevo Pedido
+                </a>
+            </div>
+        </div>
 
-                    <td><?php echo date("d/m H:i", strtotime($rows['fecha'])); ?></td>
-                    
-                    <td>
-                        <?php if($rows['metodo_pago'] == 'Pago Movil'): ?>
-                            <span class="tag is-info is-light">Pago Móvil</span>
-                        <?php else: ?>
-                            <span class="tag is-success is-light">Efectivo</span>
-                        <?php endif; ?>
-                    </td>
-                    
-                    <td><?php echo number_format($rows['precio_total'], 2); ?> Bs</td>
-                    
-                    <td>
-                        <?php 
-                            if($rows['estado_pago'] == 'Por Verificar') echo '<span class="tag is-warning">Por Verificar</span>';
-                            elseif($rows['estado_pago'] == 'Aprobado') echo '<span class="tag is-success">Aprobado</span>';
-                            elseif($rows['estado_pago'] == 'Rechazado') echo '<span class="tag is-danger">Rechazado</span>';
-                            else echo '<span class="tag is-light">'.$rows['estado_pago'].'</span>';
-                        ?>
-                    </td>
-                    
-                    <td>
-                        <?php if($rows['metodo_pago'] == 'Pago Movil' && $rows['estado_pago'] == 'Por Verificar'): ?>
-                            <div class="buttons are-small is-centered">
-                                <button onclick="verificarPago(<?php echo $rows['id_pedido']; ?>, 'Aprobado')" class="button is-success" title="Aprobar Pago">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button onclick="verificarPago(<?php echo $rows['id_pedido']; ?>, 'Rechazado')" class="button is-danger" title="Rechazar Pago">
-                                    <i class="fas fa-times"></i>
-                                </button>
+        <div class="mb-8">
+            <form action="./php/buscador.php" method="POST" autocomplete="off" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <input type="hidden" name="modulo_buscador" value="pedido">
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    <div class="md:col-span-9 lg:col-span-10">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
                             </div>
-                        <?php else: ?>
-                            <button class="button is-small is-light" disabled>
-                                <i class="fas fa-check-circle"></i> Listo
-                            </button>
+                            <input type="text" name="txt_buscador" class="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" placeholder="Buscar por Cliente, # de Pedido..." value="<?php echo isset($_GET['busqueda']) ? htmlspecialchars($_GET['busqueda']) : ''; ?>">
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-3 lg:col-span-2 flex gap-2">
+                        <button type="submit" class="w-full flex items-center justify-center text-white bg-gray-800 hover:bg-gray-900 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-3 transition-colors">
+                            Buscar
+                        </button>
+
+                        <?php if (isset($_GET['busqueda']) && !empty($_GET['busqueda'])): ?>
+                            <a href="index.php?vista=orders_list" class="flex items-center justify-center px-4 py-3 text-gray-500 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-lg transition-colors" title="Limpiar Búsqueda">
+                                <i class="fas fa-times"></i>
+                            </a>
                         <?php endif; ?>
-                    </td>
-                </tr>
-                <?php } ?>
-            </tbody>
-        </table>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
+            <?php
+            require_once "./php/main.php";
+
+            // Eliminar pedido (Si implementas borrar)
+            if (isset($_GET['order_id_del'])) {
+                require_once "./php/pedido_eliminar.php";
+            }
+
+            if (!isset($_GET['page'])) {
+                $pagina = 1;
+            } else {
+                $pagina = (int) $_GET['page'];
+                if ($pagina <= 1) {
+                    $pagina = 1;
+                }
+            }
+
+            $pagina = limpiar_cadena($pagina);
+            $url = "index.php?vista=orders_list&page=";
+            $registros = 15;
+            $busqueda = "";
+
+            // Cargamos la lógica de la tabla
+            require_once "./php/pedido_lista.php";
+            ?>
+        </div>
     </div>
-</div>
-
-<script>
-function verificarPago(id, estado) {
-    let accion = estado === 'Aprobado' ? 'aprobar' : 'rechazar';
-    
-    if(!confirm("¿Estás seguro de " + accion + " este pedido?")) return;
-    
-    let formData = new FormData();
-    formData.append('id_pedido', id);
-    formData.append('estado', estado);
-
-    fetch('php/pedido_actualizar_pago.php', { method: 'POST', body: formData })
-    .then(r => r.json())
-    .then(data => {
-        if(data.status == 'success') {
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(err => alert("Error de conexión"));
-}
-</script>
