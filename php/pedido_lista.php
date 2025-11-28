@@ -3,7 +3,6 @@ $inicio = ($pagina > 0) ? (($registros * $pagina) - $registros) : 0;
 $tabla = "";
 
 // 1. CAMPOS DE LA CONSULTA PRINCIPAL
-// Aseguramos usar los nombres exactos de tu base de datos
 $campos = "p.id_pedido, p.fecha, p.precio_total, p.total_usd, p.estado_pago, p.metodo_pago, p.referencia, p.tipo_orden, c.nombre_cliente, c.apellido_cliente, c.telefono_cliente";
 
 $conexion = conexion();
@@ -13,21 +12,17 @@ if (isset($_GET['busqueda']) && !empty($_GET['busqueda'])) {
     $url = "index.php?vista=orders_list&busqueda=" . urlencode($busqueda) . "&page=";
 }
 
-// CONSTRUCCIÓN DE CONSULTA BASE
 $query_base = "FROM pedido p INNER JOIN cliente c ON p.id_cliente = c.id_cliente";
 
 if (isset($busqueda) && $busqueda != "") {
     $condicion = "WHERE p.id_pedido LIKE :busqueda OR c.nombre_cliente LIKE :busqueda OR c.apellido_cliente LIKE :busqueda";
-
     $consulta_datos = $conexion->prepare("SELECT $campos $query_base $condicion ORDER BY p.fecha DESC LIMIT $inicio, $registros");
     $consulta_datos->execute([':busqueda' => "%$busqueda%"]);
-
     $consulta_total = $conexion->prepare("SELECT COUNT(p.id_pedido) $query_base $condicion");
     $consulta_total->execute([':busqueda' => "%$busqueda%"]);
 } else {
     $consulta_datos = $conexion->prepare("SELECT $campos $query_base ORDER BY p.fecha DESC LIMIT $inicio, $registros");
     $consulta_datos->execute();
-
     $consulta_total = $conexion->prepare("SELECT COUNT(p.id_pedido) FROM pedido p");
     $consulta_total->execute();
 }
@@ -35,11 +30,6 @@ if (isset($busqueda) && $busqueda != "") {
 $datos = $consulta_datos->fetchAll();
 $total = (int) $consulta_total->fetchColumn();
 $Npagina = ceil($total / $registros);
-
-if ($total >= 1 && $pagina <= $Npagina) {
-    $contador = $inicio + 1;
-    $pag_inicio = $inicio + 1;
-}
 
 // --- INICIO DE LA TABLA HTML (DISEÑO ESCRITORIO) ---
 $tabla .= '
@@ -61,37 +51,38 @@ $tabla .= '
 if ($total >= 1 && $pagina <= $Npagina) {
     foreach ($datos as $rows) {
 
-        // 2. GENERAR RESUMEN DESDE DETALLES (CORREGIDO)
-        // Se hace un triple JOIN para llegar al nombre de la variante en la tabla `variante`
-        // Y se corrige p.nombre_producto por p.producto_nombre
+        // 2. GENERAR RESUMEN INTELIGENTE (Soporte Promos)
         $id_pedido_actual = $rows['id_pedido'];
 
+        // Consulta corregida para traer Nombre de Promo si existe
         $sql_items = "SELECT 
                         d.cantidad, 
-                        /* Si existe nombre de variante, úsalo. Si no, usa el nombre del producto */
-                        IFNULL(v.nombre_variante, p.producto_nombre) as nombre 
+                        /* Si es Promo, usa promo_nombre. Si es Variante, nombre_variante. Si no, producto_nombre */
+                        COALESCE(v.nombre_variante, p.producto_nombre, promo.promo_nombre) as nombre,
+                        d.id_promo
                       FROM pedido_detalle d
                       LEFT JOIN producto p ON d.id_producto = p.producto_id
                       LEFT JOIN variante_producto vp ON d.id_variante_producto = vp.id_variante_producto
                       LEFT JOIN variante v ON vp.id_variante = v.id_variante
+                      LEFT JOIN promociones promo ON d.id_promo = promo.promo_id
                       WHERE d.id_pedido = '$id_pedido_actual' LIMIT 3";
 
         $items_resumen = $conexion->query($sql_items)->fetchAll(PDO::FETCH_ASSOC);
 
         $texto_resumen = "";
         foreach ($items_resumen as $it) {
-            $texto_resumen .= "<b>" . $it['cantidad'] . "x</b> " . $it['nombre'] . ", ";
+            $esPromo = !empty($it['id_promo']) ? " <span class='text-[9px] text-orange-500 bg-orange-50 px-1 rounded'>Promo</span>" : "";
+            $texto_resumen .= "<b>" . $it['cantidad'] . "x</b> " . $it['nombre'] . $esPromo . ", ";
         }
-        $texto_resumen = rtrim($texto_resumen, ", "); // Quitar última coma
+        $texto_resumen = rtrim($texto_resumen, ", ");
         if (count($items_resumen) >= 3) $texto_resumen .= "...";
 
 
-        // 3. BADGES DE ESTADO
+        // 3. BADGES Y ESTILOS
         $estado_badge = '<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Desconocido</span>';
-
-        if (stripos($rows['estado_pago'], 'Aprobado') !== false || stripos($rows['estado_pago'], 'Verificado') !== false) {
+        if (stripos($rows['estado_pago'], 'Aprobado') !== false) {
             $estado_badge = '<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Aprobado</span>';
-        } elseif (stripos($rows['estado_pago'], 'Rechazado') !== false || stripos($rows['estado_pago'], 'Cancelado') !== false) {
+        } elseif (stripos($rows['estado_pago'], 'Rechazado') !== false) {
             $estado_badge = '<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Rechazado</span>';
         } elseif (stripos($rows['estado_pago'], 'Entregado') !== false) {
             $estado_badge = '<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Entregado</span>';
@@ -99,24 +90,13 @@ if ($total >= 1 && $pagina <= $Npagina) {
             $estado_badge = '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Por Verificar</span>';
         }
 
-        // BADGE TIPO DE ORDEN
-        $tipo_badge = "";
-        if (stripos($rows['tipo_orden'], 'llevar') !== false) {
-            $tipo_badge = '<span class="ml-2 bg-orange-100 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-orange-200"><i class="fas fa-shopping-bag"></i> LLEVAR</span>';
-        } else {
-            $tipo_badge = '<span class="ml-2 bg-blue-50 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-100"><i class="fas fa-utensils"></i> MESA</span>';
-        }
+        $tipo_badge = (stripos($rows['tipo_orden'], 'llevar') !== false)
+            ? '<span class="ml-2 bg-orange-100 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-orange-200"><i class="fas fa-shopping-bag"></i> LLEVAR</span>'
+            : '<span class="ml-2 bg-blue-50 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-100"><i class="fas fa-utensils"></i> MESA</span>';
 
-        // ICONO PAGO
-        $icono_pago = (stripos($rows['metodo_pago'], 'Pago Movil') !== false)
-            ? '<i class="fas fa-mobile-alt mr-1"></i>'
-            : '<i class="fas fa-money-bill mr-1"></i>';
+        $icono_pago = (stripos($rows['metodo_pago'], 'Pago Movil') !== false) ? '<i class="fas fa-mobile-alt mr-1"></i>' : '<i class="fas fa-money-bill mr-1"></i>';
 
-        // REFERENCIA
-        $html_referencia = "";
-        if (!empty($rows['referencia'])) {
-            $html_referencia = '<div class="text-[10px] text-indigo-600 font-bold mt-0.5 select-all">Ref: ' . $rows['referencia'] . '</div>';
-        }
+        $html_referencia = !empty($rows['referencia']) ? '<div class="text-[10px] text-indigo-600 font-bold mt-0.5 select-all">Ref: ' . $rows['referencia'] . '</div>' : "";
 
         $tabla .= '
             <tr class="hover:bg-gray-50 transition-colors">
@@ -167,34 +147,32 @@ $tabla .= '
     <div class="md:hidden divide-y divide-gray-200">';
 
 if ($total >= 1 && $pagina <= $Npagina) {
-    // Reutilizamos el array $datos pero debemos resetear el puntero interno o simplemente iterarlo de nuevo si es array
     foreach ($datos as $rows) {
 
-        // REPETIMOS LA CONSULTA DE ITEMS PARA MOVIL
+        // REPETIR LÓGICA DE RESUMEN PARA MOVIL
         $id_pedido_actual = $rows['id_pedido'];
         $sql_items = "SELECT 
                         d.cantidad, 
-                        IFNULL(v.nombre_variante, p.producto_nombre) as nombre 
+                        COALESCE(v.nombre_variante, p.producto_nombre, promo.promo_nombre) as nombre,
+                        d.id_promo
                       FROM pedido_detalle d
                       LEFT JOIN producto p ON d.id_producto = p.producto_id
                       LEFT JOIN variante_producto vp ON d.id_variante_producto = vp.id_variante_producto
                       LEFT JOIN variante v ON vp.id_variante = v.id_variante
+                      LEFT JOIN promociones promo ON d.id_promo = promo.promo_id
                       WHERE d.id_pedido = '$id_pedido_actual' LIMIT 3";
-        $items_resumen = $conexion->query($sql_items)->fetchAll(PDO::FETCH_ASSOC);
 
+        $items_resumen = $conexion->query($sql_items)->fetchAll(PDO::FETCH_ASSOC);
         $texto_resumen = "";
-        foreach ($items_resumen as $it) $texto_resumen .= "<b>" . $it['cantidad'] . "x</b> " . $it['nombre'] . ", ";
+        foreach ($items_resumen as $it) {
+            $esPromo = !empty($it['id_promo']) ? " <span class='text-[9px] text-orange-500 bg-orange-50 px-1 rounded'>Promo</span>" : "";
+            $texto_resumen .= "<b>" . $it['cantidad'] . "x</b> " . $it['nombre'] . $esPromo . ", ";
+        }
         $texto_resumen = rtrim($texto_resumen, ", ");
         if (count($items_resumen) >= 3) $texto_resumen .= "...";
 
         // Estilos Movil
-        if (stripos($rows['estado_pago'], 'Aprobado') !== false) {
-            $estado_class = 'bg-green-100 text-green-800';
-        } elseif (stripos($rows['estado_pago'], 'Rechazado') !== false) {
-            $estado_class = 'bg-red-100 text-red-800';
-        } else {
-            $estado_class = 'bg-yellow-100 text-yellow-800';
-        }
+        $estado_class = (stripos($rows['estado_pago'], 'Aprobado') !== false) ? 'bg-green-100 text-green-800' : ((stripos($rows['estado_pago'], 'Rechazado') !== false) ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800');
 
         $tipo_icon = (stripos($rows['tipo_orden'], 'llevar') !== false)
             ? '<span class="text-orange-600 font-bold text-[10px] ml-2"><i class="fas fa-shopping-bag"></i> LLEVAR</span>'
