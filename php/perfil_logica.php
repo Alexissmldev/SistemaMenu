@@ -1,139 +1,99 @@
 <?php
-/*
-|---------------------------------------------------------------
-| ARCHIVO DE LÓGICA (EL "CEREBRO")
-|---------------------------------------------------------------
-| Este archivo:
-| 1. Se conecta a la BD (PDO).
-| 2. Revisa si el formulario fue enviado (POST).
-| 3. Valida y actualiza los datos.
-| 4. Obtiene los datos frescos del usuario (GET).
-| 5. Prepara las variables ($msg_exito, $usuario_actual) para la vista.
-*/
-
-// 1. INCLUIR CONEXIÓN Y OBTENER ID
-// ===================================
-//
-// Usamos require_once aquí. Asumimos que main.php está en la misma carpeta.
-//
-require_once "main.php"; 
-
+$id_usuario = $_SESSION['id']; // Asumimos que la sesión está iniciada
 $conexion = conexion();
 
-// Obtenemos el ID del usuario de la sesión.
-$user_id = $_SESSION['id'];
-
-// Inicializamos variables para la vista
 $msg_exito = "";
 $msg_error = "";
 
+/* ==============================================
+   1. CARGAR DATOS DEL USUARIO (GET)
+   ============================================== */
+$datos_usuario = $conexion->query("SELECT * FROM usuario WHERE usuario_id = '$id_usuario'");
+if ($datos_usuario->rowCount() > 0) {
+    $usuario_actual = $datos_usuario->fetch();
+} else {
+    // Si no encuentra el usuario, cerrar sesión o redirigir
+    include "./php/logout.php";
+    exit();
+}
 
-// 2. MANEJAR EL ENVÍO DEL FORMULARIO (POST)
-// ===================================
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+/* ==============================================
+   2. PROCESAR FORMULARIO (POST)
+   ============================================== */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'])) {
 
-    /* Almacenar datos del formulario */
-    $username = limpiar_cadena($_POST['username']);
-    $phone = limpiar_cadena($_POST['phone']);
-    
-    $current_password = limpiar_cadena($_POST['current_password']);
-    $new_password = limpiar_cadena($_POST['new_password']);
-    $confirm_password = limpiar_cadena($_POST['confirm_password']);
+    $usuario = limpiar_cadena($_POST['username']);
+    $telefono = limpiar_cadena($_POST['phone']);
 
-    /* ===============================================================
-      ¡IMPORTANTE! Revisa que estos nombres coincidan con tu BD
-      ===============================================================
-      Nombre de Tabla: 'usuario'
-      Columna ID: 'usuario_id'
-      Columna Usuario: 'usuario_usuario'
-      Columna Teléfono: 'usuario_telefono' (Asegúrate que esta columna exista)
-      Columna Clave: 'usuario_clave'
-      ===============================================================
-    */
-
-    // --- A. Actualizar Información Personal (Sintaxis PDO) ---
-    $stmt_info = $conexion->prepare("UPDATE usuario SET usuario_usuario = :user, usuario_telefono = :phone WHERE usuario_id = :id");
-    
-    $actualizado = $stmt_info->execute([
-        ':user' => $username,
-        ':phone' => $phone,
-        ':id' => $user_id
-    ]);
-
-    if ($actualizado) {
-        $msg_exito = "Información personal actualizada con éxito.";
-        // Actualizamos el nombre de usuario en la sesión también
-        $_SESSION['usuario'] = $username; 
+    // Validar campos obligatorios
+    if ($usuario == "") {
+        $msg_error = "El nombre de usuario no puede estar vacío.";
     } else {
-        $msg_error = "Error al actualizar la información personal. Inténtalo de nuevo.";
-    }
 
+        // Verificar que el usuario no esté repetido (si lo cambió)
+        if ($usuario != $usuario_actual['usuario_usuario']) {
+            $check_user = $conexion->query("SELECT usuario_usuario FROM usuario WHERE usuario_usuario = '$usuario'");
+            if ($check_user->rowCount() > 0) {
+                $msg_error = "Ese nombre de usuario ya está registrado.";
+            }
+        }
 
-    // --- B. Manejar Cambio de Contraseña (Sintaxis PDO) ---
-    if (!empty($current_password) || !empty($new_password) || !empty($confirm_password)) {
+        if (empty($msg_error)) {
 
-        if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
-            $msg_error .= " <br>Para cambiar la contraseña, debes llenar los tres campos: actual, nueva y confirmación.";
-        
-        } elseif ($new_password !== $confirm_password) {
-            $msg_error .= " <br>La nueva contraseña y su confirmación no coinciden.";
-        
-        } else {
-            
-            // B1. Obtener el hash actual de la BD (Sintaxis PDO)
-            $stmt_check = $conexion->prepare("SELECT usuario_clave FROM usuario WHERE usuario_id = :id");
-            $stmt_check->execute([':id' => $user_id]);
-            $user_data = $stmt_check->fetch(PDO::FETCH_ASSOC);
+            // Lógica de Contraseña
+            $clave = $usuario_actual['usuario_clave']; // Mantener la vieja por defecto
+            $cambiar_clave = false;
 
-            if ($user_data) {
-                $current_hash_db = $user_data['usuario_clave'];
+            // Si escribió algo en "Nueva Clave"
+            if ($_POST['new_password'] != "" || $_POST['confirm_password'] != "") {
 
-                // B2. Verificar que la "Contraseña Actual" coincida
-                if (password_verify($current_password, $current_hash_db)) {
-                    
-                    // ¡Correcto! Hashear la *nueva* contraseña
-                    $new_hash = password_hash($new_password, PASSWORD_BCRYPT, ["cost" => 10]);
-                    
-                    // B3. Actualizar la contraseña en la BD (Sintaxis PDO)
-                    $stmt_update_pass = $conexion->prepare("UPDATE usuario SET usuario_clave = :pass WHERE usuario_id = :id");
-                    
-                    $pass_actualizada = $stmt_update_pass->execute([
-                        ':pass' => $new_hash,
-                        ':id' => $user_id
-                    ]);
-                    
-                    if ($pass_actualizada) {
-                        $msg_exito = "¡Perfil actualizado con éxito! (Contraseña cambiada)";
-                    } else {
-                        $msg_error .= " <br>Error al actualizar la contraseña.";
-                    }
+                $clave_actual = limpiar_cadena($_POST['current_password']);
+                $clave_nueva_1 = limpiar_cadena($_POST['new_password']);
+                $clave_nueva_2 = limpiar_cadena($_POST['confirm_password']);
 
-                } else {
-                    $msg_error .= " <br>La 'Contraseña Actual' es incorrecta. No se pudo cambiar.";
+                // 1. Verificar clave actual
+                if ($clave_actual == "" || !password_verify($clave_actual, $usuario_actual['usuario_clave'])) {
+                    $msg_error = "La contraseña actual es incorrecta. Necesaria para hacer cambios.";
                 }
-            } else {
-                $msg_error .= " <br>Error al verificar el usuario. Contacte a soporte.";
+                // 2. Verificar coincidencia nuevas
+                elseif ($clave_nueva_1 != $clave_nueva_2) {
+                    $msg_error = "Las nuevas contraseñas no coinciden.";
+                }
+                // 3. Verificar longitud
+                elseif (strlen($clave_nueva_1) < 4) { // Ajusta la longitud mínima si quieres
+                    $msg_error = "La contraseña debe tener al menos 4 caracteres.";
+                } else {
+                    // Todo OK, encriptar nueva clave
+                    $clave = password_hash($clave_nueva_1, PASSWORD_BCRYPT, ["cost" => 10]);
+                    $cambiar_clave = true;
+                }
+            }
+
+            // Si no hay errores, procedemos al UPDATE
+            if (empty($msg_error)) {
+
+                $datos_user_update = [
+                    ":usuario" => $usuario,
+                    ":telefono" => $telefono,
+                    ":clave" => $clave,
+                    ":id" => $id_usuario
+                ];
+
+                $update_user = $conexion->prepare("UPDATE usuario SET usuario_usuario=:usuario, usuario_telefono=:telefono, usuario_clave=:clave WHERE usuario_id=:id");
+
+                if ($update_user->execute($datos_user_update)) {
+                    $msg_exito = "¡Perfil actualizado correctamente!";
+                    // Actualizar variable en memoria para que se vea el cambio sin recargar
+                    $usuario_actual['usuario_usuario'] = $usuario;
+                    $usuario_actual['usuario_telefono'] = $telefono;
+
+                    // Actualizar sesión si cambió el usuario
+                    $_SESSION['usuario'] = $usuario;
+                } else {
+                    $msg_error = "Error al actualizar en la base de datos.";
+                }
             }
         }
     }
-} // Fin del if ($_SERVER["REQUEST_METHOD"] == "POST")
-
-
-// 3. OBTENER DATOS DEL USUARIO (GET)
-// ===================================
-// Esta lógica se ejecuta *siempre* (sea POST o no)
-// para asegurar que el formulario tenga los datos más actuales.
-
-$stmt_get = $conexion->prepare("SELECT usuario_usuario, usuario_telefono FROM usuario WHERE usuario_id = :id");
-$stmt_get->execute([':id' => $user_id]);
-$usuario_actual = $stmt_get->fetch(PDO::FETCH_ASSOC);
-
-if (!$usuario_actual) {
-    // Si falla, creamos un array vacío para evitar errores en el HTML
-    $usuario_actual = ['usuario_usuario' => 'Error', 'usuario_telefono' => ''];
 }
-
-// Cerramos la conexión PDO asignando null
-$conexion = null; 
-$stmt_get = null; 
-
+$conexion = null;
