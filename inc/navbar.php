@@ -35,13 +35,22 @@ function isActiveText($vistas, $current)
                         </a>
 
 
-                        <div class="relative group">
-
-                            <a href="index.php?vista=orders_list" class="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors group-hover:text-indigo-600 <?php echo isActiveText(['product_list', 'product_new', 'product_update'], $current_vista); ?>">
+                       <div class="relative group">
+                            <button class="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors group-hover:text-indigo-600 <?php echo isActiveText(['orders_list', 'orders_stats'], $current_vista); ?>">
                                 PEDIDOS
                                 <i class="fas fa-chevron-down text-xs opacity-50 group-hover:rotate-180 transition-transform duration-200"></i>
-                            </a>
+                            </button>
 
+                            <div class="absolute left-0 mt-0 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50">
+                                <div class="p-1">
+                                    <a href="index.php?vista=orders_list" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg">
+                                        <i class="fas fa-list text-xs"></i> Lista de Pedidos
+                                    </a>
+                                    <a href="index.php?vista=orders_stats" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg">
+                                        <i class="fas fa-chart-pie text-xs"></i> Estadísticas
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                         <div class="relative group">
 
