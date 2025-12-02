@@ -138,8 +138,8 @@ function isActiveText($vistas, $current)
                             <p class="text-xs text-gray-500 truncate">@<?php echo $_SESSION['usuario']; ?></p>
                         </div>
                         <div class="p-1">
-                            <a href="index.php?vista=perfil" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg">
-                                <i class="fas fa-user-circle"></i> Mi Perfil
+                            <a href="index.php?vista=configuration" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg">
+                                <i class="fas fa-user-circle"></i> Mi Cuenta
                             </a>
                         </div>
                         <div class="border-t border-gray-100 p-1">
