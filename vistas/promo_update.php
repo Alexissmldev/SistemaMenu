@@ -22,7 +22,7 @@ if (!$promo) {
             </div>
             <h3 class="text-xl font-bold text-slate-800 mb-2">Error</h3>
             <p class="text-slate-500 mb-6">No se encontró la promoción solicitada.</p>
-            <a href="index.php?vista=promo_list" class="px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700">Volver</a>
+            <a href="promo_list" class="px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700">Volver</a>
         </div>
     </div>';
     exit();

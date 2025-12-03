@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 02-12-2025 a las 13:58:32
+-- Tiempo de generación: 03-12-2025 a las 14:17:24
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -94,19 +94,20 @@ INSERT INTO `anuncio_productos` (`anuncio_id`, `producto_id`) VALUES
 CREATE TABLE `categoria` (
   `categoria_id` int(11) NOT NULL,
   `categoria_nombre` varchar(50) DEFAULT NULL,
-  `categoria_ubicacion` varchar(150) DEFAULT NULL,
-  `categoria_estado` int(11) NOT NULL
+  `categoria_estado` int(11) NOT NULL,
+  `categoria_hora_inicio` time DEFAULT NULL,
+  `categoria_hora_fin` time DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `categoria`
 --
 
-INSERT INTO `categoria` (`categoria_id`, `categoria_nombre`, `categoria_ubicacion`, `categoria_estado`) VALUES
-(43, 'Almuerzos', NULL, 1),
-(44, 'Desayunos', NULL, 1),
-(45, 'Bebidas', NULL, 1),
-(46, 'Especiales', NULL, 1);
+INSERT INTO `categoria` (`categoria_id`, `categoria_nombre`, `categoria_estado`, `categoria_hora_inicio`, `categoria_hora_fin`) VALUES
+(43, 'Almuerzos', 1, '00:00:00', '00:00:00'),
+(44, 'Desayunos', 1, '00:00:06', '00:00:11'),
+(45, 'Bebidas', 1, '00:00:00', '00:00:00'),
+(46, 'Especiales', 1, '00:00:00', '00:00:00');
 
 -- --------------------------------------------------------
 
@@ -161,10 +162,10 @@ INSERT INTO `pedido` (`id_pedido`, `id_cliente`, `fecha`, `tipo_orden`, `precio_
 (246, 245, '2025-11-27 20:45:23', 'Para Llevar', 737.01, 'Efectivo', NULL, 'Entregado', 3.00),
 (247, 246, '2025-11-27 20:46:19', 'Para Llevar', 737.01, 'Pago Móvil', '7777', 'Entregado', 3.00),
 (248, 247, '2025-11-27 22:05:10', 'Para Llevar', 17.00, 'Efectivo', NULL, 'Rechazado', 17.00),
-(249, 245, '2025-11-28 19:19:33', 'Comer Aquí', 1236.50, 'Pago Móvil', '1231', 'Listo', 5.00),
+(249, 245, '2025-11-28 19:19:33', 'Comer Aquí', 1236.50, 'Pago Móvil', '1231', 'Entregado', 5.00),
 (250, 248, '2025-11-28 19:19:57', 'Para Llevar', 741.90, 'Tarjeta', NULL, 'Entregado', 3.00),
 (251, 249, '2025-11-28 19:20:17', 'Comer Aquí', 494.60, 'Efectivo', NULL, 'Entregado', 2.00),
-(252, 250, '2025-11-30 19:39:02', 'Comer Aquí', 2473.00, 'Efectivo', NULL, 'Pendiente', 10.00);
+(252, 250, '2025-11-30 19:39:02', 'Comer Aquí', 2473.00, 'Efectivo', NULL, 'Entregado', 10.00);
 
 -- --------------------------------------------------------
 
@@ -208,6 +209,81 @@ INSERT INTO `pedido_detalle` (`id_detalle`, `id_pedido`, `id_producto`, `id_prom
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `permisos`
+--
+
+CREATE TABLE `permisos` (
+  `permiso_id` bigint(20) UNSIGNED NOT NULL,
+  `permiso_clave` varchar(50) NOT NULL,
+  `permiso_nombre` varchar(100) NOT NULL,
+  `permiso_modulo` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `permisos`
+--
+
+INSERT INTO `permisos` (`permiso_id`, `permiso_clave`, `permiso_nombre`, `permiso_modulo`) VALUES
+(1, 'estadisticas.financieras', 'Ver Cierre de Caja y Ganancias', 'Estadísticas'),
+(2, 'estadisticas.operativas', 'Ver Métricas de Productos', 'Estadísticas'),
+(3, 'inventario.ver', 'Ver Menú y Categorías', 'Inventario'),
+(4, 'inventario.gestionar', 'Crear/Editar Productos', 'Inventario'),
+(5, 'inventario.pdf', 'Descargar PDF', 'Inventario'),
+(6, 'campanas.gestionar', 'Gestionar Campañas y Horarios', 'Marketing'),
+(7, 'pedidos.ver', 'Ver Tablero Kanban', 'Pedidos'),
+(8, 'pedidos.preparar', 'Mover a Preparación/Listo', 'Pedidos'),
+(9, 'pedidos.entregar', 'Mover a Entregado', 'Pedidos'),
+(10, 'pedidos.notificar', 'Notificar Cliente (WhatsApp)', 'Pedidos'),
+(11, 'config.negocio', 'Datos del Negocio (RIF/Pago)', 'Configuración'),
+(12, 'usuarios.gestionar', 'Gestionar Usuarios y Roles', 'Configuración');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `permiso_rol`
+--
+
+CREATE TABLE `permiso_rol` (
+  `rol_id` bigint(20) UNSIGNED NOT NULL,
+  `permiso_id` bigint(20) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `permiso_rol`
+--
+
+INSERT INTO `permiso_rol` (`rol_id`, `permiso_id`) VALUES
+(1, 1),
+(1, 2),
+(1, 3),
+(1, 4),
+(1, 5),
+(1, 6),
+(1, 7),
+(1, 8),
+(1, 9),
+(1, 10),
+(1, 11),
+(1, 12),
+(2, 2),
+(2, 3),
+(2, 4),
+(2, 5),
+(2, 6),
+(2, 7),
+(2, 8),
+(2, 9),
+(2, 10),
+(3, 7),
+(3, 8),
+(4, 1),
+(4, 7),
+(4, 9),
+(4, 10);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `producto`
 --
 
@@ -233,7 +309,7 @@ INSERT INTO `producto` (`producto_id`, `producto_nombre`, `producto_precio`, `pr
 (102, 'arroz chino', 2.00, 1, 'arroz_chino_40.webp', 43, 30, 'arroz chinos especial'),
 (103, 'jugo de melon pequeño', 0.50, 1, 'jugo_de_melon_pequeño_26.webp', 45, 30, 'pequeño'),
 (104, 'jugo de guayaba pequeño', 0.50, 1, 'jugo_de_guayaba_pequeño_0.webp', 45, 30, 'pequeño'),
-(105, 'Arepas', 1.70, 1, 'Arepas_35.webp', 44, 30, 'pelua, domino, reina pepiada, catira'),
+(105, 'Arepas', 1.70, 1, 'Arepas_35.webp', 43, 30, 'pelua, domino, reina pepiada, catira'),
 (106, 'jugo de mango', 0.30, 1, 'jugo_de_mango_42.webp', 45, 30, 'mango'),
 (107, 'club house', 3.00, 1, 'club_house_57.webp', 43, 30, 'normal'),
 (108, 'prueba', 2.00, 1, 'prueba_40.webp', 44, 30, 'mouse'),
@@ -302,6 +378,31 @@ INSERT INTO `promocion_productos` (`promo_id`, `producto_id`, `cantidad`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `roles`
+--
+
+CREATE TABLE `roles` (
+  `rol_id` bigint(20) UNSIGNED NOT NULL,
+  `rol_nombre` varchar(50) NOT NULL,
+  `rol_clave` varchar(50) NOT NULL,
+  `rol_descripcion` text DEFAULT NULL,
+  `creado_en` timestamp NOT NULL DEFAULT current_timestamp(),
+  `actualizado_en` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `roles`
+--
+
+INSERT INTO `roles` (`rol_id`, `rol_nombre`, `rol_clave`, `rol_descripcion`, `creado_en`, `actualizado_en`) VALUES
+(1, 'Super Administrador', 'super_admin', 'Acceso total y configuración financiera.', '2025-12-02 22:10:36', '2025-12-02 22:10:36'),
+(2, 'Gerente', 'gerente', 'Gestión operativa del menú y campañas.', '2025-12-02 22:10:36', '2025-12-02 22:10:36'),
+(3, 'Cocina', 'cocina', 'Visualización de pedidos en preparación.', '2025-12-02 22:10:36', '2025-12-02 22:10:36'),
+(4, 'Despacho', 'despacho', 'Entregas y atención al cliente final.', '2025-12-02 22:10:36', '2025-12-02 22:10:36');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `tiendas`
 --
 
@@ -327,7 +428,7 @@ CREATE TABLE `tiendas` (
 --
 
 INSERT INTO `tiendas` (`id_tienda`, `nombre_tienda`, `logo_tienda`, `rif_tienda`, `telefono_tienda`, `direccion_tienda`, `email_tienda`, `moneda_simbolo`, `impuesto`, `color_principal`, `color_secundario`, `pm_banco`, `pm_telefono`, `pm_cedula`) VALUES
-(1, 'Alas Restaurante', 'logo_1_33.png', '123456789', '04124618344', 'Av. Agustin Alvarez, Maracay 2101, Aragua, Maracay, Aragua 2103', NULL, '', 0.00, '#eb0000', '#1F2937', 'Venezuela', '04124618344', '30956956');
+(1, 'Alas Restaurante', 'logo_1_31.png', '123456789', '04124618344', 'Av. Agustin Alvarez, Maracay 2101, Aragua, Maracay, Aragua 2103', NULL, '', 0.00, '#eb0000', '#1F2937', 'Venezuela', '04124618344', '30956956');
 
 -- --------------------------------------------------------
 
@@ -342,16 +443,19 @@ CREATE TABLE `usuario` (
   `usuario_apellido` varchar(50) DEFAULT NULL,
   `usuario_usuario` varchar(20) DEFAULT NULL,
   `usuario_clave` varchar(200) DEFAULT NULL,
-  `usuario_email` varchar(70) DEFAULT NULL,
-  `usuario_telefono` varchar(20) DEFAULT NULL
+  `rol_id` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `usuario`
 --
 
-INSERT INTO `usuario` (`usuario_id`, `id_tienda`, `usuario_nombre`, `usuario_apellido`, `usuario_usuario`, `usuario_clave`, `usuario_email`, `usuario_telefono`) VALUES
-(30, 1, 'Administrador', 'Administrador', 'admin', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', '', '4124618344');
+INSERT INTO `usuario` (`usuario_id`, `id_tienda`, `usuario_nombre`, `usuario_apellido`, `usuario_usuario`, `usuario_clave`, `rol_id`) VALUES
+(30, 1, 'Administrador', 'Administrador', NULL, NULL, NULL),
+(31, 1, 'admin', 'Dueño', 'admin', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', 1),
+(32, 1, 'Maria', 'Gerente', 'gerente', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', 2),
+(34, 1, 'Ana', 'Despacho', 'caja', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', 4),
+(37, 1, 'Daniel', 'Pua', 'danielpss', '$2y$10$p6svhCW7ZW5ClLh4NOegRuU9LC0k7iqEG0j9PJHLg/fruRETJDwz6', 4);
 
 -- --------------------------------------------------------
 
@@ -452,6 +556,20 @@ ALTER TABLE `pedido_detalle`
   ADD KEY `fk_detalle_a_promo` (`id_promo`);
 
 --
+-- Indices de la tabla `permisos`
+--
+ALTER TABLE `permisos`
+  ADD PRIMARY KEY (`permiso_id`),
+  ADD UNIQUE KEY `clave` (`permiso_clave`);
+
+--
+-- Indices de la tabla `permiso_rol`
+--
+ALTER TABLE `permiso_rol`
+  ADD PRIMARY KEY (`rol_id`,`permiso_id`),
+  ADD KEY `fk_pr_permiso` (`permiso_id`);
+
+--
 -- Indices de la tabla `producto`
 --
 ALTER TABLE `producto`
@@ -473,6 +591,13 @@ ALTER TABLE `promocion_productos`
   ADD KEY `producto_id` (`producto_id`);
 
 --
+-- Indices de la tabla `roles`
+--
+ALTER TABLE `roles`
+  ADD PRIMARY KEY (`rol_id`),
+  ADD UNIQUE KEY `clave` (`rol_clave`);
+
+--
 -- Indices de la tabla `tiendas`
 --
 ALTER TABLE `tiendas`
@@ -483,7 +608,8 @@ ALTER TABLE `tiendas`
 --
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`usuario_id`),
-  ADD KEY `id_tienda` (`id_tienda`);
+  ADD KEY `id_tienda` (`id_tienda`),
+  ADD KEY `fk_usuario_rol` (`rol_id`);
 
 --
 -- Indices de la tabla `variante`
@@ -534,16 +660,28 @@ ALTER TABLE `pedido_detalle`
   MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
+-- AUTO_INCREMENT de la tabla `permisos`
+--
+ALTER TABLE `permisos`
+  MODIFY `permiso_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
 -- AUTO_INCREMENT de la tabla `producto`
 --
 ALTER TABLE `producto`
-  MODIFY `producto_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=124;
+  MODIFY `producto_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=125;
 
 --
 -- AUTO_INCREMENT de la tabla `promociones`
 --
 ALTER TABLE `promociones`
   MODIFY `promo_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT de la tabla `roles`
+--
+ALTER TABLE `roles`
+  MODIFY `rol_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `tiendas`
@@ -555,7 +693,7 @@ ALTER TABLE `tiendas`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `usuario_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `usuario_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT de la tabla `variante`
@@ -603,6 +741,13 @@ ALTER TABLE `pedido_detalle`
   ADD CONSTRAINT `fk_detalle_a_variante` FOREIGN KEY (`id_variante_producto`) REFERENCES `variante_producto` (`id_variante_producto`) ON UPDATE CASCADE;
 
 --
+-- Filtros para la tabla `permiso_rol`
+--
+ALTER TABLE `permiso_rol`
+  ADD CONSTRAINT `fk_pr_permiso` FOREIGN KEY (`permiso_id`) REFERENCES `permisos` (`permiso_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_pr_rol` FOREIGN KEY (`rol_id`) REFERENCES `roles` (`rol_id`) ON DELETE CASCADE;
+
+--
 -- Filtros para la tabla `producto`
 --
 ALTER TABLE `producto`
@@ -620,6 +765,7 @@ ALTER TABLE `promocion_productos`
 -- Filtros para la tabla `usuario`
 --
 ALTER TABLE `usuario`
+  ADD CONSTRAINT `fk_usuario_rol` FOREIGN KEY (`rol_id`) REFERENCES `roles` (`rol_id`) ON DELETE SET NULL,
   ADD CONSTRAINT `usuario_ibfk_1` FOREIGN KEY (`id_tienda`) REFERENCES `tiendas` (`id_tienda`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --

@@ -5,201 +5,150 @@ if (isset($_POST['login_usuario']) && isset($_POST['login_clave'])) {
 }
 ?>
 
-<script src="https://cdn.tailwindcss.com"></script>
-
 <style>
-    /* --- BLOQUEAR SCROLL GLOBALMENTE --- */
-    body {
-        overflow: hidden; /* Esto quita el scroll de la ventana */
-        margin: 0;
-        padding: 0;
-    }
-
-    /* --- 1. ANIMACIÓN DE FONDO (MOVIMIENTO LENTO) --- */
-    @keyframes bgPan {
-        0% { background-position: 0% 50%; transform: scale(1); }
-        50% { background-position: 100% 50%; transform: scale(1.1); }
-        100% { background-position: 0% 50%; transform: scale(1); }
-    }
-
-    /* --- 2. EFECTO DE BRASAS/CHISPAS FLOTANTES --- */
-    .ember {
-        position: absolute;
-        bottom: -20px; /* Empiezan un poco más abajo para no cortar de golpe */
-        width: 4px;
-        height: 4px;
-        background: #fb923c;
-        border-radius: 50%;
-        opacity: 0;
-        animation: floatUp linear infinite;
-        box-shadow: 0 0 15px #f97316;
-        pointer-events: none; /* Para que no interfieran con los clics */
-    }
-
-    .ember:nth-child(1) { left: 10%; animation-duration: 8s; animation-delay: 0s; }
-    .ember:nth-child(2) { left: 20%; animation-duration: 12s; animation-delay: 2s; width: 6px; height: 6px; }
-    .ember:nth-child(3) { left: 35%; animation-duration: 10s; animation-delay: 4s; }
-    .ember:nth-child(4) { left: 50%; animation-duration: 15s; animation-delay: 1s; width: 3px; height: 3px;}
-    .ember:nth-child(5) { left: 65%; animation-duration: 11s; animation-delay: 3s; }
-    .ember:nth-child(6) { left: 80%; animation-duration: 9s; animation-delay: 5s; width: 5px; height: 5px;}
-    .ember:nth-child(7) { left: 90%; animation-duration: 13s; animation-delay: 0.5s; }
-
-    @keyframes floatUp {
-        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-        20% { opacity: 0.8; }
-        80% { opacity: 0.4; }
-        100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
-    }
-
-    /* --- 3. ANIMACIONES GENERALES --- */
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(40px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
+    /* --- ANIMACIONES --- */
     @keyframes floatLogo {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-8px); }
+
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-8px);
+        }
     }
 
     @keyframes spinSlow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     @keyframes spinReverse {
-        from { transform: rotate(360deg); }
-        to { transform: rotate(0deg); }
+        from {
+            transform: rotate(360deg);
+        }
+
+        to {
+            transform: rotate(0deg);
+        }
     }
 
-    @keyframes shimmerText {
-        0% { background-position: -200% center; }
-        100% { background-position: 200% center; }
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    .animate-bg-pan {
-        animation: bgPan 25s ease-in-out infinite;
-    }
-    
-    .animate-fade-in {
-        animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    }
-
-    .text-shimmer {
-        background: linear-gradient(to right, #fed7aa 20%, #ffffff 40%, #fed7aa 60%, #f97316 80%);
-        background-size: 200% auto;
-        color: transparent;
-        -webkit-background-clip: text;
-        background-clip: text;
-        animation: shimmerText 4s linear infinite;
-    }
-    
-    /* Expansión de la línea del input */
-    .input-line {
-        transition: width 0.4s ease-in-out;
-        width: 0%;
-    }
-    .group:focus-within .input-line {
-        width: 100%;
+    .animate-slide-up {
+        animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 </style>
 
-<main class="w-full h-screen flex items-center justify-center p-4 overflow-hidden relative">
-    
-    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1974&auto=format&fit=crop')] bg-cover bg-center animate-bg-pan"></div>
-    
-    <div class="absolute inset-0 bg-gradient-to-b from-black/90 via-orange-950/70 to-black/90 backdrop-blur-[3px]"></div>
+<div class="relative min-h-screen w-full font-sans overflow-hidden flex items-center justify-center lg:block bg-slate-900 lg:bg-white">
 
-    <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
-        <div class="ember"></div>
+    <div class="absolute inset-0 z-0 lg:hidden block">
+        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('./img/login.webp');"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/80 to-slate-900/40 backdrop-blur-[2px]"></div>
     </div>
 
-    <div class="relative w-full max-w-md bg-black/40 backdrop-blur-2xl rounded-[2rem] shadow-[0_0_50px_rgba(234,88,12,0.15)] border border-white/10 p-8 animate-fade-in group/card z-10">
-        
-        <div class="absolute -top-20 -right-20 w-60 h-60 bg-orange-500/20 rounded-full blur-[80px] animate-pulse pointer-events-none"></div>
-        <div class="absolute -bottom-20 -left-20 w-60 h-60 bg-red-600/20 rounded-full blur-[80px] animate-pulse delay-1000 pointer-events-none"></div>
+    <div class="flex w-full h-full lg:h-screen">
 
-        <div class="text-center mb-10 relative">
-            
-            <div class="relative w-40 h-40 mx-auto mb-6 flex items-center justify-center">
-                <div class="absolute inset-0 border-2 border-dashed border-orange-500/30 rounded-full animate-[spinSlow_10s_linear_infinite]"></div>
-                <div class="absolute inset-2 border border-orange-300/20 rounded-full animate-[spinReverse_15s_linear_infinite]"></div>
-                
-                <div class="relative w-32 h-32 rounded-full overflow-hidden shadow-[0_0_30px_rgba(249,115,22,0.3)] animate-[floatLogo_4s_ease-in-out_infinite] border-4 border-black/50">
-                     <img src="img/logo.png" 
-                          alt="Logo Restaurante" 
-                          class="h-full w-full object-cover" />
-                </div>
+        <div class="hidden lg:flex w-1/2 relative bg-slate-900 overflow-hidden h-full">
+            <div class="absolute inset-0 bg-cover bg-center opacity-60" style="background-image: url('./img/login.webp');"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-orange-900/80 to-slate-900/40"></div>
+
+            <div class="relative z-10 m-auto text-center px-10">
+                <h1 class="text-5xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">Sistema de Gestión</h1>
+                <p class="text-orange-100 text-lg drop-shadow-md">Control de inventario, pedidos y personal.</p>
             </div>
-            
-            <h2 class="text-4xl font-extrabold tracking-wide drop-shadow-lg text-shimmer">
-                Bienvenido
-            </h2>
-            <p class="text-orange-100/60 text-xs mt-3 font-semibold uppercase tracking-[0.3em]">Panel Administrativo</p>
         </div>
 
-        <form action="" method="POST" autocomplete="off" class="space-y-8">
-            
-            <div class="group relative">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-6 w-6 text-gray-500 group-focus-within:text-orange-400 transition-all duration-500 group-focus-within:scale-110" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                    </svg>
-                </div>
-                <input
-                    name="login_usuario"
-                    type="text"
-                    id="login_usuario"
-                    pattern="[a-zA-Z0-9]{4,20}"
-                    maxlength="20"
-                    required
-                    class="block w-full pl-14 pr-4 py-4 bg-white/5 border-b-2 border-white/10 rounded-t-xl text-white placeholder-gray-500 focus:outline-none focus:bg-white/10 transition-all duration-300"
-                    placeholder="Usuario">
-                
-                <div class="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 input-line mx-auto right-0"></div>
-            </div>
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-4 lg:p-8 relative z-10">
 
-            <div class="group relative">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-6 w-6 text-gray-500 group-focus-within:text-orange-400 transition-all duration-500 group-focus-within:scale-110" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                    </svg>
-                </div>
-                <input
-                    name="login_clave"
-                    type="password"
-                    id="login_clave"
-                    pattern="[a-zA-Z0-9$@.-]{7,100}"
-                    maxlength="100"
-                    required
-                    class="block w-full pl-14 pr-4 py-4 bg-white/5 border-b-2 border-white/10 rounded-t-xl text-white placeholder-gray-500 focus:outline-none focus:bg-white/10 transition-all duration-300"
-                    placeholder="Contraseña">
-                
-                <div class="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 input-line mx-auto right-0"></div>
-            </div>
+            <div class="hidden lg:block absolute top-0 right-0 w-64 h-64 bg-orange-100 rounded-full blur-[80px] opacity-60 pointer-events-none translate-x-1/2 -translate-y-1/2"></div>
 
-            <div class="pt-4">
-                <button class="relative w-full group overflow-hidden rounded-xl shadow-[0_10px_30px_rgba(234,88,12,0.4)] transition-all hover:shadow-[0_10px_50px_rgba(234,88,12,0.6)] hover:-translate-y-1" type="submit">
-                    
-                    <div class="absolute inset-0 bg-gradient-to-r from-orange-700 via-red-600 to-orange-700 bg-[length:200%_auto] animate-[shimmerText_3s_linear_infinite]"></div>
-                    
-                    <div class="absolute inset-0 bg-white/0 group-hover:bg-white/20 transition-colors duration-300"></div>
+            <div class="w-full max-w-sm lg:max-w-md animate-slide-up bg-white/90 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none p-8 lg:p-0 rounded-3xl lg:rounded-none shadow-2xl lg:shadow-none border border-white/20 lg:border-none">
 
-                    <div class="relative flex items-center justify-center py-4 px-4">
-                        <span class="mr-2 text-lg font-bold text-white tracking-widest uppercase">Ingresar</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-yellow-300 group-hover:translate-x-2 transition-transform duration-300">
-                            <path fill-rule="evenodd" d="M12.97 3.97a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H3a.75.75 0 010-1.5h16.19l-6.22-6.22a.75.75 0 010-1.06z" clip-rule="evenodd" />
-                        </svg>
+                <div class="relative w-28 h-28 lg:w-32 lg:h-32 mx-auto mb-6 lg:mb-8 flex items-center justify-center">
+                    <div class="absolute inset-0 border-2 border-dashed border-orange-500 rounded-full animate-[spinSlow_10s_linear_infinite] opacity-50 lg:opacity-30"></div>
+                    <div class="absolute inset-2 border border-slate-400 lg:border-slate-300 rounded-full animate-[spinReverse_15s_linear_infinite] opacity-60 lg:opacity-50"></div>
+
+                    <div class="relative w-20 h-20 lg:w-24 lg:h-24 rounded-full overflow-hidden shadow-xl animate-[floatLogo_4s_ease-in-out_infinite] border-4 border-white bg-white">
+                        <img src="img/logo.png"
+                            alt="Logo"
+                            class="h-full w-full object-cover"
+                            onerror="this.src='https://ui-avatars.com/api/?name=Alas&background=random'" />
                     </div>
-                </button>
-            </div>
+                </div>
 
-        </form>
+                <div class="text-center mb-6 lg:mb-8">
+                    <h2 class="text-2xl lg:text-3xl font-bold text-slate-800">¡Hola de nuevo!</h2>
+                    <p class="text-slate-500 text-sm mt-2">Inicia sesión para gestionar el restaurante.</p>
+                </div>
+
+                <form action="" method="POST" autocomplete="off" class="space-y-5 lg:space-y-6">
+
+                    <div>
+                        <label for="login_usuario" class="block text-xs font-bold text-slate-600 uppercase mb-2 ml-1">Usuario</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-orange-600 transition-colors">
+                                <i class="fas fa-user text-lg"></i>
+                            </div>
+                            <input
+                                type="text"
+                                name="login_usuario"
+                                id="login_usuario"
+                                pattern="[a-zA-Z0-9]{4,20}"
+                                maxlength="20"
+                                required
+                                class="block w-full pl-10 pr-3 py-3 border border-slate-200 lg:border-slate-200 rounded-xl text-slate-800 bg-white/80 lg:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm placeholder-slate-400"
+                                placeholder="Ej. administrador">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="login_clave" class="block text-xs font-bold text-slate-600 uppercase mb-2 ml-1">Contraseña</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-orange-600 transition-colors">
+                                <i class="fas fa-lock text-lg"></i>
+                            </div>
+                            <input
+                                type="password"
+                                name="login_clave"
+                                id="login_clave"
+                                pattern="[a-zA-Z0-9$@.-]{7,100}"
+                                maxlength="100"
+                                required
+                                class="block w-full pl-10 pr-3 py-3 border border-slate-200 lg:border-slate-200 rounded-xl text-slate-800 bg-white/80 lg:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm placeholder-slate-400"
+                                placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-orange-500/30 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all transform hover:-translate-y-1 hover:shadow-orange-500/50">
+                            INGRESAR
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                </form>
+
+                <p class="mt-8 text-center text-[10px] uppercase tracking-wider text-slate-400 lg:text-slate-400">
+                    &copy; <?php echo date("Y"); ?> Alas Restaurante
+                </p>
+            </div>
+        </div>
     </div>
-</main>
+</div>

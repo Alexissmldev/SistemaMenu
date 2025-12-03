@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // FUNCIONES GLOBALES
 
-// Cierra el modal activo
+//// Cierra el modal activo con animación
 function closeModal() {
   const modalContainer = document.getElementById("modal-container");
   if (modalContainer) {
@@ -237,7 +237,7 @@ function initProductModalScripts() {
       }
     });
   }
- initImagePreview("productForm");
+  initImagePreview("productForm");
 }
 
 //previsualización de imágenes.
@@ -381,36 +381,71 @@ function initCategoryUpdateModal() {
 function eliminarUsuario(id, nombre) {
   Swal.fire({
     title: "¿Estás seguro?",
-    text: `Deseas eliminar al usuario "${nombre}". Esta acción es irreversible.`,
+    text: `Vas a eliminar este usuario. Esta acción es irreversible. Por seguridad, ingresa tu contraseña de administrador:`,
     icon: "warning",
+    input: "password", // Habilita el campo de contraseña
+    inputAttributes: {
+      autocapitalize: "off",
+      placeholder: "Tu contraseña actual",
+    },
     showCancelButton: true,
     confirmButtonColor: "#d33",
     cancelButtonColor: "#3085d6",
-    confirmButtonText: "Sí, ¡eliminar!",
+    confirmButtonText: "Sí, eliminar",
     cancelButtonText: "Cancelar",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      let data = new FormData();
-      data.append("user_id_del", id);
+    showLoaderOnConfirm: true, // Muestra spinner de carga mientras se procesa
+    preConfirm: (password) => {
+      // Validar que escribió algo
+      if (!password) {
+        Swal.showValidationMessage("Por favor ingresa tu contraseña");
+        return false;
+      }
 
-      fetch("./php/usuario_eliminar.php", { method: "POST", body: data })
-        .then((res) => res.json())
-        .then((res) => {
-          return Swal.fire({
-            icon: res.tipo,
-            title: res.titulo,
-            text: res.texto,
-          });
+      // Preparamos los datos
+      let data = new FormData();
+      data.append("usuario_id", id); // Asegúrate que en PHP recibes $_POST['usuario_id']
+      data.append("administrador_clave", password);
+
+      // Hacemos la petición
+      return fetch("./php/usuario_eliminar.php", {
+        method: "POST",
+        body: data,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(response.statusText);
+          }
+          return response.json();
         })
-        .then((res) => {
-          if (res.isConfirmed || res.isDismissed) {
+        .catch((error) => {
+          Swal.showValidationMessage(`Solicitud fallida: ${error}`);
+        });
+    },
+    allowOutsideClick: () => !Swal.isLoading(),
+  }).then((result) => {
+    // Manejo de la respuesta final del PHP
+    if (result.isConfirmed) {
+      if (result.value.tipo === "success" || result.value.tipo === "success") {
+        Swal.fire({
+          icon: "success",
+          title: result.value.titulo,
+          text: result.value.mensaje || result.value.texto,
+        }).then(() => {
+          // Recargar o Redirigir
+          if (result.value.url) {
+            window.location.href = result.value.url;
+          } else {
             window.location.reload();
           }
-        })
-        .catch((err) => {
-          console.error("Error:", err);
-          Swal.fire("Error", "No se pudo comunicar con el servidor.", "error");
         });
+      } else {
+        // Caso de error (contraseña incorrecta, etc.)
+        Swal.fire({
+          icon: "error",
+          title: result.value.titulo,
+          text: result.value.mensaje || result.value.texto,
+        });
+      }
     }
   });
 }

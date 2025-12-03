@@ -151,7 +151,7 @@ foreach ($pedidos as $key => $p) {
         <div class="p-3 bg-white rounded-t-xl border-b border-gray-200 flex justify-between items-center shadow-sm sticky top-0 z-10">
             <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></span>
-                <h3 class="font-bold text-gray-700 text-sm uppercase">En Cocina</h3>
+                <h3 class="font-bold text-gray-700 text-sm uppercase">En Preparacion</h3>
             </div>
             <span class="bg-gray-800 text-white px-2 py-0.5 rounded text-xs font-bold"><?php echo count($kanban['Preparacion']); ?></span>
         </div>

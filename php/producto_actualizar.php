@@ -167,7 +167,7 @@ if ($actualizar->execute($marcadores)) {
         "tipo" => "success",
         "titulo" => "¡Actualizado!",
         "texto" => "El producto se actualizó correctamente.",
-        "url" => "index.php?vista=product_list" 
+        "url" => "product_list"
     ];
     echo json_encode($respuesta);
     exit();

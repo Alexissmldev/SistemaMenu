@@ -67,7 +67,7 @@
         }
 
         $pagina = limpiar_cadena($pagina);
-        $url = "index.php?vista=ad_list&page=";
+        $url = "ad_list&page=";
         $registros = 9;
         $busqueda = "";
 

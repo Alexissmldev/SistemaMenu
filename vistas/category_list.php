@@ -13,10 +13,13 @@
         </div>
 
         <div>
-            <button onclick="openModal('category_new', '' , '' , '')" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-orange-600 rounded-lg hover:bg-orange-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+
+            <a href="index.php?vista=category_new" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-orange-600 rounded-lg hover:bg-orange-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
                 <i class="fas fa-plus mr-2"></i>
                 Nueva Categoría
-            </button>
+
+            </a>
+            
         </div>
     </div>
 
@@ -68,7 +71,7 @@
         }
 
         $pagina = limpiar_cadena($pagina);
-        $url = "index.php?vista=category_list&page=";
+        $url = "category_list&page=";
         $registros = 15;
         $busqueda = "";
 

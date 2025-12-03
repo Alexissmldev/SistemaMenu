@@ -242,3 +242,21 @@ function procesar_imagen_optimizada($archivo_subido, $nombre_base, $dir_original
     // 7. Liberar memoria del recurso principal
     imagedestroy($original_en_memoria);
 }
+
+
+
+function tiene_permiso($permiso_requerido)
+{
+    // 1. Si no hay sesión, no hay permiso
+    if (!isset($_SESSION['permisos'])) {
+        return false;
+    }
+
+    // 2. Si es Super Admin (rol_id 1), tiene acceso a todo (Opcional, pero recomendado)
+    if (isset($_SESSION['rol_id']) && $_SESSION['rol_id'] == 1) {
+        return true;
+    }
+
+    // 3. Buscar el permiso en el array de la sesión
+    return in_array($permiso_requerido, $_SESSION['permisos']);
+}
