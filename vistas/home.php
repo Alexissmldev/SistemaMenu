@@ -20,7 +20,7 @@ $conexion = null;
             </div>
             <div>
                 <h1 class="text-lg md:text-2xl font-bold text-gray-800">Hola, <?php echo $_SESSION['nombre']; ?></h1>
-                <p class="text-[10px] md:text-xs text-gray-500 font-medium uppercase tracking-wider">Administrador</p>
+                <p class="text-[10px] md:text-xs text-gray-500 font-medium uppercase tracking-wider"><?php echo $_SESSION['apellido']; ?></p>
             </div>
         </div>
         <div class="bg-gray-100 px-3 py-1 md:px-4 md:py-2 rounded-lg border border-gray-200 hidden sm:block">

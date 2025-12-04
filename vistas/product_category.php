@@ -21,7 +21,7 @@
             if ($categorias->rowCount() > 0) {
                 $categorias = $categorias->fetchAll();
                 foreach ($categorias as $row) {
-                    echo '<a href="http://localhost:3000/index.php?vista=product_category&category_id=' . $row['categoria_id'] . ' " 
+                    echo '<a href="http://localhost:3000/product_category&category_id=' . $row['categoria_id'] . ' " 
                     class="button is-link is-inverted is-fullwidth">' . $row['categoria_nombre'] . '</a>';
                 }
             } else {
@@ -61,7 +61,7 @@
                 }
                 $categoria_id = (isset($_GET['category_id'])) ? $_GET['category_id'] : 0;
                 $pagina = limpiar_cadena($pagina);
-                $url = "index.php?vista=product_category&category_id=$categoria_id&page=";
+                $url = "product_category&category_id=$categoria_id&page=";
                 $registros = 15;
                 $busqueda = "";
 

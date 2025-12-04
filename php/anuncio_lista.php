@@ -1,6 +1,6 @@
 <?php
 $inicio = ($pagina > 0) ? (($registros * $pagina) - $registros) : 0;
-$tabla = ""; 
+$tabla = "";
 
 $campos = "anuncio_id, anuncio_mensaje, anuncio_hora_inicio, anuncio_hora_fin, anuncio_tipo, anuncio_estado, anuncio_fecha_inicio, anuncio_fecha_fin, anuncio_prioridad";
 
@@ -117,7 +117,7 @@ if ($total >= 1 && $pagina <= $Npagina) {
         </div>';
 }
 
-$tabla .= '</div>'; 
+$tabla .= '</div>';
 
 $conexion = null;
 echo $tabla;
@@ -126,5 +126,3 @@ echo $tabla;
 if ($total >= 1 && $pagina <= $Npagina) {
     echo paginador_tablas($pagina, $Npagina, $url, 7);
 }
-?>
-

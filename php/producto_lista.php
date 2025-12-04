@@ -124,7 +124,7 @@ if ($total >= 1 && $pagina <= $Npagina) {
                 <div class="mt-4 flex justify-between items-center">
                   
                     <div class="flex items-center space-x-3">
-                        <a href="index.php?vista=product_update&product_id_up=' . $rows['producto_id'] . '" class="text-gray-500 hover:text-blue-600" title="Actualizar Producto">
+                        <a href="product_update&product_id_up=' . $rows['producto_id'] . '" class="text-gray-500 hover:text-blue-600" title="Actualizar Producto">
                             <i class="fa fa-pencil fa-lg"></i>
                         </a>
                         <button onclick="eliminarProducto(' . $rows['producto_id'] . ', \'' . htmlspecialchars($rows['producto_nombre'], ENT_QUOTES) . '\')" type="button" class="text-gray-500 hover:text-red-600" title="Eliminar Producto">

@@ -18,10 +18,7 @@
                     Ver Tablero
                 </a>
 
-                <a href="index.php?vista=order_new" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-                    <i class="fas fa-plus mr-2"></i>
-                    Nuevo Pedido
-                </a>
+
             </div>
         </div>
 
@@ -73,7 +70,7 @@
             }
 
             $pagina = limpiar_cadena($pagina);
-            $url = "index.php?vista=orders_list&page=";
+            $url = "orders_list&page=";
             $registros = 15;
             $busqueda = "";
 

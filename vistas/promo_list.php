@@ -1,5 +1,5 @@
 <div class="container mx-auto p-6 lg:p-10 max-w-7xl">
-	<?php include "./inc/breadcrumb.php"; ?>
+    <?php include "./inc/breadcrumb.php"; ?>
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
@@ -67,7 +67,7 @@
         }
 
         $pagina = limpiar_cadena($pagina);
-        $url = "index.php?vista=promo_list&page="; // URL para paginación
+        $url = "promo_list&page="; // URL para paginación
         $registros = 9; // 9 tarjetas por página
         $busqueda = "";
 

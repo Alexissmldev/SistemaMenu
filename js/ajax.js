@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Si no, hacemos lo de siempre (recargar)
                 location.reload();
               }
-              // -------------------------
+              // 
             }
           });
         })

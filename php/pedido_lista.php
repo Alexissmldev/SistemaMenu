@@ -207,7 +207,7 @@ if ($total >= 1 && $pagina <= $Npagina) {
                     </div>
                     
                     <div class="flex items-center space-x-4">
-                         <a href="index.php?vista=order_detail&order_id=' . $rows['id_pedido'] . '" class="text-indigo-600 text-sm font-medium">
+                         <a href="order_detail&order_id=' . $rows['id_pedido'] . '" class="text-indigo-600 text-sm font-medium">
                             Ver Detalles
                         </a>
                         <a href="./php/ticket.php?id=' . $rows['id_pedido'] . '" target="_blank" class="text-gray-400 hover:text-gray-600">

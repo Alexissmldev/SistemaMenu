@@ -2,7 +2,18 @@
 //conexion a la base de datos
 function conexion()
 {
-    $pdo = new PDO('mysql:host=localhost;dbname=SistemaMenu', 'root', '',);
+    // 1. IMPORTANTE: Configurar la hora de Venezuela para que "HOY" funcione
+    date_default_timezone_set('America/Caracas');
+
+    // 2. Conexión (Asegúrate que el nombre de la DB sea exacto, quité una coma extra al final)
+    $pdo = new PDO('mysql:host=localhost;dbname=sistemamenu', 'root', '');
+    
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // 3. Configurar caracteres especiales (ñ, tildes) y sincronizar hora con MySQL
+    $pdo->exec("SET NAMES 'utf8mb4'");
+    $pdo->exec("SET time_zone = '-04:00'");
+
     return $pdo;
 }
 
@@ -241,4 +252,22 @@ function procesar_imagen_optimizada($archivo_subido, $nombre_base, $dir_original
 
     // 7. Liberar memoria del recurso principal
     imagedestroy($original_en_memoria);
+}
+
+
+
+function tiene_permiso($permiso_requerido)
+{
+    // 1. Si no hay sesión, no hay permiso
+    if (!isset($_SESSION['permisos'])) {
+        return false;
+    }
+
+    // 2. Si es Super Admin (rol_id 1), tiene acceso a todo (Opcional, pero recomendado)
+    if (isset($_SESSION['rol_id']) && $_SESSION['rol_id'] == 1) {
+        return true;
+    }
+
+    // 3. Buscar el permiso en el array de la sesión
+    return in_array($permiso_requerido, $_SESSION['permisos']);
 }

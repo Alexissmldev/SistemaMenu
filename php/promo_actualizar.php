@@ -219,7 +219,7 @@ try {
         "tipo" => "success",
         "titulo" => "¡Actualizado!",
         "texto" => "La promoción y sus productos se actualizaron correctamente.",
-        "url" => "index.php?vista=promo_list"
+        "url" => "promo_list"
     ]);
 } catch (Exception $e) {
     $conexion->rollBack();

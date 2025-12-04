@@ -85,7 +85,7 @@
 </div>
 
 <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex justify-around lg:hidden shadow-xl z-20">
-    <a href="index.php?vista=home" id="mobile-home-trigger" class="text-red-600 flex flex-col items-center">
+    <a href="home" id="mobile-home-trigger" class="text-red-600 flex flex-col items-center">
         <i class="fa fa-home text-2xl"></i>
         <span class="text-xs">Inicio</span>
     </a>

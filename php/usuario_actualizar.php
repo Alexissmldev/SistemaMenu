@@ -1,106 +1,147 @@
 <?php
-
-require_once "../inc/session_start.php";
+require_once "../inc/session_Start.php";
 require_once "main.php";
 
-/*-- Verificar si la sesión recuperó el ID --*/
-if (empty($_SESSION['id'])) {
-    enviar_respuesta_json("error", "Sesión Caducada", "No se detecta tu usuario. Por favor recarga la página e inicia sesión.");
-}
-
-$id_usuario = $_SESSION['id'];
+$id = limpiar_cadena($_POST['usuario_id']);
 $conexion = conexion();
 
-/* ==========================================================================
-   2. RECIBIR DATOS
-   ========================================================================== */
-$usuario = limpiar_cadena($_POST['username']);
-$telefono = limpiar_cadena($_POST['phone']);
+/*== Verificando usuario ==*/
+$check_usuario = $conexion->prepare("SELECT * FROM usuario WHERE usuario_id=:id");
+$check_usuario->execute([':id' => $id]);
 
-/*-- Validar campos obligatorios --*/
-if ($usuario == "") {
-    enviar_respuesta_json("error", "¡Ocurrió un error!", "El nombre de usuario no puede estar vacío.");
-}
-
-/* ==========================================================================
-   3. VERIFICACIONES DE SEGURIDAD
-   ========================================================================== */
-
-/*-- Obtener datos actuales de la BD --*/
-$check_user_actual = $conexion->query("SELECT * FROM usuario WHERE usuario_id = '$id_usuario'");
-
-if ($check_user_actual->rowCount() <= 0) {
-    enviar_respuesta_json("error", "Error Crítico", "El usuario de la sesión no existe en la base de datos.");
+if ($check_usuario->rowCount() <= 0) {
+    echo json_encode([
+        "tipo" => "error",
+        "titulo" => "Error",
+        "mensaje" => "El usuario no existe en el sistema"
+    ]);
+    exit();
 } else {
-    $datos_actuales = $check_user_actual->fetch();
+    $datos = $check_usuario->fetch();
 }
 
-/*-- Verificar si cambió el usuario y si ya existe otro igual --*/
-if ($usuario != $datos_actuales['usuario_usuario']) {
-    $check_user_duplicado = $conexion->query("SELECT usuario_usuario FROM usuario WHERE usuario_usuario = '$usuario'");
+/*== Verificando credenciales del administrador ==*/
+$admin_usuario = limpiar_cadena($_POST['administrador_usuario']);
+$admin_clave = limpiar_cadena($_POST['administrador_clave']);
+
+if ($admin_usuario == "" || $admin_clave == "") {
+    echo json_encode([
+        "tipo" => "error",
+        "titulo" => "Campos incompletos",
+        "mensaje" => "Debe ingresar su USUARIO y CLAVE de administrador para confirmar los cambios."
+    ]);
+    exit();
+}
+
+// Verificamos que el admin sea el usuario actual de la sesión
+$check_admin = $conexion->prepare("SELECT usuario_usuario, usuario_clave FROM usuario WHERE usuario_usuario=:user AND usuario_id=:id");
+$check_admin->execute([':user' => $admin_usuario, ':id' => $_SESSION['id']]);
+
+if ($check_admin->rowCount() == 1) {
+    $admin_data = $check_admin->fetch();
+    if ($admin_data['usuario_usuario'] != $admin_usuario || !password_verify($admin_clave, $admin_data['usuario_clave'])) {
+        echo json_encode([
+            "tipo" => "error",
+            "titulo" => "Error de Autenticación",
+            "mensaje" => "USUARIO o CLAVE de administrador incorrectos"
+        ]);
+        exit();
+    }
+} else {
+    echo json_encode([
+        "tipo" => "error",
+        "titulo" => "Error de Autenticación",
+        "mensaje" => "USUARIO o CLAVE de administrador incorrectos"
+    ]);
+    exit();
+}
+
+/*== Procesando datos del formulario ==*/
+$nombre = limpiar_cadena($_POST['usuario_nombre']);
+$apellido = limpiar_cadena($_POST['usuario_apellido']);
+$usuario = limpiar_cadena($_POST['usuario_usuario']);
+$clave_1 = limpiar_cadena($_POST['usuario_clave_1']);
+$clave_2 = limpiar_cadena($_POST['usuario_clave_2']);
+
+/*== Verificando campos obligatorios ==*/
+if ($nombre == "" || $apellido == "" || $usuario == "") {
+    echo json_encode([
+        "tipo" => "error",
+        "titulo" => "Campos incompletos",
+        "mensaje" => "No has llenado todos los campos obligatorios (Nombre, Apellido, Usuario)."
+    ]);
+    exit();
+}
+
+/*== Verificando integridad de los datos (Patrones) ==*/
+if (verificar_datos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,40}", $nombre)) {
+    echo json_encode(["tipo" => "error", "titulo" => "Formato inválido", "mensaje" => "El NOMBRE no coincide con el formato solicitado (Solo letras)."]);
+    exit();
+}
+
+if (verificar_datos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,40}", $apellido)) {
+    echo json_encode(["tipo" => "error", "titulo" => "Formato inválido", "mensaje" => "El APELLIDO no coincide con el formato solicitado (Solo letras)."]);
+    exit();
+}
+
+if (verificar_datos("[a-zA-Z0-9]{4,20}", $usuario)) {
+    echo json_encode(["tipo" => "error", "titulo" => "Formato inválido", "mensaje" => "El USUARIO no coincide con el formato solicitado (Alfanumérico, 4-20 carácteres)."]);
+    exit();
+}
+
+/*== Verificando Usuario Duplicado ==*/
+if ($usuario != $datos['usuario_usuario']) {
+    $check_user_duplicado = $conexion->prepare("SELECT usuario_usuario FROM usuario WHERE usuario_usuario=:usuario");
+    $check_user_duplicado->execute([':usuario' => $usuario]);
     if ($check_user_duplicado->rowCount() > 0) {
-        enviar_respuesta_json("error", "Usuario no disponible", "El nombre de usuario '$usuario' ya está registrado.");
+        echo json_encode([
+            "tipo" => "error",
+            "titulo" => "Usuario ocupado",
+            "mensaje" => "El nombre de USUARIO ingresado ya se encuentra registrado por otra persona."
+        ]);
+        exit();
     }
 }
 
-/* ==========================================================================
-   4. LÓGICA DE CONTRASEÑA
-   ========================================================================== */
-$clave_final = $datos_actuales['usuario_clave']; // Por defecto, la misma
-
-// Si escribió algo en los campos de nueva clave
-if ($_POST['new_password'] != "" || $_POST['confirm_password'] != "") {
-
-    $clave_actual = limpiar_cadena($_POST['current_password']);
-    $clave_nueva_1 = limpiar_cadena($_POST['new_password']);
-    $clave_nueva_2 = limpiar_cadena($_POST['confirm_password']);
-
-    // A. Validar contraseña actual
-    if ($clave_actual == "") {
-        enviar_respuesta_json("error", "Seguridad", "Debes escribir tu contraseña actual para hacer cambios.");
+/*== Procesando Contraseña ==*/
+if ($clave_1 != "" || $clave_2 != "") {
+    if (verificar_datos("[a-zA-Z0-9$@.-]{7,100}", $clave_1) || verificar_datos("[a-zA-Z0-9$@.-]{7,100}", $clave_2)) {
+        echo json_encode(["tipo" => "error", "titulo" => "Clave inválida", "mensaje" => "Las claves no coinciden con el formato solicitado."]);
+        exit();
     }
-
-    if (!password_verify($clave_actual, $datos_actuales['usuario_clave'])) {
-        enviar_respuesta_json("error", "Contraseña Incorrecta", "La contraseña actual que ingresaste no es válida.");
+    if ($clave_1 != $clave_2) {
+        echo json_encode(["tipo" => "error", "titulo" => "Claves no coinciden", "mensaje" => "Las nuevas claves ingresadas no coinciden."]);
+        exit();
     }
-
-    // B. Validar nuevas contraseñas
-    if ($clave_nueva_1 != $clave_nueva_2) {
-        enviar_respuesta_json("error", "Error", "Las nuevas contraseñas no coinciden.");
-    }
-
-    if (strlen($clave_nueva_1) < 4) {
-        enviar_respuesta_json("error", "Seguridad", "La contraseña es muy corta (mínimo 4 caracteres).");
-    }
-
-    // C. Encriptar
-    $clave_final = password_hash($clave_nueva_1, PASSWORD_BCRYPT, ["cost" => 10]);
+    $clave_para_db = password_hash($clave_1, PASSWORD_BCRYPT, ["cost" => 10]);
+} else {
+    $clave_para_db = $datos['usuario_clave'];
 }
 
-/* ==========================================================================
-   5. ACTUALIZAR BASE DE DATOS
-   ========================================================================== */
-$datos_update = [
+/*== Actualizar datos en la BD ==*/
+// Nota: Se eliminó usuario_email de la consulta
+$actualizar_usuario = $conexion->prepare("UPDATE usuario SET usuario_nombre=:nombre, usuario_apellido=:apellido, usuario_usuario=:usuario, usuario_clave=:clave WHERE usuario_id=:id");
+
+$marcadores = [
+    ":nombre" => $nombre,
+    ":apellido" => $apellido,
     ":usuario" => $usuario,
-    ":telefono" => $telefono,
-    ":clave" => $clave_final,
-    ":id" => $id_usuario
+    ":clave" => $clave_para_db,
+    ":id" => $id
 ];
 
-$update = $conexion->prepare("UPDATE usuario SET 
-    usuario_usuario = :usuario, 
-    usuario_telefono = :telefono, 
-    usuario_clave = :clave 
-    WHERE usuario_id = :id");
-
-if ($update->execute($datos_update)) {
-
-    // Actualizar variable de sesión para reflejar cambios inmediatamente
-    $_SESSION['usuario'] = $usuario;
-
-    enviar_respuesta_json("success", "¡Perfil Actualizado!", "Tus datos se han guardado correctamente.");
+if ($actualizar_usuario->execute($marcadores)) {
+    echo json_encode([
+        "tipo" => "success", // IMPORTANTE: Tu JS probablemente espera "success" o "limpiar" para redirigir/limpiar
+        "titulo" => "¡Usuario Actualizado!",
+        "mensaje" => "El usuario se actualizó con éxito en el sistema."
+    ]);
 } else {
-    enviar_respuesta_json("error", "Error de Servidor", "No se pudo actualizar el registro.");
+    echo json_encode([
+        "tipo" => "error",
+        "titulo" => "Error en el servidor",
+        "mensaje" => "No se pudo actualizar el usuario, intente nuevamente."
+    ]);
 }
 
 $conexion = null;

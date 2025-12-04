@@ -14,12 +14,11 @@
         </div>
 
         <div class="flex gap-2 md:gap-3">
-          
 
-            <button onclick="toggleHistorial()" id="btnHistorial" class="flex items-center justify-center gap-2 px-3 md:px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all shadow-sm">
-                <i class="fas fa-history text-lg"></i>
-                <span class="hidden md:inline font-bold text-sm">Historial</span>
-            </button>
+            <a href="index.php?vista=order_new" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                <i class="fas fa-plus mr-2"></i>
+                Nuevo Pedido
+            </a>
 
             <a href="index.php?vista=orders_list" class="flex items-center justify-center w-10 h-10 md:w-auto md:h-auto md:px-5 md:py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
                 <i class="fas fa-list md:mr-2"></i>

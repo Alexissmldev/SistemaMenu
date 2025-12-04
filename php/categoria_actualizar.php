@@ -63,7 +63,7 @@ if ($actualizar_categoria->execute($marcadores)) {
         "tipo" => "success",
         "titulo" => "¡Actualizado!",
         "texto" => "El producto se actualizó correctamente.",
-        "url" => "index.php?vista=category_list"
+        "url" => "category_list"
     ];
     echo json_encode($respuesta);
     exit();
