@@ -15,11 +15,6 @@
 
         <div class="flex gap-2 md:gap-3">
 
-            <a href="index.php?vista=order_new" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-                <i class="fas fa-plus mr-2"></i>
-                Nuevo Pedido
-            </a>
-
             <a href="index.php?vista=orders_list" class="flex items-center justify-center w-10 h-10 md:w-auto md:h-auto md:px-5 md:py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
                 <i class="fas fa-list md:mr-2"></i>
                 <span class="hidden md:inline font-bold text-sm">Lista</span>
@@ -124,10 +119,8 @@
             .then(r => r.json())
             .then(d => {
                 if (d.status === 'success') {
-                    // Si fue exitoso, recargamos el tablero inmediatamente
                     cargarKanban();
                 } else {
-                    // Solo si hay un error grave lo mostramos en consola para no molestar
                     console.error("Error al actualizar:", d.message);
                 }
             })

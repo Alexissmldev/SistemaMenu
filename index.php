@@ -55,6 +55,8 @@ if (isset($_GET['vista']) && $_GET['vista'] === 'reportes' && isset($_GET['desca
             exit();
         }
 
+ 
+
         // C. Protección de INVENTARIO (Productos y Categorías)
         if ((strpos($v, 'product_') === 0 || strpos($v, 'category_') === 0) && !tiene_permiso('inventario.ver')) {
             include "vistas/404.php";
