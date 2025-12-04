@@ -2,7 +2,18 @@
 //conexion a la base de datos
 function conexion()
 {
-    $pdo = new PDO('mysql:host=localhost;dbname=SistemaMenu', 'root', '',);
+    // 1. IMPORTANTE: Configurar la hora de Venezuela para que "HOY" funcione
+    date_default_timezone_set('America/Caracas');
+
+    // 2. Conexión (Asegúrate que el nombre de la DB sea exacto, quité una coma extra al final)
+    $pdo = new PDO('mysql:host=localhost;dbname=sistemamenu', 'root', '');
+    
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // 3. Configurar caracteres especiales (ñ, tildes) y sincronizar hora con MySQL
+    $pdo->exec("SET NAMES 'utf8mb4'");
+    $pdo->exec("SET time_zone = '-04:00'");
+
     return $pdo;
 }
 
