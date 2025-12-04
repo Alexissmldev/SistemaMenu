@@ -14,11 +14,10 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            <button onclick="openModal('user_new', '' , '' , '')"
-                class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-                <i class="fas fa-user-plus mr-2"></i>
+            <a href="index.php?vista=user_new" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                <i class="fas fa-plus mr-2"></i>
                 Nuevo Usuario
-            </button>
+            </a>
         </div>
     </div>
 
