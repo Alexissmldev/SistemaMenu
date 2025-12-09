@@ -3,7 +3,7 @@ require_once "main.php";
 
 $modulo_buscador = limpiar_cadena($_POST['modulo_buscador']);
 // 1. AÑADIMOS "anuncio" A LA LISTA DE MÓDULOS PERMITIDOS
-$modulos = ["usuario", "categoria", "producto", "anuncio"];
+$modulos = ["usuario", "categoria", "producto", "anuncio", "cierre"];
 
 if (in_array($modulo_buscador, $modulos)) {
 
@@ -12,7 +12,8 @@ if (in_array($modulo_buscador, $modulos)) {
         "usuario"   => "user_list",
         "categoria" => "category_list",
         "producto"  => "product_list",
-        "anuncio"   => "ad_list" // <-- LÍNEA NUEVA
+        "anuncio"   => "ad_list",
+        "cierre"    => "cash_history"
     ];
     $redirect_url = $modulos_url[$modulo_buscador];
 

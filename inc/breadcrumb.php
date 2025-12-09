@@ -45,7 +45,7 @@ $rutas = [
     'user_list'    => ['texto' => 'Lista de Usuarios',   'padre' => 'Usuarios', 'padre_link' => 'user_list'],
     'user_new'     => ['texto' => 'Nuevo Usuario',       'padre' => 'Usuarios', 'padre_link' => 'user_list'],
     'user_update'  => ['texto' => 'Editar Usuario',      'padre' => 'Usuarios', 'padre_link' => 'user_list'],
-    'perfil'       => ['texto' => 'Mi Perfil',           'padre' => 'Usuario',  'padre_link' => $vista_raiz], // El padre del perfil es el inicio dinámico
+    'perfil'       => ['texto' => 'Mi Perfil',           'padre' => 'Usuario',  'padre_link' => $vista_raiz], 
 
     // --- PEDIDOS Y REPORTES ---
     'orders_list'   => ['texto' => 'Historial de Pedidos', 'padre' => 'Pedidos',  'padre_link' => 'orders_kanban'],
@@ -53,6 +53,11 @@ $rutas = [
     'order_search'  => ['texto' => 'Buscar Pedido',        'padre' => 'Pedidos',  'padre_link' => 'orders_list'],
     'orders_stats'  => ['texto' => 'Estadísticas',         'padre' => 'Reportes', 'padre_link' => 'orders_stats'],
     'sales_report'  => ['texto' => 'Cierre de Caja',       'padre' => 'Reportes', 'padre_link' => 'sales_report'],
+
+    
+
+    // --- CIERRES DE CAJA ---
+    'cash_history'  => ['texto' => 'Historial de Cierres', 'padre' => 'Caja',     'padre_link' => 'sales_report'],
 ];
 
 // Datos por defecto si la vista no está en el array
