@@ -1,32 +1,41 @@
 <?php
 // Archivo: php/api_estadisticas_dashboard.php
 
+// Evitar que errores de PHP rompan el JSON
 error_reporting(0);
 ini_set('display_errors', 0);
+
+// Encabezados JSON
 header('Content-Type: application/json; charset=utf-8');
 
-try {
-    // 1. Conexión Autónoma
-    date_default_timezone_set('America/Caracas');
-    $pdo = new PDO('mysql:host=localhost;dbname=sistemamenu;charset=utf8mb4', 'root', '');
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->exec("SET time_zone = '-04:00'");
+// 1. IMPORTANTE: Incluir tu archivo de conexión externo
+// Ajusta la ruta si tu archivo se llama distinto (ej: '../db.php')
+require_once './main.php';
 
-    // 2. Recibir datos
+try {
+    // 2. Usar la función de conexión segura configurada para InfinityFree
+    $pdo = conexion();
+
+    // Configurar zona horaria para cálculos de PHP
+    date_default_timezone_set('America/Caracas');
+
+    // 3. Recibir datos del fetch
     $input = file_get_contents("php://input");
     $data = json_decode($input, true);
 
-    if (!$data) throw new Exception('No hay datos de entrada');
+    if (!$data) {
+        // Si no llegan datos, usar valores por defecto (mes actual)
+        $inicio = date('Y-m-01');
+        $fin = date('Y-m-t');
+    } else {
+        $inicio = $data['inicio'];
+        $fin = $data['fin'];
+    }
 
-    $inicio = $data['inicio'];
-    $fin = $data['fin'];
     $inicioSql = $inicio . " 00:00:00";
     $finSql = $fin . " 23:59:59";
 
-    // --- CAMBIO CLAVE: LOGICA NEGATIVA ---
-    // En vez de adivinar si se llama "Pagado" o "Entregado",
-    // sumamos TODO lo que NO sea "Rechazado" ni "Pendiente".
-    // Esto incluirá automáticamente tus pedidos "Entregado", "Pagado", "Aprobado", etc.
+    // Condición para contar solo ventas reales
     $condicion_pago = "estado_pago NOT IN ('Rechazado', 'Pendiente', 'Anulado')";
 
     $response = [];
@@ -80,6 +89,7 @@ try {
         $stmt->execute([$inicioSql, $finSql]);
         $ventas_dia = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
+        // Llenar días vacíos con 0
         $periodo = new DatePeriod(
             new DateTime($inicio),
             new DateInterval('P1D'),
@@ -139,7 +149,7 @@ try {
     $stmt->execute([$inicioSql, $finSql]);
     $response['categories'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // --- TABLAS ---
+    // --- TABLA: Clientes Top ---
     $sql = "SELECT CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente_nombre, 
                    SUM(ped.total_usd) as gastado 
             FROM pedido ped
@@ -150,6 +160,7 @@ try {
     $stmt->execute([$inicioSql, $finSql]);
     $response['clients'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // --- TABLA: Promos ---
     $sql = "SELECT prom.promo_nombre as producto_nombre, SUM(d.cantidad) as cant 
             FROM pedido_detalle d
             JOIN pedido ped ON ped.id_pedido = d.id_pedido
@@ -161,9 +172,12 @@ try {
     $stmt->execute([$inicioSql, $finSql]);
     $response['promos'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Devolver JSON final
     echo json_encode($response);
 
 } catch (Exception $e) {
-    echo json_encode(['error' => $e->getMessage()]);
+    // En caso de error, devolver JSON con mensaje
+    http_response_code(500); // Opcional: marca el status HTTP como error
+    echo json_encode(['error' => 'Error en servidor: ' . $e->getMessage()]);
 }
 ?>

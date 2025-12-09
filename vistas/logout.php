@@ -3,7 +3,7 @@
 session_destroy();
 
 if (headers_sent()) {
-    echo "<script> window.location.href='login';</script>";
+    echo "<script> window.location.href='index.php?vista=login';</script>";
 } else {
-    header("Location: login");
+    header("Location: index.php?vista=login");
 }

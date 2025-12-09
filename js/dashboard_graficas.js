@@ -1,29 +1,42 @@
 // Archivo: js/dashboard_graficas.js
 
-let chartTrend = null;
-let chartHoras = null;
-let chartTop = null;
-let chartCat = null;
+// --- VARIABLES GLOBALES (Usando window para evitar conflictos de redeclaración) ---
+window.chartTrend = window.chartTrend || null;
+window.chartHoras = window.chartHoras || null;
+window.chartTop   = window.chartTop   || null;
+window.chartCat   = window.chartCat   || null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Al cargar, pide estadísticas del MES por defecto
-    loadStats('mes', document.querySelector("button[onclick=\"loadStats('mes', this)\"]"));
+    // Busca el botón del mes para simular el click y cargar datos iniciales
+    // Usamos ?. para evitar error si el botón no existe
+    const btnMes = document.querySelector("button[onclick=\"loadStats('mes', this)\"]");
+    loadStats('mes', btnMes);
 });
 
 function loadStats(modo, btn = null) {
-    // Estilos visuales de botones
+    // 1. Estilos visuales de botones (Solo si el botón existe y hay botones de filtro)
     if(btn) {
-        document.querySelectorAll('.filter-btn').forEach(b => {
-            b.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
-            b.classList.add('text-slate-500');
-        });
-        btn.classList.remove('text-slate-500');
-        btn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+        const botones = document.querySelectorAll('.filter-btn');
+        if (botones.length > 0) {
+            botones.forEach(b => {
+                b.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
+                b.classList.add('text-slate-500');
+            });
+            btn.classList.remove('text-slate-500');
+            btn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+        }
     }
 
     let fechaInicio, fechaFin;
     const hoy = new Date();
+    
+    // Función auxiliar segura para obtener valor por ID sin que explote si no existe
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value : null;
+    };
 
+    // Lógica de fechas
     if (modo === 'hoy') {
         fechaInicio = formatDate(hoy);
         fechaFin = formatDate(hoy);
@@ -38,29 +51,39 @@ function loadStats(modo, btn = null) {
         fechaFin = formatDate(domingo);
     } 
     else if (modo === 'mes') {
-        const year = document.getElementById('sel_anio').value;
-        const month = document.getElementById('sel_mes').value;
-        fechaInicio = `${year}-${month}-01`;
+        // Intenta obtener del select, si no existe usa el mes actual
+        const year = getVal('sel_anio') || hoy.getFullYear();
+        const month = getVal('sel_mes') || (hoy.getMonth() + 1); 
+        
+        fechaInicio = `${year}-${String(month).padStart(2,'0')}-01`;
         const ultimoDiaMes = new Date(year, month, 0).getDate();
-        fechaFin = `${year}-${month}-${ultimoDiaMes}`;
+        fechaFin = `${year}-${String(month).padStart(2,'0')}-${ultimoDiaMes}`;
     } 
     else if (modo === 'anio') {
-        const year = document.getElementById('sel_anio').value;
+        const year = getVal('sel_anio') || hoy.getFullYear();
         fechaInicio = `${year}-01-01`;
         fechaFin = `${year}-12-31`;
     }
     else if (modo === 'custom') {
-        fechaInicio = document.getElementById('fecha_inicio').value;
-        fechaFin = document.getElementById('fecha_fin').value;
+        fechaInicio = getVal('fecha_inicio');
+        fechaFin = getVal('fecha_fin');
+        
+        // Si es custom y el usuario no ha puesto fechas, no hacemos nada
+        if(!fechaInicio || !fechaFin) return; 
     }
 
-    document.getElementById('fecha_inicio').value = fechaInicio;
-    document.getElementById('fecha_fin').value = fechaFin;
+    // Actualizar inputs visibles solo si existen en el DOM
+    const inputInicio = document.getElementById('fecha_inicio');
+    const inputFin = document.getElementById('fecha_fin');
+    if(inputInicio) inputInicio.value = fechaInicio;
+    if(inputFin) inputFin.value = fechaFin;
     
-    if(document.getElementById('kpi_rango')) {
-        document.getElementById('kpi_rango').innerText = `Rango: ${fechaInicio} al ${fechaFin}`;
+    const labelRango = document.getElementById('kpi_rango');
+    if(labelRango) {
+        labelRango.innerText = `Rango: ${fechaInicio} al ${fechaFin}`;
     }
 
+    // Llamar al backend
     fetchData(fechaInicio, fechaFin);
 }
 
@@ -85,20 +108,18 @@ async function fetchData(inicio, fin) {
         });
 
         const text = await response.text();
-        console.log("Respuesta cruda del servidor:", text); // MIRA LA CONSOLA SI FALLA
+        // console.log("Respuesta servidor:", text); // Descomentar para depurar
 
         let data;
         try {
             data = JSON.parse(text);
         } catch (e) {
             console.error("EL PHP NO DEVOLVIÓ JSON VÁLIDO. Respuesta:", text);
-            // alert("Error grave: El servidor devolvió texto en lugar de datos. Revisa la consola.");
             return;
         }
         
         if(data.error) {
             console.error("Error reportado por PHP:", data.error);
-            // alert("Error de base de datos: " + data.error);
             return;
         }
 
@@ -114,18 +135,35 @@ async function fetchData(inicio, fin) {
 }
 
 function renderKPIs(kpi) {
+    if(!kpi) return;
     const formatUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-    if(document.getElementById('kpi_ingresos')) document.getElementById('kpi_ingresos').innerText = formatUSD.format(kpi.ingresos);
-    if(document.getElementById('kpi_pedidos')) document.getElementById('kpi_pedidos').innerText = kpi.pedidos;
-    if(document.getElementById('kpi_ticket')) document.getElementById('kpi_ticket').innerText = formatUSD.format(kpi.ticket);
+    
+    const elIngresos = document.getElementById('kpi_ingresos');
+    const elPedidos = document.getElementById('kpi_pedidos');
+    const elTicket = document.getElementById('kpi_ticket');
+
+    if(elIngresos) elIngresos.innerText = formatUSD.format(kpi.ingresos);
+    if(elPedidos) elPedidos.innerText = kpi.pedidos;
+    if(elTicket) elTicket.innerText = formatUSD.format(kpi.ticket);
 }
 
 function renderCharts(data) {
+    // Helper para crear/actualizar gráficas de forma segura
+    const createChart = (canvasId, globalVarName, config) => {
+        const ctx = document.getElementById(canvasId);
+        if (ctx) {
+            // Destruir instancia anterior si existe en window
+            if (window[globalVarName] instanceof Chart) {
+                window[globalVarName].destroy();
+            }
+            // Crear nueva instancia y guardarla en window
+            window[globalVarName] = new Chart(ctx.getContext('2d'), config);
+        }
+    };
+
     // 1. Trend Chart
-    const ctxTrend = document.getElementById('chartTrend');
-    if (ctxTrend) {
-        if (chartTrend) chartTrend.destroy();
-        chartTrend = new Chart(ctxTrend.getContext('2d'), {
+    if(data.trend) {
+        createChart('chartTrend', 'chartTrend', {
             type: 'line',
             data: {
                 labels: data.trend.map(d => d.dia),
@@ -143,10 +181,8 @@ function renderCharts(data) {
     }
 
     // 2. Horas Pico
-    const ctxHoras = document.getElementById('chartHoras');
-    if (ctxHoras) {
-        if (chartHoras) chartHoras.destroy();
-        chartHoras = new Chart(ctxHoras.getContext('2d'), {
+    if(data.hours) {
+        createChart('chartHoras', 'chartHoras', {
             type: 'bar',
             data: {
                 labels: data.hours.map(d => d.hora + ':00'),
@@ -162,10 +198,8 @@ function renderCharts(data) {
     }
 
     // 3. Top Productos
-    const ctxTop = document.getElementById('chartTop');
-    if (ctxTop) {
-        if (chartTop) chartTop.destroy();
-        chartTop = new Chart(ctxTop.getContext('2d'), {
+    if(data.products) {
+        createChart('chartTop', 'chartTop', {
             type: 'bar',
             indexAxis: 'y',
             data: {
@@ -181,10 +215,8 @@ function renderCharts(data) {
     }
 
     // 4. Categorías
-    const ctxCat = document.getElementById('chartCat');
-    if (ctxCat) {
-        if (chartCat) chartCat.destroy();
-        chartCat = new Chart(ctxCat.getContext('2d'), {
+    if(data.categories) {
+        createChart('chartCat', 'chartCat', {
             type: 'doughnut',
             data: {
                 labels: data.categories.map(d => d.categoria),
@@ -202,9 +234,9 @@ function renderCharts(data) {
 function renderTables(data) {
     const formatUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
     
-    // Clientes
+    // Tabla Clientes
     const tbodyClientes = document.getElementById('table_clientes');
-    if(tbodyClientes) {
+    if(tbodyClientes && data.clients) {
         tbodyClientes.innerHTML = '';
         if(data.clients.length > 0) {
             data.clients.forEach(c => {
@@ -219,9 +251,9 @@ function renderTables(data) {
         }
     }
 
-    // Promos
+    // Tabla Promos
     const tbodyPromos = document.getElementById('table_promos');
-    if(tbodyPromos) {
+    if(tbodyPromos && data.promos) {
         tbodyPromos.innerHTML = '';
         if(data.promos.length > 0) {
             data.promos.forEach(p => {

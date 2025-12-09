@@ -64,7 +64,7 @@ $datos = $rutas[$vista_actual] ?? ['texto' => 'Página', 'padre' => 'Sistema', '
 
         <!-- ENLACE DE INICIO INTELIGENTE -->
         <li class="inline-flex items-center">
-            <a href="<?php echo $link_inicio; ?>" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors">
+            <a href="index.php?vista=<?php echo $link_inicio; ?>" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors">
                 <i class="fa fa-home mr-2"></i> Inicio
             </a>
         </li>
@@ -74,7 +74,7 @@ $datos = $rutas[$vista_actual] ?? ['texto' => 'Página', 'padre' => 'Sistema', '
                 <div class="flex items-center">
                     <i class="fas fa-chevron-right text-gray-400 text-xs mx-1"></i>
                     <!-- El enlace del padre también verificamos que no sea redundante -->
-                    <a href="<?php echo $datos['padre_link']; ?>" class="ml-1 text-sm font-medium text-gray-700 hover:text-orange-600 md:ml-2 transition-colors">
+                    <a href="index.php?vista=<?php echo $datos['padre_link']; ?>" class="ml-1 text-sm font-medium text-gray-700 hover:text-orange-600 md:ml-2 transition-colors">
                         <?php echo $datos['padre']; ?>
                     </a>
                 </div>

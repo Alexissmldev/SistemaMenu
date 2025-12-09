@@ -158,7 +158,7 @@ try {
         "tipo" => "success",
         "titulo" => "¡Actualizado!",
         "texto" => "El producto se actualizó correctamente.",
-        "url" => "ad_list"
+        "url" => "index.php?vista=ad_list"
     ];
     echo json_encode($respuesta);
     exit();
