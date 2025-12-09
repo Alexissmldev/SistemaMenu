@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 03-12-2025 a las 14:17:24
+-- Tiempo de generación: 09-12-2025 a las 03:33:24
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -112,6 +112,36 @@ INSERT INTO `categoria` (`categoria_id`, `categoria_nombre`, `categoria_estado`,
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `cierres_caja`
+--
+
+CREATE TABLE `cierres_caja` (
+  `cierre_id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `fecha_cierre` datetime NOT NULL DEFAULT current_timestamp(),
+  `sistema_total_usd` decimal(10,2) NOT NULL,
+  `sistema_efectivo` decimal(10,2) NOT NULL,
+  `sistema_digital` decimal(10,2) NOT NULL,
+  `manual_efectivo` decimal(10,2) NOT NULL,
+  `manual_digital` decimal(10,2) NOT NULL,
+  `diferencia` decimal(10,2) NOT NULL,
+  `tasa_bcv` decimal(10,2) NOT NULL,
+  `observacion` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `cierres_caja`
+--
+
+INSERT INTO `cierres_caja` (`cierre_id`, `usuario_id`, `fecha_cierre`, `sistema_total_usd`, `sistema_efectivo`, `sistema_digital`, `manual_efectivo`, `manual_digital`, `diferencia`, `tasa_bcv`, `observacion`) VALUES
+(1, 31, '2025-12-08 21:07:20', 7.00, 7.00, 0.00, 7.00, 0.00, 0.00, 257.93, NULL),
+(2, 31, '2025-12-08 21:08:13', 7.00, 7.00, 0.00, 7.00, 0.00, 0.00, 257.93, NULL),
+(3, 31, '2025-12-08 21:28:18', 39.00, 28.00, 11.00, 39.00, 0.00, 0.00, 257.93, NULL),
+(4, 31, '2025-12-08 21:34:43', 12.00, 9.00, 3.00, 12.00, 0.00, 0.00, 257.93, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `cliente`
 --
 
@@ -150,22 +180,27 @@ CREATE TABLE `pedido` (
   `metodo_pago` varchar(50) DEFAULT 'Efectivo',
   `referencia` varchar(50) DEFAULT NULL,
   `estado_pago` varchar(50) DEFAULT 'Pendiente',
-  `total_usd` decimal(10,2) DEFAULT 0.00
+  `total_usd` decimal(10,2) DEFAULT 0.00,
+  `cierre_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `pedido`
 --
 
-INSERT INTO `pedido` (`id_pedido`, `id_cliente`, `fecha`, `tipo_orden`, `precio_total`, `metodo_pago`, `referencia`, `estado_pago`, `total_usd`) VALUES
-(245, 245, '2025-11-27 20:44:50', 'Comer Aquí', 737.01, 'Efectivo', NULL, 'Entregado', 3.00),
-(246, 245, '2025-11-27 20:45:23', 'Para Llevar', 737.01, 'Efectivo', NULL, 'Entregado', 3.00),
-(247, 246, '2025-11-27 20:46:19', 'Para Llevar', 737.01, 'Pago Móvil', '7777', 'Entregado', 3.00),
-(248, 247, '2025-11-27 22:05:10', 'Para Llevar', 17.00, 'Efectivo', NULL, 'Rechazado', 17.00),
-(249, 245, '2025-11-28 19:19:33', 'Comer Aquí', 1236.50, 'Pago Móvil', '1231', 'Entregado', 5.00),
-(250, 248, '2025-11-28 19:19:57', 'Para Llevar', 741.90, 'Tarjeta', NULL, 'Entregado', 3.00),
-(251, 249, '2025-11-28 19:20:17', 'Comer Aquí', 494.60, 'Efectivo', NULL, 'Entregado', 2.00),
-(252, 250, '2025-11-30 19:39:02', 'Comer Aquí', 2473.00, 'Efectivo', NULL, 'Entregado', 10.00);
+INSERT INTO `pedido` (`id_pedido`, `id_cliente`, `fecha`, `tipo_orden`, `precio_total`, `metodo_pago`, `referencia`, `estado_pago`, `total_usd`, `cierre_id`) VALUES
+(245, 245, '2025-11-27 20:44:50', 'Comer Aquí', 737.01, 'Efectivo', NULL, 'Entregado', 3.00, 3),
+(246, 245, '2025-11-27 20:45:23', 'Para Llevar', 737.01, 'Efectivo', NULL, 'Entregado', 3.00, 3),
+(247, 246, '2025-11-27 20:46:19', 'Para Llevar', 737.01, 'Pago Móvil', '7777', 'Entregado', 3.00, 3),
+(248, 247, '2025-11-27 22:05:10', 'Para Llevar', 17.00, 'Efectivo', NULL, 'Rechazado', 17.00, NULL),
+(249, 245, '2025-11-28 19:19:33', 'Comer Aquí', 1236.50, 'Pago Móvil', '1231', 'Entregado', 5.00, 3),
+(250, 248, '2025-11-28 19:19:57', 'Para Llevar', 741.90, 'Tarjeta', NULL, 'Entregado', 3.00, 3),
+(251, 249, '2025-11-28 19:20:17', 'Comer Aquí', 494.60, 'Efectivo', NULL, 'Entregado', 2.00, 3),
+(252, 250, '2025-11-30 19:39:02', 'Comer Aquí', 2473.00, 'Efectivo', NULL, 'Entregado', 10.00, 3),
+(253, 250, '2025-12-03 09:46:21', 'Comer Aquí', 747.60, 'Efectivo', NULL, 'Entregado', 3.00, 3),
+(254, 250, '2025-12-08 20:37:11', 'Comer Aquí', 1805.50, 'Efectivo', NULL, 'Entregado', 7.00, 3),
+(255, 250, '2025-12-08 21:28:38', 'Comer Aquí', 773.79, 'Pago Móvil', '2222', 'Entregado', 3.00, 4),
+(256, 250, '2025-12-08 21:29:06', 'Comer Aquí', 2321.36, 'Efectivo', NULL, 'Entregado', 9.00, 4);
 
 -- --------------------------------------------------------
 
@@ -204,7 +239,12 @@ INSERT INTO `pedido_detalle` (`id_detalle`, `id_pedido`, `id_producto`, `id_prom
 (35, 251, NULL, 1, NULL, 1, 494.60, ''),
 (36, 252, 108, NULL, NULL, 2, 494.60, ''),
 (37, 252, NULL, 3, NULL, 1, 989.20, ''),
-(38, 252, NULL, 1, NULL, 1, 494.60, '');
+(38, 252, NULL, 1, NULL, 1, 494.60, ''),
+(39, 253, NULL, 4, NULL, 1, 747.60, ''),
+(40, 254, NULL, 3, NULL, 1, 1031.71, ''),
+(41, 254, NULL, 2, NULL, 1, 773.79, ''),
+(42, 255, NULL, 2, NULL, 1, 773.79, ''),
+(43, 256, NULL, 4, NULL, 3, 773.79, '');
 
 -- --------------------------------------------------------
 
@@ -452,7 +492,7 @@ CREATE TABLE `usuario` (
 
 INSERT INTO `usuario` (`usuario_id`, `id_tienda`, `usuario_nombre`, `usuario_apellido`, `usuario_usuario`, `usuario_clave`, `rol_id`) VALUES
 (30, 1, 'Administrador', 'Administrador', NULL, NULL, NULL),
-(31, 1, 'admin', 'Dueño', 'admin', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', 1),
+(31, 1, 'Admin', 'Dueño', 'Admin', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', 1),
 (32, 1, 'Maria', 'Gerente', 'gerente', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', 2),
 (34, 1, 'Ana', 'Despacho', 'caja', '$2y$10$3e.zaoF/pfzrUIoAfzkGuuSUV8/4hsfybciQU/2XyUwxvuTELmYq.', 4),
 (37, 1, 'Daniel', 'Pua', 'danielpss', '$2y$10$p6svhCW7ZW5ClLh4NOegRuU9LC0k7iqEG0j9PJHLg/fruRETJDwz6', 4);
@@ -533,6 +573,13 @@ ALTER TABLE `categoria`
   ADD PRIMARY KEY (`categoria_id`);
 
 --
+-- Indices de la tabla `cierres_caja`
+--
+ALTER TABLE `cierres_caja`
+  ADD PRIMARY KEY (`cierre_id`),
+  ADD KEY `usuario_id` (`usuario_id`);
+
+--
 -- Indices de la tabla `cliente`
 --
 ALTER TABLE `cliente`
@@ -543,7 +590,8 @@ ALTER TABLE `cliente`
 --
 ALTER TABLE `pedido`
   ADD PRIMARY KEY (`id_pedido`),
-  ADD KEY `fk_pedido_cliente` (`id_cliente`);
+  ADD KEY `fk_pedido_cliente` (`id_cliente`),
+  ADD KEY `fk_pedido_cierre` (`cierre_id`);
 
 --
 -- Indices de la tabla `pedido_detalle`
@@ -642,6 +690,12 @@ ALTER TABLE `categoria`
   MODIFY `categoria_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
+-- AUTO_INCREMENT de la tabla `cierres_caja`
+--
+ALTER TABLE `cierres_caja`
+  MODIFY `cierre_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT de la tabla `cliente`
 --
 ALTER TABLE `cliente`
@@ -651,13 +705,13 @@ ALTER TABLE `cliente`
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `id_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=253;
+  MODIFY `id_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=257;
 
 --
 -- AUTO_INCREMENT de la tabla `pedido_detalle`
 --
 ALTER TABLE `pedido_detalle`
-  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos`
@@ -726,9 +780,16 @@ ALTER TABLE `anuncio_productos`
   ADD CONSTRAINT `anuncio_productos_ibfk_2` FOREIGN KEY (`producto_id`) REFERENCES `producto` (`producto_id`) ON DELETE CASCADE;
 
 --
+-- Filtros para la tabla `cierres_caja`
+--
+ALTER TABLE `cierres_caja`
+  ADD CONSTRAINT `fk_cierre_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`usuario_id`);
+
+--
 -- Filtros para la tabla `pedido`
 --
 ALTER TABLE `pedido`
+  ADD CONSTRAINT `fk_pedido_cierre` FOREIGN KEY (`cierre_id`) REFERENCES `cierres_caja` (`cierre_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_pedido_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
